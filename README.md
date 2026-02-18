@@ -142,7 +142,7 @@ Is it read-only? ─── Yes ──→ Finding files?
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/hydra.git
+git clone https://github.com/AR6420/Hail_Hydra.git
 cd hydra
 
 # Deploy heads globally (recommended — always on, every project)
