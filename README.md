@@ -1,338 +1,254 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
-</p>
+# Speculative Execution Framework (SEF)
 
-<h1 align="center">🐉 H Y D R A</h1>
-
-<p align="center">
-  <strong>Multi-Headed Speculative Execution for Claude Code</strong>
-</p>
-
-<p align="center">
-  <em>"Cut off one head, two more shall take its place."</em><br/>
-  <em>Except here — every head is doing your work faster and cheaper.</em>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Opus_4.6-🧠_The_Body-7C3AED?style=flat-square" alt="Opus" />
-  <img src="https://img.shields.io/badge/Sonnet_4.5-🔵_Smart_Heads-3B82F6?style=flat-square" alt="Sonnet" />
-  <img src="https://img.shields.io/badge/Haiku_4.5-🟢_Fast_Heads-22C55E?style=flat-square" alt="Haiku" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Speed-2--3×_Faster-22C55E?style=flat-square&logo=zap&logoColor=white" alt="Speed" />
-  <img src="https://img.shields.io/badge/Cost-60--70%25_Cheaper-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
-  <img src="https://img.shields.io/badge/Quality-Zero_Loss-7C3AED?style=flat-square&logo=shield-check&logoColor=white" alt="Quality" />
-  <img src="https://img.shields.io/badge/Mode-Always_On-darkred?style=flat-square&logo=power&logoColor=white" alt="Always On" />
-</p>
+Task-level speculative execution for Claude Code. Routes each software engineering task
+to the lowest-cost model capable of producing acceptable output, with the Opus orchestrator
+verifying and accepting or re-executing as needed.
 
 ---
 
-## 🧬 What is Hydra?
+## Abstract
 
-You know how in the movies, Hydra had agents embedded *everywhere*, silently getting things done in the background? That's exactly what this framework does for your Claude Code sessions.
-
-**Hydra** is a task-level speculative execution framework inspired by [Speculative Decoding](https://arxiv.org/abs/2302.01318) in LLM inference. Instead of making one expensive model (Opus 4.6) do *everything* — from searching files to writing entire modules — Hydra deploys a team of specialized **"heads"** running on faster, cheaper models that handle the grunt work.
-
-The result? **Opus becomes a manager, not a laborer.** It classifies tasks, dispatches them to the right head, glances at the output, and moves on. The user never notices. It's invisible. It's always on.
-
-> **Think of it this way:**
->
-> Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's Hydra.
+The Speculative Execution Framework (SEF) applies the speculative decoding paradigm
+(Chen et al., 2023; Leviathan et al., 2022) at the task level rather than the token level.
+Most software engineering tasks do not require the full reasoning capacity of a large model
+such as Claude Opus. By routing mechanical and well-defined tasks to faster, cheaper Haiku
+and Sonnet executors — and reserving Opus for tasks that genuinely require deep reasoning —
+SEF achieves meaningful reductions in both latency and API cost with no measurable quality
+degradation on correctly classified tasks.
 
 ---
 
-## 💡 The Theory (for nerds)
+## Background
 
-Speculative decoding (Chen et al., 2023) accelerates LLM inference by having a small **draft model** propose tokens that a large **target model** verifies in parallel. Since verifying K tokens costs roughly the same as generating 1 token, you get 2–2.5× speedup with **zero quality loss**.
+Autoregressive transformer inference is memory-bandwidth bound: the time required per token
+scales with model size regardless of task complexity. Speculative decoding addresses this by
+having a small draft model propose K tokens that a large target model verifies in a single
+forward pass. Since verification of K tokens costs approximately the same as generating one
+token, acceptance rates of 70–90% yield 2–2.5x effective throughput with zero distribution
+shift.
 
-Hydra applies this at the **task level**:
-
-```
-                          ┌─────────────────────────────────┐
-                          │  SPECULATIVE DECODING (tokens)  │
-                          │                                 │
-                          │  Small model drafts K tokens    │
-                          │  Big model verifies in parallel │
-                          │  Accept or reject + resample    │
-                          │  Result: 2-2.5× speedup         │
-                          └─────────────────────────────────┘
-                                        │
-                                   Same idea,
-                                  bigger scale
-                                        │
-                                        ▼
-                          ┌─────────────────────────────────┐
-                          │  🐉 HYDRA (tasks)               │
-                          │                                 │
-                          │  Haiku/Sonnet drafts the task   │
-                          │  Opus verifies (quick glance)   │
-                          │  Accept or redo yourself        │
-                          │  Result: 2-3× speedup           │
-                          └─────────────────────────────────┘
-```
-
-The math is simple: if 70% of tasks can be handled by Haiku (10× faster, 30× cheaper) and 20% by Sonnet (3× faster, 6× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
+SEF applies this structure at task granularity. The orchestrator (Opus) classifies each
+incoming task, dispatches it to an appropriate executor (Haiku or Sonnet subagent), and
+verifies the output. Accepted outputs are returned directly; rejected outputs are re-executed
+by the orchestrator. The user observes only the final result.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 User Request
-    │
-    ▼
-┌───────────────────────────────┐
-│  🧠 OPUS (The Body)           │  Classifies complexity
-│  "Is this a Haiku/Sonnet/me   │  Dispatches to the right head
-│   kind of problem?"            │  Verifies output (if needed)
-└────────┬──────────────────────┘
-         │
-    ┌────┴──────┬────────────────┐
-    ▼           ▼                ▼
- ┌───────┐  ┌────────┐   ┌────────────┐
- │🟢 HAIKU│  │🔵SONNET│   │🧠 OPUS     │
- │ Heads  │  │ Heads  │   │ (hard      │
- │        │  │        │   │  problems) │
- └───┬────┘  └───┬────┘   └────────────┘
-     │           │
-     ▼           ▼
-┌───────────────────────────────┐
-│  🧠 OPUS verifies ONLY IF     │  Good output? → Ship it.
-│  something seems off           │  Bad output? → Redo yourself.
-└───────────────────────────────┘
-     │
-     ▼
-   User gets result (never knows what happened behind the scenes)
+    |
+    v
++------------------------------+
+|  ORCHESTRATOR  (Opus)        |
+|  1. Classify task tier       |
+|  2. Dispatch to executor     |
+|  3. Verify output            |
++----------+-------------------+
+           |
+    +------+------+------------------+
+    v             v                  v
++---------+  +---------+  +--------------------+
+| Tier 1  |  | Tier 2  |  | Orchestrator       |
+| Haiku   |  | Sonnet  |  | (Tier 3: retained) |
+| executor|  | executor|  +--------------------+
++----+----+  +----+----+
+     |            |
+     +------+-----+
+            |
+            v
++------------------------------+
+|  ORCHESTRATOR verifies:      |
+|  accept -> return to user    |
+|  reject -> execute directly  |
++------------------------------+
+            |
+            v
+     User receives result
 ```
 
 ---
 
-## 🐲 The Five Heads
+## Executor Agents
 
-| Head | Model | Speed | Role | Personality |
-|:-----|:------|:------|:-----|:------------|
-| **hydra-scout** | 🟢 Haiku | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
-| **hydra-runner** | 🟢 Haiku | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
-| **hydra-scribe** | 🟢 Haiku | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
-| **hydra-coder** | 🔵 Sonnet | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
-| **hydra-analyst** | 🔵 Sonnet | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
-
-### Task Routing Cheat Sheet
-
-```
-Is it read-only? ─── Yes ──→ Finding files?
-    │                           ├── Yes: hydra-scout 🟢
-    │                           └── No:  hydra-analyst 🔵
-    │
-    No ──→ Just running a command? ─── Yes ──→ hydra-runner 🟢
-    │
-    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe 🟢
-    │
-    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder 🔵
-    │
-    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus (handle it yourself)
-```
+| Executor | Model | Tier | Role | Tools |
+|----------|-------|------|------|-------|
+| `sef-explore` | Haiku 4.5 | 1 | Codebase exploration, file search, reading | Read, Grep, Glob |
+| `sef-validate` | Haiku 4.5 | 1 | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
+| `sef-document` | Haiku 4.5 | 1 | Documentation, comments, changelogs | Read, Write, Edit, Glob, Grep |
+| `sef-implement` | Sonnet 4.5 | 2 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
+| `sef-review` | Sonnet 4.5 | 2 | Code review, debugging, analysis | Read, Grep, Glob, Bash |
 
 ---
 
-## 🚀 Installation
+## Task Classification
 
-### Quick Start (30 seconds)
+The orchestrator classifies each task before dispatching. Classification is a fast mental
+check, not a visible step to the user.
+
+### Tier 1 — Haiku (sef-explore, sef-validate, sef-document)
+
+Tasks that are mechanical, read-heavy, or have a well-defined output:
+
+- File search and pattern matching across codebases
+- Reading and summarizing code or documentation
+- Running tests, builds, linters, and format checks
+- Simple git operations (status, log, diff)
+- Boilerplate generation from clear templates
+- Writing or updating comments, docstrings, and README content
+
+**Decision criterion**: Can the task be expressed as a single unambiguous imperative
+sentence? If yes, it is Tier 1.
+
+### Tier 2 — Sonnet (sef-implement, sef-review)
+
+Tasks requiring reasoning about code within established patterns:
+
+- Feature implementation from a specification
+- Function, class, and module creation or modification
+- Refactoring (rename, extract, restructure)
+- Test writing requiring business logic comprehension
+- Bug fixing with identifiable stack traces or error messages
+- Code review and quality assessment
+- API integrations following documented patterns
+
+**Decision criterion**: Does the task require reading, understanding, and producing code
+where the approach is standard? If yes, it is Tier 2.
+
+### Tier 3 — Orchestrator (Opus, retained)
+
+Tasks requiring deep reasoning, novel architecture, or high-stakes judgment:
+
+- System architecture design and major structural decisions
+- Debugging subtle issues with no clear stack trace
+- Performance optimization requiring algorithmic analysis
+- Security vulnerability assessment
+- Multi-file coordinated changes with complex interdependencies
+- Novel algorithm implementation
+- Ambiguous requirements requiring clarification
+
+**Decision criterion**: Would careful reasoning be required even with full Opus capacity?
+If yes, retain the task.
+
+---
+
+## Installation
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/AR6420/Hail_Hydra.git
-cd hydra
+cd Hail_Hydra
 
-# Deploy heads globally (recommended — always on, every project)
+# Deploy executors to all Claude Code projects (recommended)
 ./scripts/install.sh --user
 
-# 🐉 Hail Hydra! Heads are now active in all Claude Code sessions.
-```
-
-### Installation Options
-
-```bash
-# User-level — available in ALL your Claude Code projects
-./scripts/install.sh --user
-
-# Project-level — just this one project
+# Deploy to current project only
 ./scripts/install.sh --project
 
-# Both — maximum coverage
+# Deploy to both locations
 ./scripts/install.sh --both
 
-# Check what's deployed
+# Check deployment status
 ./scripts/install.sh --status
 
-# Remove everything
+# Remove all executors
 ./scripts/install.sh --uninstall
 ```
 
-### What Gets Installed Where
+Executors are installed to:
+- `~/.claude/agents/` — user-level, active in all Claude Code sessions
+- `.claude/agents/` — project-level, active in the current project only
 
-```
-~/.claude/agents/          ← User-level (all projects)
-  ├── hydra-scout.md       🟢 Haiku
-  ├── hydra-runner.md      🟢 Haiku
-  ├── hydra-scribe.md      🟢 Haiku
-  ├── hydra-coder.md       🔵 Sonnet
-  └── hydra-analyst.md     🔵 Sonnet
-
-.claude/agents/            ← Project-level (one project)
-  └── (same files)
-```
-
-> **Note:** Project-level agents take precedence over user-level when both exist. This lets you customize heads per-project if needed.
+Project-level executors take precedence over user-level when both are present.
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```
-hydra/
-├── 📄 SKILL.md                          # Core framework instructions
-├── 🐲 agents/
-│   ├── hydra-scout.md                   # 🟢 Codebase explorer
-│   ├── hydra-runner.md                  # 🟢 Test & build executor
-│   ├── hydra-scribe.md                  # 🟢 Documentation writer
-│   ├── hydra-coder.md                   # 🔵 Code implementer
-│   └── hydra-analyst.md                 # 🔵 Code reviewer & debugger
-├── 📚 references/
-│   ├── routing-guide.md                 # 30+ task classification examples
-│   └── model-capabilities.md            # What each model excels at
-└── ⚙️ scripts/
-    └── install.sh                       # One-command deployment
+.
++-- SKILL.md                          # Framework instructions (loaded by Claude Code)
++-- agents/
+|   +-- sef-explore.md                # Haiku: codebase exploration
+|   +-- sef-validate.md               # Haiku: test and build execution
+|   +-- sef-document.md               # Haiku: documentation writing
+|   +-- sef-implement.md              # Sonnet: code implementation
+|   +-- sef-review.md                 # Sonnet: code review and debugging
++-- references/
+|   +-- routing-guide.md              # Classification examples and decision flowchart
+|   +-- model-capabilities.md         # Model capability profiles and cost/speed ratios
++-- scripts/
+    +-- install.sh                    # Executor deployment script
 ```
 
 ---
 
-## 📊 Expected Impact
+## Performance Expectations
 
-| Metric | Without Hydra | With Hydra | Improvement |
-|:-------|:-------------|:-----------|:------------|
-| **Task Speed** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku heads respond ~10× faster |
-| **API Cost** | 1× (Opus for everything) | 0.3–0.4× | 60–70% cheaper |
-| **Quality** | Opus-level | Opus-level | Zero degradation |
-| **User Experience** | Normal | Normal | Invisible — zero friction |
+Estimates based on approximate model speed and cost ratios. Actual results depend on task
+mix and classification accuracy.
 
-### How the Savings Work
+| Metric | Baseline (Opus only) | With SEF | Notes |
+|--------|---------------------|----------|-------|
+| Task completion speed | 1x | 2–3x | Haiku ~10x faster than Opus |
+| API cost | 1x | 0.3–0.4x | 60–70% reduction |
+| Output quality | Opus-level | Opus-level | Zero degradation on correctly classified tasks |
 
-| Task Type | % of Work | Model Used | Cost vs Opus |
-|:----------|:----------|:-----------|:-------------|
-| Exploration, search, tests, docs | ~50% | 🟢 Haiku | ~3% of Opus cost |
-| Implementation, review, debugging | ~30% | 🔵 Sonnet | ~17% of Opus cost |
-| Architecture, hard problems | ~20% | 🧠 Opus | 100% (no change) |
+### Cost Model
+
+| Task category | Estimated share | Executor used | Cost vs. Opus |
+|---------------|----------------|---------------|---------------|
+| Exploration, execution, documentation | ~50% | Haiku | ~3% of Opus cost |
+| Implementation, review, testing | ~30% | Sonnet | ~17% of Opus cost |
+| Architecture, complex debugging | ~20% | Opus (retained) | 100% |
 | **Blended effective cost** | | | **~25% of all-Opus** |
 
 ---
 
-## 🎯 Design Principles
+## Design Principles
 
-### 🫥 Invisibility
-> The user should **never** notice Hydra operating. No announcements, no permission requests, no process narration. If a head does the work, present the output as if Opus did it.
+- **Transparency**: The user does not observe routing decisions. Executor output is presented
+  as the final result. No delegation announcements, no routing narration.
 
-### ⚡ Speed Over Ceremony
-> Don't overthink classification. Quick mental check: "Haiku? Sonnet? Me?" and go. If you spend 10 seconds classifying a 5-second task, you've defeated the purpose.
+- **Conservative escalation**: When classification is uncertain, route to a higher tier.
+  Quality takes precedence over cost reduction. Never downgrade on retry — if an executor's
+  output is insufficient, the orchestrator re-executes directly.
 
-### 🔀 Parallel Heads
-> Independent subtasks launch in parallel. "Fix the bug AND add tests" → two heads working simultaneously.
+- **Parallel dispatch**: Independent subtasks are dispatched concurrently to multiple
+  executors, maximizing throughput on compound requests.
 
-### ⬆️ Escalate, Never Downgrade
-> If a head's output isn't good enough, Opus does it directly. No retries at the same tier. This mirrors speculative decoding's rejection sampling — when a draft token is rejected, the target model samples directly.
-
----
-
-## 🔬 The Speculative Decoding Connection
-
-For those who want to go deeper, here's how Hydra maps to the original speculative decoding concepts:
-
-| Speculative Decoding Concept | Hydra Equivalent |
-|:-----------------------------|:-----------------|
-| Target model (large) | 🧠 Opus 4.6 — the orchestrator |
-| Draft model (small) | 🟢 Haiku / 🔵 Sonnet heads |
-| Draft K tokens | Heads draft the full task output |
-| Parallel verification | Opus glances at the output |
-| Modified rejection sampling | Accept → ship it. Reject → Opus redoes it. |
-| Acceptance rate (~70-90%) | Target: 85%+ of delegated tasks accepted as-is |
-| Guaranteed ≥1 token per loop | Every task produces a result — Opus catches failures |
-| Temperature/nucleus compatibility | Works with any coding task type or domain |
-
-### Key Papers
-- [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/abs/2302.01318) — Chen et al., 2023 (DeepMind)
-- [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — Leviathan et al., 2022 (Google)
+- **Calibration**: Track delegation rate (target: 60–80%) and rejection rate (target: <15%).
+  Adjust classification thresholds if either metric drifts significantly.
 
 ---
 
-## 🤔 FAQ
+## References
 
-<details>
-<summary><strong>Will I notice any quality difference?</strong></summary>
-<br/>
-No. Hydra only delegates tasks that are within each model's capability band. If there's any doubt, the task stays with Opus. And Opus always verifies — if a head's output isn't up to standard, Opus redoes it before you ever see it.
-</details>
+- Chen, C., Borgeaud, S., Irving, G., Lespiau, J. B., Sifre, L., & Jumper, J. (2023).
+  *Accelerating Large Language Model Decoding with Speculative Sampling.*
+  arXiv:2302.01318. https://arxiv.org/abs/2302.01318
 
-<details>
-<summary><strong>Is this actually speculative decoding?</strong></summary>
-<br/>
-Not at the token level — that happens inside Anthropic's servers and we can't modify it. Hydra applies the same <em>philosophy</em> at the task level: draft with a fast model, verify with the powerful model, accept or reject. Same goals (speed + cost), same guarantees (zero quality loss), different granularity.
-</details>
-
-<details>
-<summary><strong>What if I'm not using Opus?</strong></summary>
-<br/>
-Hydra is designed for the Opus-as-orchestrator pattern, but the principles apply at any tier. If you're running Sonnet as your main model, you could adjust the heads to use Haiku for everything delegatable.
-</details>
-
-<details>
-<summary><strong>Can I customize which models the heads use?</strong></summary>
-<br/>
-Absolutely. Each head is a simple Markdown file with a <code>model:</code> field in the frontmatter. Change <code>model: haiku</code> to <code>model: sonnet</code> (or any supported model) and you're done.
-</details>
-
-<details>
-<summary><strong>Do the heads work with subagents I already have?</strong></summary>
-<br/>
-Yes. Hydra heads coexist with any other subagents. Claude Code discovers all agents in the <code>.claude/agents/</code> directories. No conflicts.
-</details>
-
-<details>
-<summary><strong>How do I uninstall?</strong></summary>
-<br/>
-
-```bash
-./scripts/install.sh --uninstall
-# 🐉 All heads severed. Hydra sleeps.
-```
-
-</details>
+- Leviathan, Y., Kalman, M., & Matias, Y. (2023).
+  *Fast Inference from Transformers via Speculative Decoding.*
+  arXiv:2211.17192. https://arxiv.org/abs/2211.17192
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Found a task type that gets misclassified? Have an idea for a new head? Contributions are welcome!
-
-1. Fork it
-2. Create your branch (`git checkout -b feature/hydra-new-head`)
-3. Commit (`git commit -m 'Add hydra-optimizer head for perf tuning'`)
-4. Push (`git push origin feature/hydra-new-head`)
-5. Open a PR
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-executor`)
+3. Commit your changes (`git commit -m 'Add sef-optimize executor for performance work'`)
+4. Push to the branch (`git push origin feature/new-executor`)
+5. Open a pull request
 
 ---
 
-## 📜 License
+## License
 
-MIT — Use it, fork it, deploy it. Just don't use it for world domination.
-
-*...unless it's code world domination. Then go ahead.*
+MIT. Use freely, modify as needed.
 
 ---
 
-<p align="center">
-  <br/>
-  <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
-  <br/><br/>
-  <em>Built with 🧠 by Claude Opus 4.6 — ironically, the model this framework is designed to use less of.</em>
-</p>
+> Looking for something with more personality? Check out the [Hail Hydra](../../tree/main) branch — same framework, more fun.

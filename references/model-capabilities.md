@@ -1,18 +1,18 @@
 # Model Capabilities Reference
 
 Understanding what each model does well (and where it struggles) is key to effective routing.
-This reference helps calibrate delegation decisions.
+This reference helps calibrate delegation decisions within the Speculative Execution Framework.
 
 ## Claude Haiku 4.5
 
 ### Strengths
-- Extremely fast response times (~10× faster than Opus)
-- Very low cost per token (~30× cheaper than Opus)
+- Extremely fast response times (~10x faster than Opus)
+- Very low cost per token (~30x cheaper than Opus)
 - Excellent at following clear, well-defined instructions
 - Strong at text extraction, search, and pattern matching
 - Good at generating code from templates and clear patterns
 - Reliable for mechanical tasks with unambiguous specifications
-- Great at summarization and information retrieval
+- Effective at summarization and information retrieval
 
 ### Limitations
 - Weaker at multi-step reasoning chains
@@ -23,7 +23,7 @@ This reference helps calibrate delegation decisions.
 - Less creative in problem-solving approaches
 
 ### Ideal Task Profile
-Short context, clear instructions, well-defined output, no judgment calls needed.
+Short context, clear instructions, well-defined output, no judgment calls required.
 
 ---
 
@@ -69,7 +69,7 @@ the approach is established even if the specific implementation requires thought
 
 ### Ideal Task Profile
 Hard problems: architecture design, subtle debugging, complex tradeoffs, novel implementations,
-security analysis, anything where getting it wrong is costly.
+security analysis, anything where errors are costly to recover from.
 
 ---
 
@@ -77,29 +77,30 @@ security analysis, anything where getting it wrong is costly.
 
 | Model | Relative Speed | Relative Cost | Best For |
 |-------|---------------|---------------|----------|
-| Haiku 4.5 | 10× | 1× | Exploration, execution, docs |
-| Sonnet 4.5 | 3× | 5× | Implementation, review, testing |
-| Opus 4.6 | 1× (baseline) | 30× | Architecture, hard debugging, novel work |
+| Haiku 4.5 | 10x | 1x | Exploration, execution, documentation |
+| Sonnet 4.5 | 3x | 5x | Implementation, review, testing |
+| Opus 4.6 | 1x (baseline) | 30x | Architecture, hard debugging, novel work |
 
-These are approximate ratios. The key insight: for 60-70% of coding tasks, Haiku or Sonnet
-produces output identical in quality to what Opus would produce, but dramatically faster and
-cheaper. The skill is in identifying the 30-40% where Opus is genuinely needed.
+These are approximate ratios. The key insight: for 60–70% of coding tasks, Haiku or Sonnet
+produces output identical in quality to Opus, but dramatically faster and cheaper. Effective
+use of SEF is in identifying the 30–40% where Opus is genuinely required.
 
 ---
 
 ## Acceptance Rate Expectations
 
-Drawing from speculative decoding theory, track these metrics mentally:
+Drawing from speculative decoding theory, track these metrics:
 
-| Draft Model | Expected Acceptance Rate | Notes |
-|-------------|------------------------|-------|
-| Haiku → Opus verification | ~85-90% | For well-classified Tier 1 tasks |
-| Sonnet → Opus verification | ~90-95% | For well-classified Tier 2 tasks |
+| Executor Tier | Expected Acceptance Rate | Notes |
+|---------------|-------------------------|-------|
+| Haiku (Tier 1) -> Orchestrator verification | ~85–90% | For well-classified Tier 1 tasks |
+| Sonnet (Tier 2) -> Orchestrator verification | ~90–95% | For well-classified Tier 2 tasks |
 
-If your acceptance rate drops below 80%, you're likely misclassifying tasks — shift borderline
-tasks to a higher tier. If it's consistently above 95%, you might be too conservative.
+If your acceptance rate drops below 80%, tasks are likely being misclassified — shift
+borderline cases to a higher tier. If it is consistently above 95%, classification may
+be too conservative.
 
-The analogy to speculative decoding is direct: just as the paper found acceptance rates of
-~0.7-0.9 for draft tokens depending on domain, our task-level acceptance rates should be
-similar or better, since we have more context for classification than a draft model has for
-next-token prediction.
+The analogy to speculative decoding is direct: acceptance rates of approximately 0.7–0.9
+for draft tokens (depending on domain) correspond to similar or better rates at the task
+level, since the orchestrator has substantially more context for classification than a
+draft model has for next-token prediction.

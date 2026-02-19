@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ============================================================================
-# 🐉 Hydra — SubAgent (Head) Installer
+# Speculative Execution Framework (SEF) — Executor Installer
 # ============================================================================
-# Installs Hydra heads so Claude Code can discover and use them.
+# Installs SEF executors so Claude Code can discover and use them.
 #
 # Usage:
 #   ./install.sh --user      # Install to ~/.claude/agents/ (all projects)
 #   ./install.sh --project   # Install to .claude/agents/ (current project)
 #   ./install.sh --both      # Install to both locations
-#   ./install.sh --uninstall # Remove all hydra-* agents from both locations
+#   ./install.sh --uninstall # Remove all sef-* executors from both locations
 # ============================================================================
 
 set -euo pipefail
@@ -19,7 +19,7 @@ AGENTS_DIR="$(dirname "$SCRIPT_DIR")/agents"
 USER_DIR="$HOME/.claude/agents"
 PROJECT_DIR=".claude/agents"
 
-AGENTS=("hydra-scout" "hydra-runner" "hydra-coder" "hydra-analyst" "hydra-scribe")
+AGENTS=("sef-explore" "sef-validate" "sef-implement" "sef-review" "sef-document")
 
 # Colors
 RED='\033[0;31m'
@@ -28,10 +28,10 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-info()  { echo -e "${CYAN}[🐉 hydra]${NC} $*"; }
-ok()    { echo -e "${GREEN}[🐉 hydra]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[🐉 hydra]${NC} $*"; }
-err()   { echo -e "${RED}[🐉 hydra]${NC} $*" >&2; }
+info()  { echo -e "${CYAN}[sef]${NC} $*"; }
+ok()    { echo -e "${GREEN}[sef]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[sef]${NC} $*"; }
+err()   { echo -e "${RED}[sef]${NC} $*" >&2; }
 
 install_to() {
     local target_dir="$1"
@@ -45,7 +45,7 @@ install_to() {
         local dst="$target_dir/${agent}.md"
 
         if [[ ! -f "$src" ]]; then
-            err "Head not found: $src"
+            err "Executor not found: $src"
             continue
         fi
 
@@ -53,7 +53,7 @@ install_to() {
         count=$((count + 1))
     done
 
-    ok "Deployed $count heads to $label ($target_dir)"
+    ok "Deployed $count executors to $label ($target_dir)"
 }
 
 uninstall_from() {
@@ -70,37 +70,35 @@ uninstall_from() {
     done
 
     if [[ $count -gt 0 ]]; then
-        ok "Severed $count heads from $label ($target_dir)"
+        ok "Removed $count executors from $label ($target_dir)"
     else
-        info "No Hydra heads found in $label"
+        info "No SEF executors found in $label"
     fi
 }
 
 show_usage() {
     cat << 'EOF'
-🐉 Hydra — Multi-Headed Speculative Execution
-
-  "Cut off one head, two more shall take its place."
+Speculative Execution Framework (SEF) — Executor Installer
 
 Usage:
-  ./install.sh --user       Deploy heads to ~/.claude/agents/ (all projects)
-  ./install.sh --project    Deploy heads to .claude/agents/ (current project)
+  ./install.sh --user       Deploy executors to ~/.claude/agents/ (all projects)
+  ./install.sh --project    Deploy executors to .claude/agents/ (current project)
   ./install.sh --both       Deploy to both locations
-  ./install.sh --uninstall  Sever all Hydra heads from both locations
-  ./install.sh --status     Show where heads are deployed
+  ./install.sh --uninstall  Remove all SEF executors from both locations
+  ./install.sh --status     Show where executors are deployed
   ./install.sh --help       Show this message
 
-The Five Heads:
-  hydra-scout    🟢 Haiku   — Codebase exploration, file search
-  hydra-runner   🟢 Haiku   — Test execution, builds, validation
-  hydra-scribe   🟢 Haiku   — Documentation writing
-  hydra-coder    🔵 Sonnet  — Code implementation, refactoring
-  hydra-analyst  🔵 Sonnet  — Code review, debugging, analysis
+Executors:
+  sef-explore    Haiku   -- Codebase exploration, file search
+  sef-validate   Haiku   -- Test execution, builds, validation
+  sef-document   Haiku   -- Documentation writing
+  sef-implement  Sonnet  -- Code implementation, refactoring
+  sef-review     Sonnet  -- Code review, debugging, analysis
 EOF
 }
 
 show_status() {
-    info "Checking head deployment status..."
+    info "Checking executor deployment status..."
     echo ""
 
     for location_label in "User-level:$USER_DIR" "Project-level:$PROJECT_DIR"; do
@@ -111,17 +109,16 @@ show_status() {
         local found=0
         for agent in "${AGENTS[@]}"; do
             if [[ -f "$dir/${agent}.md" ]]; then
-                # Determine the emoji based on model
-                local emoji="🟢"
-                if [[ "$agent" == "hydra-coder" || "$agent" == "hydra-analyst" ]]; then
-                    emoji="🔵"
+                local tier="Haiku"
+                if [[ "$agent" == "sef-implement" || "$agent" == "sef-review" ]]; then
+                    tier="Sonnet"
                 fi
-                echo "    $emoji ${agent}.md"
+                echo "    ${agent}.md  ($tier)"
                 found=$((found + 1))
             fi
         done
         if [[ $found -eq 0 ]]; then
-            echo "    (no heads deployed)"
+            echo "    (no executors deployed)"
         fi
         echo ""
     done
@@ -136,32 +133,32 @@ fi
 
 case "${1:-}" in
     --user)
-        info "Deploying heads to user-level (~/.claude/agents/)..."
+        info "Deploying executors to user-level (~/.claude/agents/)..."
         install_to "$USER_DIR" "user-level"
         echo ""
-        ok "Hail Hydra! Heads are now active in all Claude Code sessions."
+        ok "SEF deployment complete. Executors are now active in all Claude Code sessions."
         ;;
     --project)
-        info "Deploying heads to project-level (.claude/agents/)..."
+        info "Deploying executors to project-level (.claude/agents/)..."
         install_to "$PROJECT_DIR" "project-level"
         echo ""
-        ok "Hail Hydra! Heads are now active in this project."
-        warn "Consider adding .claude/agents/hydra-*.md to .gitignore"
+        ok "SEF deployment complete. Executors are now active in this project."
+        warn "Consider adding .claude/agents/sef-*.md to .gitignore"
         ;;
     --both)
-        info "Deploying heads to all locations..."
+        info "Deploying executors to all locations..."
         install_to "$USER_DIR" "user-level"
         install_to "$PROJECT_DIR" "project-level"
         echo ""
-        ok "Hail Hydra! All heads deployed everywhere."
-        warn "Project-level heads take precedence over user-level when both exist."
+        ok "SEF deployment complete. All executors deployed."
+        warn "Project-level executors take precedence over user-level when both exist."
         ;;
     --uninstall)
-        info "Severing Hydra heads..."
+        info "Removing SEF executors..."
         uninstall_from "$USER_DIR" "user-level"
         uninstall_from "$PROJECT_DIR" "project-level"
         echo ""
-        ok "All heads severed. Hydra sleeps."
+        ok "All executors removed."
         ;;
     --status)
         show_status

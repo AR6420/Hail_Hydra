@@ -11,3 +11,6 @@ Thumbs.db
 
 # Workspace artifacts (if using skill-creator to iterate)
 *-workspace/
+
+# Local Claude Code install artifacts
+.claude/agents/
