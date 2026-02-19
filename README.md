@@ -336,3 +336,6 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/><br/>
   <em>Built with 🧠 by Claude Opus 4.6 — ironically, the model this framework is designed to use less of.</em>
 </p>
+
+---
+> Prefer a clean, technical version? See the [`spec-exec`](../../tree/spec-exec) branch — same framework, zero theatrics.
