@@ -48,6 +48,28 @@ The result? **Opus becomes a manager, not a laborer.** It classifies tasks, disp
 
 ---
 
+## 🤔 Why I Built This
+
+After Opus 4.6 dropped, I noticed something frustrating — code execution felt slowww. Reallyyy Slow. Not because the model was worse, but because I was feeding everything through one massive model. Every file read, every grep, every test run, every docstring — all burning through Opus-tier tokens. The result? Frequent context compaction, more hallucinations, and an API bill that made me wince.
+
+So I started experimenting. I switched to Haiku for the simple stuff — running commands, tool calls, file exploration. Sonnet for code generation, refactoring, reviews. And kept Opus only for what it's actually good at: planning, architecture, and the hard decisions. The result surprised me. Same code quality. Sometimes better — because each model was operating within a focused context window instead of one overloaded one.
+
+Five agents. Five separate context windows. Each with a clearly defined job. They do the work, and only pass results back to the brain — Opus. The outcome:
+
+- Longer coding sessions (less compaction, less context blowup)
+- Drastically reduced API costs (Haiku is 30× cheaper than Opus)
+- Faster execution (Haiku responds 10× faster)
+- Same or better code quality (focused context > bloated context)
+- Zero manual model switching (this is the big one)
+
+Because that was the real pain — manually switching between models for every task tier to save costs. Every. Single. Time. So I built a framework that does it for me. And honestly? It does it better than I did. That was hard to admit, but here we are.
+
+I also didn't want it to be boring. So I gave it teeth, heads, and a battle cry. If you prefer something more buttoned-up, the [`spec-exec`](../../tree/spec-exec) branch has the same framework with zero theatrics.
+
+*Hail Hydra. Have fun.*
+
+---
+
 ## 💡 The Theory (for nerds)
 
 Speculative decoding (Chen et al., 2023) accelerates LLM inference by having a small **draft model** propose tokens that a large **target model** verifies in parallel. Since verifying K tokens costs roughly the same as generating 1 token, you get 2–2.5× speedup with **zero quality loss**.

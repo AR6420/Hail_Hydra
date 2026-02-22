@@ -11,3 +11,8 @@ Thumbs.db
 
 # Workspace artifacts (if using skill-creator to iterate)
 *-workspace/
+
+# npm package build artifacts
+npm-package/node_modules/
+npm-package/*.tgz
+npm-package/package-lock.json

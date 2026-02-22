@@ -1,0 +1,12 @@
+# Development / test artifacts
+*.test.js
+*.spec.js
+.DS_Store
+.eslintrc*
+.prettierrc*
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+.nyc_output/

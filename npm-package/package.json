@@ -1,0 +1,40 @@
+{
+  "name": "hail-hydra-cc",
+  "version": "1.0.0",
+  "description": "Multi-headed speculative execution framework for Claude Code",
+  "bin": {
+    "hail-hydra-cc": "./bin/cli.js"
+  },
+  "main": "./src/installer.js",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "inquirer": "^8.2.6"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "ai",
+    "speculative-execution",
+    "multi-agent",
+    "hydra",
+    "anthropic"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AR6420/Hail_Hydra"
+  },
+  "homepage": "https://github.com/AR6420/Hail_Hydra#readme",
+  "bugs": {
+    "url": "https://github.com/AR6420/Hail_Hydra/issues"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "files/"
+  ]
+}
