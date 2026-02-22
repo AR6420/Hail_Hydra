@@ -36,6 +36,12 @@ You know how in the movies, Hydra had agents embedded *everywhere*, silently get
 
 The result? **Opus becomes a manager, not a laborer.** It classifies tasks, dispatches them to the right head, glances at the output, and moves on. The user never notices. It's invisible. It's always on.
 
+> **Four built-in speed optimizations** reduce overhead at every stage: speculative pre-dispatch
+> (scout launches in parallel with task classification), session indexing (codebase context
+> persists across turns — no re-exploration), fire-and-forget dispatch (non-critical agents run
+> in the background without blocking downstream work), and confidence-based auto-accept (raw
+> factual outputs skip Opus review entirely).
+
 > **Think of it this way:**
 >
 > Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's Hydra.
@@ -81,29 +87,35 @@ The math is simple: if 70% of tasks can be handled by Haiku (10× faster, 30× c
 ```
 User Request
     │
+    ├──────────────────────────────────────────────────────┐
+    │                                                      │
+    ▼                                                      ▼
+┌─────────────────────────────┐            ┌──────────────────────────────┐
+│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku)      │
+│  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
+│  Plans waves                │            │  "Find files relevant to      │
+│  Decides blocking / not     │            │   [user's request]"           │
+└────────┬────────────────────┘            └──────────────┬───────────────┘
+         │         (unless Session Index already covers)  │
+         └──────────────────────┬──────────────────────────┘
+                                │ (scout + classification both ready)
+                      [Session Index updated]
+                                │
+    ════════════════════════════════════════════════════════
+    Wave N  (parallel dispatch, index context injected)
+    ┌───────────────────┬──────────────────────────────────┐
+    │  BLOCKING         │  NON-BLOCKING (fire & forget)    │
+    ▼                   ▼                                  │
+ [coder]            [scribe] ──────────────────────────────┘
+    │
     ▼
-┌───────────────────────────────┐
-│  🧠 OPUS (The Body)           │  Classifies complexity
-│  "Is this a Haiku/Sonnet/me   │  Dispatches to the right head
-│   kind of problem?"            │  Verifies output (if needed)
-└────────┬──────────────────────┘
+ Results arrive
+    │
+    ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
+    └── Code / analysis / user-facing docs? → Orchestrator verifies
          │
-    ┌────┴──────┬────────────────┐
-    ▼           ▼                ▼
- ┌───────┐  ┌────────┐   ┌────────────┐
- │🟢 HAIKU│  │🔵SONNET│   │🧠 OPUS     │
- │ Heads  │  │ Heads  │   │ (hard      │
- │        │  │        │   │  problems) │
- └───┬────┘  └───┬────┘   └────────────┘
-     │           │
-     ▼           ▼
-┌───────────────────────────────┐
-│  🧠 OPUS verifies ONLY IF     │  Good output? → Ship it.
-│  something seems off           │  Bad output? → Redo yourself.
-└───────────────────────────────┘
-     │
-     ▼
-   User gets result (never knows what happened behind the scenes)
+         ▼
+   User gets result  +  non-blocking outputs appended when ready
 ```
 
 ---
@@ -112,24 +124,24 @@ User Request
 
 | Head | Model | Speed | Role | Personality |
 |:-----|:------|:------|:-----|:------------|
-| **hydra-scout** | 🟢 Haiku | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
-| **hydra-runner** | 🟢 Haiku | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
-| **hydra-scribe** | 🟢 Haiku | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
-| **hydra-coder** | 🔵 Sonnet | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
-| **hydra-analyst** | 🔵 Sonnet | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
+| **hydra-scout (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
+| **hydra-runner (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
+| **hydra-scribe (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
+| **hydra-coder (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
+| **hydra-analyst (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
 
 ### Task Routing Cheat Sheet
 
 ```
 Is it read-only? ─── Yes ──→ Finding files?
-    │                           ├── Yes: hydra-scout 🟢
-    │                           └── No:  hydra-analyst 🔵
+    │                           ├── Yes: hydra-scout (Haiku) 🟢
+    │                           └── No:  hydra-analyst (Sonnet) 🔵
     │
-    No ──→ Just running a command? ─── Yes ──→ hydra-runner 🟢
+    No ──→ Just running a command? ─── Yes ──→ hydra-runner (Haiku) 🟢
     │
-    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe 🟢
+    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe (Haiku) 🟢
     │
-    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder 🔵
+    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet) 🔵
     │
     No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus (handle it yourself)
 ```
@@ -174,11 +186,11 @@ cd hydra
 
 ```
 ~/.claude/agents/          ← User-level (all projects)
-  ├── hydra-scout.md       🟢 Haiku
-  ├── hydra-runner.md      🟢 Haiku
-  ├── hydra-scribe.md      🟢 Haiku
-  ├── hydra-coder.md       🔵 Sonnet
-  └── hydra-analyst.md     🔵 Sonnet
+  ├── hydra-scout.md       🟢 hydra-scout (Haiku)
+  ├── hydra-runner.md      🟢 hydra-runner (Haiku)
+  ├── hydra-scribe.md      🟢 hydra-scribe (Haiku)
+  ├── hydra-coder.md       🔵 hydra-coder (Sonnet)
+  └── hydra-analyst.md     🔵 hydra-analyst (Sonnet)
 
 .claude/agents/            ← Project-level (one project)
   └── (same files)
@@ -216,6 +228,8 @@ hydra/
 | **API Cost** | 1× (Opus for everything) | 0.3–0.4× | 60–70% cheaper |
 | **Quality** | Opus-level | Opus-level | Zero degradation |
 | **User Experience** | Normal | Normal | Invisible — zero friction |
+| **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
+| **Scout/runner verification** | Opus reviews every output | Auto-accepted for factual data | 🟢 ~50-60% of outputs skip review |
 
 ### How the Savings Work
 

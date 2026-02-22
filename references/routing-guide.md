@@ -14,58 +14,58 @@ Read this when you need to resolve ambiguous cases.
 
 ## Tier 1 (Haiku)
 
-### hydra-scout examples
+### hydra-scout (Haiku) examples
 | User says | Route to | Why |
 |-----------|----------|-----|
-| "What framework is this project using?" | hydra-scout | Read package.json/config files |
-| "Find where the login endpoint is defined" | hydra-scout | Grep for routes/endpoints |
-| "How many files are in the src directory?" | hydra-scout | Glob + count |
-| "Show me the database schema" | hydra-scout | Find and read schema/migration files |
-| "What does the User model look like?" | hydra-scout | Find and read model definition |
-| "Is there a rate limiter in this project?" | hydra-scout | Grep for rate limit patterns |
-| "What version of React are we using?" | hydra-scout | Read package.json |
+| "What framework is this project using?" | hydra-scout (Haiku) | Read package.json/config files |
+| "Find where the login endpoint is defined" | hydra-scout (Haiku) | Grep for routes/endpoints |
+| "How many files are in the src directory?" | hydra-scout (Haiku) | Glob + count |
+| "Show me the database schema" | hydra-scout (Haiku) | Find and read schema/migration files |
+| "What does the User model look like?" | hydra-scout (Haiku) | Find and read model definition |
+| "Is there a rate limiter in this project?" | hydra-scout (Haiku) | Grep for rate limit patterns |
+| "What version of React are we using?" | hydra-scout (Haiku) | Read package.json |
 
-### hydra-runner examples
+### hydra-runner (Haiku) examples
 | User says | Route to | Why |
 |-----------|----------|-----|
-| "Run the tests" | hydra-runner | Execute test command, report results |
-| "Does the build pass?" | hydra-runner | Run build, report success/failure |
-| "Check if there are any lint errors" | hydra-runner | Run linter, report findings |
-| "What's the git status?" | hydra-runner | Run git status/diff |
-| "Run the migration" | hydra-runner | Execute migration command |
-| "Check if the server starts" | hydra-runner | Start server, check for errors |
+| "Run the tests" | hydra-runner (Haiku) | Execute test command, report results |
+| "Does the build pass?" | hydra-runner (Haiku) | Run build, report success/failure |
+| "Check if there are any lint errors" | hydra-runner (Haiku) | Run linter, report findings |
+| "What's the git status?" | hydra-runner (Haiku) | Run git status/diff |
+| "Run the migration" | hydra-runner (Haiku) | Execute migration command |
+| "Check if the server starts" | hydra-runner (Haiku) | Start server, check for errors |
 
-### hydra-scribe examples
+### hydra-scribe (Haiku) examples
 | User says | Route to | Why |
 |-----------|----------|-----|
-| "Add docstrings to this file" | hydra-scribe | Read code, write docstrings |
-| "Update the README with the new API endpoints" | hydra-scribe | Descriptive writing from code |
-| "Write a changelog entry for these changes" | hydra-scribe | Summarize changes |
-| "Add comments explaining this function" | hydra-scribe | Read and annotate |
+| "Add docstrings to this file" | hydra-scribe (Haiku) | Read code, write docstrings |
+| "Update the README with the new API endpoints" | hydra-scribe (Haiku) | Descriptive writing from code |
+| "Write a changelog entry for these changes" | hydra-scribe (Haiku) | Summarize changes |
+| "Add comments explaining this function" | hydra-scribe (Haiku) | Read and annotate |
 
 ---
 
 ## Tier 2 (Sonnet)
 
-### hydra-coder examples
+### hydra-coder (Sonnet) examples
 | User says | Route to | Why |
 |-----------|----------|-----|
-| "Add a password reset endpoint" | hydra-coder | Feature implementation from spec |
-| "Refactor this class to use composition" | hydra-coder | Code transformation, clear goal |
-| "Write tests for the auth module" | hydra-coder | Test creation requires comprehension |
-| "Fix this TypeError: cannot read property of undefined" | hydra-coder | Bug fix with clear error |
-| "Add pagination to the list API" | hydra-coder | Standard pattern implementation |
-| "Convert this JavaScript to TypeScript" | hydra-coder | Mechanical but needs type reasoning |
-| "Add input validation to the form" | hydra-coder | Implementation with business logic |
+| "Add a password reset endpoint" | hydra-coder (Sonnet) | Feature implementation from spec |
+| "Refactor this class to use composition" | hydra-coder (Sonnet) | Code transformation, clear goal |
+| "Write tests for the auth module" | hydra-coder (Sonnet) | Test creation requires comprehension |
+| "Fix this TypeError: cannot read property of undefined" | hydra-coder (Sonnet) | Bug fix with clear error |
+| "Add pagination to the list API" | hydra-coder (Sonnet) | Standard pattern implementation |
+| "Convert this JavaScript to TypeScript" | hydra-coder (Sonnet) | Mechanical but needs type reasoning |
+| "Add input validation to the form" | hydra-coder (Sonnet) | Implementation with business logic |
 
-### hydra-analyst examples
+### hydra-analyst (Sonnet) examples
 | User says | Route to | Why |
 |-----------|----------|-----|
-| "Review this PR for issues" | hydra-analyst | Code review |
-| "Why is this test flaky?" | hydra-analyst | Debug analysis with test output |
-| "Are there any security issues in the auth code?" | hydra-analyst | Focused security review |
-| "What's causing this memory leak?" | hydra-analyst | Performance debugging with symptoms |
-| "How well tested is this module?" | hydra-analyst | Coverage analysis |
+| "Review this PR for issues" | hydra-analyst (Sonnet) | Code review |
+| "Why is this test flaky?" | hydra-analyst (Sonnet) | Debug analysis with test output |
+| "Are there any security issues in the auth code?" | hydra-analyst (Sonnet) | Focused security review |
+| "What's causing this memory leak?" | hydra-analyst (Sonnet) | Performance debugging with symptoms |
+| "How well tested is this module?" | hydra-analyst (Sonnet) | Coverage analysis |
 
 ---
 
@@ -85,29 +85,34 @@ Read this when you need to resolve ambiguous cases.
 
 ## Compound Tasks
 
+> **Note**: By default, hydra-scout is pre-dispatched in parallel with task classification for
+> any prompt involving codebase context (see Speculative Pre-Dispatch in SKILL.md). The compound
+> task decompositions below show the explicit Wave 1 scout dispatch for clarity, but in practice,
+> scout may already be returning results by the time Wave 1 launches.
+
 Many real user requests contain multiple subtasks at different tiers. Decompose them:
 
 ### Example 1: "Fix the bug in auth.py and add tests"
-1. **hydra-scout** → Find auth.py, read it, understand the context
-2. **hydra-coder** → Fix the bug and write tests
-3. **hydra-runner** → Run the tests to verify
+1. **hydra-scout (Haiku)** [BLOCKING] → Find auth.py, read it, understand the context
+2. **hydra-coder (Sonnet)** [BLOCKING] → Fix the bug and write tests
+3. **hydra-runner (Haiku)** [BLOCKING] → Run the tests to verify
 
 ### Example 2: "Refactor the API module and update the docs"
-1. **hydra-scout** → Map the current API module structure
-2. **hydra-coder** → Perform the refactoring
-3. **hydra-runner** → Run tests to verify nothing broke
-4. **hydra-scribe** → Update documentation
+1. **hydra-scout (Haiku)** [BLOCKING] → Map the current API module structure
+2. **hydra-coder (Sonnet)** [BLOCKING] → Perform the refactoring
+3. **hydra-runner (Haiku)** [BLOCKING] → Run tests to verify nothing broke
+   **hydra-scribe (Haiku)** [NON-BLOCKING] → Update documentation (fire & forget)
 
 ### Example 3: "Review the codebase and suggest architecture improvements"
-1. **hydra-scout** → Map the project structure and key files
-2. **hydra-analyst** → Review code quality and patterns
+1. **hydra-scout (Haiku)** → Map the project structure and key files
+2. **hydra-analyst (Sonnet)** → Review code quality and patterns
 3. **Opus (you)** → Synthesize findings into architecture recommendations
 
 ### Example 4: "Set up CI/CD for this project"
-1. **hydra-scout** → Understand the project structure, build system, test framework
+1. **hydra-scout (Haiku)** → Understand the project structure, build system, test framework
 2. **Opus (you)** → Design the CI/CD pipeline (architectural decision)
-3. **hydra-coder** → Implement the config files
-4. **hydra-runner** → Validate the configuration
+3. **hydra-coder (Sonnet)** → Implement the config files
+4. **hydra-runner (Haiku)** → Validate the configuration
 
 ---
 

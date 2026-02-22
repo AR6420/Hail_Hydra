@@ -25,6 +25,13 @@ This reference helps calibrate delegation decisions.
 ### Ideal Task Profile
 Short context, clear instructions, well-defined output, no judgment calls needed.
 
+### Auto-Accept Thresholds
+Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguous:
+- **hydra-scout**: File paths, grep results, directory listings, code snippets with location markers
+- **hydra-runner**: All-pass results, clean build/lint output, git status output
+- **hydra-scribe**: Internal docstrings, inline comments, changelog entries
+- **Requires verify**: Any analysis, interpretation, or user-facing documentation
+
 ---
 
 ## Claude Sonnet 4.5
@@ -49,6 +56,11 @@ Short context, clear instructions, well-defined output, no judgment calls needed
 Standard software engineering tasks: implementation, testing, debugging, review. Tasks where
 the approach is established even if the specific implementation requires thought.
 
+### Auto-Accept Thresholds
+Sonnet outputs always require orchestrator review — code changes and analysis are never auto-accepted:
+- **hydra-coder**: ALWAYS verify — scan for correctness, edge cases, project pattern alignment
+- **hydra-analyst**: ALWAYS verify — validate reasoning, check suggested fix against actual code
+
 ---
 
 ## Claude Opus 4.6
@@ -70,6 +82,9 @@ the approach is established even if the specific implementation requires thought
 ### Ideal Task Profile
 Hard problems: architecture design, subtle debugging, complex tradeoffs, novel implementations,
 security analysis, anything where getting it wrong is costly.
+
+### Auto-Accept Thresholds
+N/A — Opus is the orchestrator, not a delegated head. Opus output goes directly to the user.
 
 ---
 

@@ -91,11 +91,11 @@ Usage:
   ./install.sh --help       Show this message
 
 The Five Heads:
-  hydra-scout    🟢 Haiku   — Codebase exploration, file search
-  hydra-runner   🟢 Haiku   — Test execution, builds, validation
-  hydra-scribe   🟢 Haiku   — Documentation writing
-  hydra-coder    🔵 Sonnet  — Code implementation, refactoring
-  hydra-analyst  🔵 Sonnet  — Code review, debugging, analysis
+  hydra-scout (Haiku)    🟢 Haiku   — Codebase exploration, file search
+  hydra-runner (Haiku)   🟢 Haiku   — Test execution, builds, validation
+  hydra-scribe (Haiku)   🟢 Haiku   — Documentation writing
+  hydra-coder (Sonnet)   🔵 Sonnet  — Code implementation, refactoring
+  hydra-analyst (Sonnet) 🔵 Sonnet  — Code review, debugging, analysis
 EOF
 }
 
@@ -111,12 +111,17 @@ show_status() {
         local found=0
         for agent in "${AGENTS[@]}"; do
             if [[ -f "$dir/${agent}.md" ]]; then
-                # Determine the emoji based on model
+                # Determine the emoji and display name based on model
                 local emoji="🟢"
-                if [[ "$agent" == "hydra-coder" || "$agent" == "hydra-analyst" ]]; then
-                    emoji="🔵"
-                fi
-                echo "    $emoji ${agent}.md"
+                local display_name="$agent"
+                case "$agent" in
+                    hydra-scout)   display_name="hydra-scout (Haiku)" ;;
+                    hydra-runner)  display_name="hydra-runner (Haiku)" ;;
+                    hydra-scribe)  display_name="hydra-scribe (Haiku)" ;;
+                    hydra-coder)   display_name="hydra-coder (Sonnet)"; emoji="🔵" ;;
+                    hydra-analyst) display_name="hydra-analyst (Sonnet)"; emoji="🔵" ;;
+                esac
+                echo "    $emoji ${display_name}.md"
                 found=$((found + 1))
             fi
         done

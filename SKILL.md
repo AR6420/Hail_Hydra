@@ -37,45 +37,273 @@ heads and reserving Opus for genuinely hard problems, we get:
 ```
 User Request
     │
+    ├──────────────────────────────────────────────────────┐
+    │                                                      │
+    ▼                                                      ▼
+┌─────────────────────────────┐            ┌──────────────────────────────┐
+│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku)      │
+│  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
+│  Plans waves                │            │  "Find files relevant to      │
+│  Decides blocking / not     │            │   [user's request]"           │
+└────────┬────────────────────┘            └──────────────┬───────────────┘
+         │         (unless Session Index already covers)  │
+         └──────────────────────┬──────────────────────────┘
+                                │ (scout + classification both ready)
+                      [Session Index updated]
+                                │
+    ════════════════════════════════════════════════════════
+    Wave N  (parallel dispatch, index context injected)
+    ┌───────────────────┬──────────────────────────────────┐
+    │  BLOCKING         │  NON-BLOCKING (fire & forget)    │
+    ▼                   ▼                                  │
+ [coder]            [scribe] ──────────────────────────────┘
+    │
     ▼
-┌─────────────────────────────┐
-│  🧠 ORCHESTRATOR (Opus)     │  ◄── You. Decompose → Map dependencies
-│  Decompose → Map Deps       │       → Group into waves → Dispatch waves.
-│  → Group into Waves         │
-└────────┬────────────────────┘
-         │
-    ═══════════════════════════
-    Wave 1  (parallel dispatch)
-    ┌────┴────┬──────────┐
-    ▼         ▼          ▼
- [scout]  [runner]   [scribe]
-    │         │          │
-    └────┬────┘          │
-         │               │
-    ═══════════════════════════
-    Wave 2  (parallel dispatch)
-    ┌────┴────┐           │
-    ▼         ▼           │
- [coder]  [analyst]       │
-    │         │           │
-    └────┬────┘───────────┘
-         │
-    ═══════════════════════════
-    Wave 3  (parallel dispatch)
-    ┌────┴────┐
-    ▼         ▼
- [runner]  [scribe]
-    │         │
-    └────┬────┘
+ Results arrive
+    │
+    ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
+    └── Code / analysis / user-facing docs? → Orchestrator verifies
          │
          ▼
- Orchestrator verifies & merges
-         │
-         ▼
-   User gets result
+   User gets result  +  non-blocking outputs appended when ready
 ```
 
 This mirrors speculative decoding's "draft → score → accept/reject" loop, but at task granularity.
+
+## Speculative Pre-Dispatch
+
+When a user prompt arrives, launch hydra-scout IMMEDIATELY before classifying the task.
+
+### Why
+Every task — Tier 1, 2, or 3 — benefits from codebase context. Scout's output is never
+wasted. By the time you finish classifying the task and deciding which agents to dispatch,
+scout has already returned with relevant file paths, project structure, and code context.
+
+### Protocol
+1. User prompt arrives
+2. IMMEDIATELY dispatch hydra-scout with: "Find all files and code relevant to: [user's request]"
+3. IN PARALLEL, classify the task into Tier 1/2/3 and plan your waves
+4. When scout returns + classification is done, dispatch the execution wave with scout's
+   context already available
+5. If the task turns out to be pure exploration (Tier 1 scout-only), scout's output IS
+   the result — zero additional dispatch needed
+
+### Timing Advantage
+Without pre-dispatch:  [classify: 2s] → [dispatch scout: 3s] → [dispatch coder: 5s] = 10s
+With pre-dispatch:     [classify: 2s ↔ scout: 3s (parallel)] → [dispatch coder: 5s] = 8s
+                       Saved: 2-3 seconds per task (20-30% of overhead)
+
+### When NOT to pre-dispatch
+- User explicitly says "don't search" or "just do X directly"
+- The task is a continuation of the immediately previous turn where context is already loaded
+- The prompt is a simple question answerable without codebase context (e.g., "what does REST stand for?")
+
+## Session Index
+
+After the first hydra-scout dispatch in a session, build a persistent mental index of
+the project. Update it as new information is discovered. Pass relevant slices of this
+index to every agent dispatch so they skip cold-start exploration.
+
+### Index Contents
+Maintain these fields mentally throughout the session:
+
+- **Tech Stack**: Language, framework, package manager, key dependencies
+- **Project Layout**: Top-level directory structure and what each directory contains
+- **Key Files**: Entry points, config files, test setup, CI config, main modules
+- **Test Command**: The exact command to run tests (e.g., `pytest`, `npm test`)
+- **Build Command**: The exact command to build (e.g., `npm run build`, `cargo build`)
+- **Conventions**: Naming patterns, file organization style, import conventions observed
+
+### Usage Rules
+1. Build the index after the FIRST scout dispatch in a session
+2. On subsequent prompts, check if the index already covers what scout would find
+3. If yes — skip scout, inject index context directly into the execution agent's prompt
+4. If no (user asks about a NEW area of the codebase) — dispatch scout for that
+   specific area only, then update the index
+5. Always pass the relevant slice of the index to dispatched agents:
+   - hydra-coder gets: tech stack, conventions, relevant file paths
+   - hydra-runner gets: test command, build command
+   - hydra-scribe gets: project layout, conventions, existing docs
+   - hydra-analyst gets: tech stack, key files, project layout
+
+### Speed Impact
+- Turn 1: Normal speed (scout runs, index is built)
+- Turn 2+: Scout is SKIPPED for known areas → saves 2-4 seconds per turn
+- Over a 10-turn session: ~20-40 seconds saved total
+
+### Index Invalidation
+The index is stale if:
+- The user explicitly changes the project structure
+- A major refactoring was just completed
+- The user switches to a different project/directory
+When stale, rebuild the index on the next scout dispatch.
+
+## Blocking vs Non-Blocking Dispatch
+
+Not all agents need to finish before the next wave starts. Classify each dispatch as
+blocking or non-blocking to maximize throughput.
+
+### Blocking Dispatch (wait for result before continuing)
+Use when downstream agents DEPEND on this agent's output:
+- hydra-scout exploring files that hydra-coder needs to edit
+- hydra-analyst diagnosing a bug that hydra-coder needs to fix
+- hydra-coder making changes that hydra-runner needs to test
+
+### Non-Blocking Dispatch (fire and forget, merge results later)
+Use when the output is a FINAL deliverable with no downstream dependents:
+- hydra-scribe writing docs (ALWAYS non-blocking unless user only asked for docs)
+- hydra-runner running final validation tests (the fix is already done)
+- hydra-scout exploring supplementary context (nice-to-have, not critical-path)
+
+### Execution Flow with Non-Blocking
+
+```
+Wave 1 (blocking): scout explores → returns file paths
+Wave 2 (blocking): coder implements fix → returns changed files
+Wave 3 (mixed):
+  runner tests the fix   (BLOCKING — need to confirm it works)
+  scribe updates docs    (NON-BLOCKING — fire and forget)
+
+Wave 3 completes when: runner returns (don't wait for scribe)
+Present results to user. Scribe's docs are appended when ready.
+```
+
+### Rules
+1. A wave completes when all BLOCKING agents in it return
+2. Non-blocking agents run in background — their output is merged into the final
+   response or presented as a follow-up
+3. NEVER mark hydra-coder as non-blocking — code changes always need verification
+4. NEVER mark hydra-analyst as non-blocking — diagnoses feed into fixes
+5. hydra-scribe is non-blocking by DEFAULT unless it's the primary task
+6. hydra-runner is non-blocking ONLY when it's the final validation step
+7. If in doubt, make it blocking — correctness over speed
+
+## Integrated Execution Model
+
+All four optimizations compose into a unified execution loop. This section shows how
+they interact as a single coherent system.
+
+### Full Execution Flow
+
+```
+User Prompt arrives
+    │
+    ├── Session Index covers this area? ─── YES ──► Skip scout; inject index context
+    │           │                                    into execution wave directly ──►──┐
+    │           NO                                                                     │
+    │           ▼                                                                      │
+    ├── IMMEDIATELY dispatch hydra-scout             ◄── Opt 1: Speculative Pre-Dispatch
+    │   "Find files relevant to: [prompt]"                                             │
+    │                                                                                  │
+    ├── IN PARALLEL: Classify task, plan waves,                                        │
+    │   decide blocking/non-blocking per agent                                         │
+    │                                                                                  │
+    ▼                                                                                  │
+Scout returns                                                                          │
+    │                                                                                  │
+    ├── AUTO-ACCEPT scout output ─────────────────── ◄── Opt 4: Confidence Auto-Accept │
+    │   Update Session Index with new findings ──────◄── Opt 2: Session Index         │
+    │                                                                                  │
+    └─────────────────────────────────────────────────────────────────────────────►───┘
+                                          │
+                                          ▼
+                              Wave N dispatched
+                        (index context injected into each agent prompt)
+                                          │
+                     ┌────────────────────┴───────────────────────┐
+                     │ BLOCKING agents       ◄── Opt 3: Non-Block  │ NON-BLOCKING agents
+                     │ (wait for result)                           │ (fire & forget)
+                     ▼                                             ▼
+              Results arrive                              Background — merge when ready
+                     │                                             │
+              ┌──────┴──────┐                                      │
+              │             │                                      │
+              ▼             ▼                                      │
+        AUTO-ACCEPT?   MANUAL VERIFY?  ◄── Opt 4: Auto-Accept     │
+              │             │                                      │
+              ▼             ▼                                      │
+        Pass through   Orchestrator                                │
+        directly       reviews                                     │
+              │             │                                      │
+              └──────┬──────┘                                      │
+                     │                                             │
+                     ▼                                             │
+          Next wave OR present result ◄──────────────────────────►┘
+          (non-blocking outputs appended when ready)
+```
+
+### Optimization Interaction Rules
+
+#### Rule 1: Session Index OVERRIDES Speculative Pre-Dispatch
+When the Session Index already covers the relevant area, skip pre-dispatch entirely.
+The index IS the scout output — use it directly and save the full scout dispatch time.
+
+```
+New prompt arrives → Check Session Index coverage
+    ├── Covered:     Use index → Skip scout → Wave 1 starts immediately
+    └── Not covered: Pre-dispatch scout → Update index → Wave 1 starts
+```
+
+#### Rule 2: Non-Blocking + Auto-Accept = Zero-Overhead Path
+When an agent is both non-blocking AND its output qualifies for auto-accept:
+- Dispatch it
+- When it returns: auto-accept without orchestrator review
+- Append result to response
+- **Total orchestrator overhead: 0 seconds**
+
+This is the highest-throughput path. Common cases:
+- Non-blocking hydra-runner (final validation) reporting all-pass → zero overhead
+- Non-blocking hydra-scribe (internal docstrings) → zero overhead
+- Non-blocking hydra-scout (supplementary context) → zero overhead, index updated
+
+#### Rule 3: Auto-Accepted Scout Output ALWAYS Updates Session Index
+Every scout output that passes auto-accept is immediately folded into the Session Index.
+No separate step. The act of auto-accepting IS the index update.
+
+#### Rule 4: Non-Blocking Does Not Override Verification Requirements
+Non-blocking governs TIMING (don't wait), not VERIFICATION (do review).
+If scribe writes user-facing docs (README, API docs), verification is still required —
+it happens when scribe's output arrives asynchronously, not before the next wave.
+The next wave starts without waiting; verification happens as a follow-up step.
+
+### Timing Profile: Optimized vs Baseline
+
+```
+BASELINE (4-agent task, no optimizations):
+  t=0s   Classify task                                         [1s]
+  t=1s   Dispatch scout, wait                                  [3s]
+  t=4s   Verify scout (manual)                                 [1s]
+  t=5s   Dispatch coder, wait                                  [5s]
+  t=10s  Verify coder (manual)                                 [2s]
+  t=12s  Dispatch runner + scribe, wait for BOTH               [4s]
+  t=16s  Verify scribe output (user-facing docs)               [2s]
+  t=18s  Present result
+  Total wall-clock: ~18 seconds
+
+OPTIMIZED (all 4 optimizations active):
+  t=0s   Pre-dispatch scout + classify (parallel)              [3s max]
+  t=3s   Scout auto-accepted, index built                      [0s overhead]
+  t=3s   Dispatch coder (index context injected), wait         [5s]
+  t=8s   Quick-scan coder (code → verify)                      [1s]
+  t=9s   Dispatch runner (blocking) + scribe (non-blocking)    [3s runner]
+         Scribe runs in background simultaneously
+  t=12s  Runner: all-pass → auto-accept                        [0s overhead]
+  t=12s  Present result to user
+         Scribe arrives ~t=13s → auto-accept internal docs → appended
+  Total wall-clock: ~12 seconds (33% faster, zero quality loss)
+```
+
+### Override Cases
+
+Deviate from this model only when:
+
+| Situation | Override |
+|-----------|---------|
+| User says "don't search" | Skip pre-dispatch; skip session index injection |
+| Pure factual question (no codebase) | Skip all scout steps |
+| Docs-only task | Make scribe BLOCKING (it's the primary deliverable) |
+| Catastrophic test failure | Make final runner BLOCKING (something is fundamentally broken) |
+| Stale Session Index detected | Rebuild index; treat as Turn 1 |
 
 ## Decomposition First Protocol
 
@@ -262,18 +490,65 @@ Wave 3 → E + F (parallel)
 - The orchestrator (Opus) is not executing during waves — it's free to think about the
   next wave while heads work
 
-## The Verification Protocol
+## Verification Protocol
 
-After a head returns, apply this quick check:
+After an agent returns, determine whether to auto-accept or manually verify.
 
-1. **Scan the output** — Does it look complete and sensible? (1–2 seconds of your time)
-2. **If yes** → Pass directly to the user. Done.
-3. **If uncertain** → Read more carefully. Fix minor issues inline. Still cheaper than redoing.
-4. **If clearly wrong** → Do the task yourself. Don't retry with the same tier.
+### Auto-Accept (skip verification entirely)
+These output types require no orchestrator judgment — accept and pass through:
 
-The key insight from the speculative decoding paper: at least one token is always generated per loop.
-Similarly, every task always produces a result — if the draft fails, Opus catches it. The user
-never sees a failed draft.
+| Agent | Auto-Accept When |
+|-------|-----------------|
+| hydra-scout (Haiku) | Returns file paths, directory listings, search results, grep output — factual data with no interpretation |
+| hydra-runner (Haiku) | Reports all tests passing, clean build, clean lint — unambiguous pass/fail |
+| hydra-scribe (Haiku) | Produces docs/comments for NON-CRITICAL content (internal docstrings, changelogs) |
+
+### Manual Verify (orchestrator reviews before accepting)
+These outputs require judgment — scan before passing to user or downstream agents:
+
+| Agent | Always Verify When |
+|-------|-------------------|
+| hydra-coder (Sonnet) | ALWAYS — code changes are never auto-accepted |
+| hydra-analyst (Sonnet) | ALWAYS — diagnoses and recommendations need validation |
+| hydra-runner (Haiku) | Reports test FAILURES — verify the failures are real and not environment issues |
+| hydra-scribe (Haiku) | Writing user-facing docs (README, API docs) — verify accuracy |
+| hydra-scout (Haiku) | Returns analysis or interpretation (not raw data) — verify conclusions |
+
+### Verification Decision Flowchart
+
+```
+Agent returns output
+│
+├── Is it raw factual data? (file paths, test pass, grep results)
+│       → AUTO-ACCEPT. Zero overhead.
+│
+├── Is it code changes?
+│       → ALWAYS VERIFY. Scan for correctness, edge cases.
+│
+├── Is it analysis/diagnosis/recommendation?
+│       → ALWAYS VERIFY. Check reasoning, validate conclusions.
+│
+├── Is it documentation?
+│       ├── Internal (docstrings, comments) → AUTO-ACCEPT
+│       └── User-facing (README, API docs) → VERIFY for accuracy
+│
+└── Is it a test failure report?
+    → VERIFY. Confirm failures are real, not environment noise.
+```
+
+### Verification Depth
+When manual verification is required, match depth to risk:
+
+- **Quick scan (2 seconds)**: Code looks complete, handles obvious cases, follows
+  project patterns → Accept
+- **Careful review (5-10 seconds)**: Edge cases, error handling, security implications
+  → Accept with minor adjustments OR reject
+- **Full re-execution**: Output is fundamentally wrong → Discard, do it yourself
+
+### Speed Impact
+- ~50-60% of agent outputs qualify for auto-accept (most scout and runner outputs)
+- Saves 2-3 seconds per auto-accepted output (the time Opus would spend reading/judging)
+- Over a typical 4-agent task: saves ~6-8 seconds of verification overhead
 
 ## Verification Report
 
