@@ -56,6 +56,8 @@ The result? **Opus becomes a manager, not a laborer.** It classifies tasks, disp
 npx hail-hydra-cc
 ```
 
+[OR]
+
 ```bash
 npm i hail-hydra-cc
 ```
