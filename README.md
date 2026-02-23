@@ -15,13 +15,13 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Opus_4.6-🧠_The_Body-7C3AED?style=flat-square" alt="Opus" />
-  <img src="https://img.shields.io/badge/Sonnet_4.5-🔵_Smart_Heads-3B82F6?style=flat-square" alt="Sonnet" />
+  <img src="https://img.shields.io/badge/Sonnet_4.6-🔵_Smart_Heads-3B82F6?style=flat-square" alt="Sonnet" />
   <img src="https://img.shields.io/badge/Haiku_4.5-🟢_Fast_Heads-22C55E?style=flat-square" alt="Haiku" />
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Speed-2--3×_Faster-22C55E?style=flat-square&logo=zap&logoColor=white" alt="Speed" />
-  <img src="https://img.shields.io/badge/Cost-60--70%25_Cheaper-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
+  <img src="https://img.shields.io/badge/Cost-~50%25_Cheaper-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
   <img src="https://img.shields.io/badge/Quality-Zero_Loss-7C3AED?style=flat-square&logo=shield-check&logoColor=white" alt="Quality" />
   <img src="https://img.shields.io/badge/Mode-Always_On-darkred?style=flat-square&logo=power&logoColor=white" alt="Always On" />
 </p>
@@ -48,6 +48,19 @@ The result? **Opus becomes a manager, not a laborer.** It classifies tasks, disp
 
 ---
 
+## ✨ Features
+
+- **Seven specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type
+- **Auto-Guard** — hydra-guard (Haiku 4.5) automatically scans code changes for security issues after every hydra-coder run
+- **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
+- **Quick commands** — `hydra status`, `hydra quiet`, `hydra verbose`, `hydra config` for session control
+- **Custom agent templates** — Add your own heads using `templates/custom-agent.md`
+- **Session indexing** — Codebase context persists across turns; no re-exploration on every prompt
+- **Speculative pre-dispatch** — hydra-scout launches in parallel with task classification, saving 2–3 seconds per task
+- **Dispatch log** — Transparent audit trail showing which agents ran, what model, and outcome
+
+---
+
 ## 🤔 Why I Built This
 
 After Opus 4.6 dropped, I noticed something frustrating — code execution felt slowww. Reallyyy Slow. Not because the model was worse, but because I was feeding everything through one massive model. Every file read, every grep, every test run, every docstring — all burning through Opus-tier tokens. The result? Frequent context compaction, more hallucinations, and an API bill that made me wince.
@@ -57,8 +70,8 @@ So I started experimenting. I switched to Haiku for the simple stuff — running
 Five agents. Five separate context windows. Each with a clearly defined job. They do the work, and only pass results back to the brain — Opus. The outcome:
 
 - Longer coding sessions (less compaction, less context blowup)
-- Drastically reduced API costs (Haiku is 30× cheaper than Opus)
-- Faster execution (Haiku responds 10× faster)
+- Drastically reduced API costs (Haiku 4.5 is 5× cheaper than Opus 4.6)
+- Faster execution (Haiku 4.5 responds ~10× faster)
 - Same or better code quality (focused context > bloated context)
 - Zero manual model switching (this is the big one)
 
@@ -100,7 +113,7 @@ Hydra applies this at the **task level**:
                           └─────────────────────────────────┘
 ```
 
-The math is simple: if 70% of tasks can be handled by Haiku (10× faster, 30× cheaper) and 20% by Sonnet (3× faster, 6× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
+The math is simple: if 70% of tasks can be handled by Haiku 4.5 (10× faster, 5× cheaper) and 20% by Sonnet 4.6 (3× faster, ~1.7× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
 
 ---
 
@@ -113,7 +126,7 @@ User Request
     │                                                      │
     ▼                                                      ▼
 ┌─────────────────────────────┐            ┌──────────────────────────────┐
-│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku)      │
+│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku 4.5)  │
 │  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
 │  Plans waves                │            │  "Find files relevant to      │
 │  Decides blocking / not     │            │   [user's request]"           │
@@ -142,30 +155,36 @@ User Request
 
 ---
 
-## 🐲 The Five Heads
+## 🐲 The Seven Heads
 
 | Head | Model | Speed | Role | Personality |
 |:-----|:------|:------|:-----|:------------|
-| **hydra-scout (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
-| **hydra-runner (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
-| **hydra-scribe (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
-| **hydra-coder (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
-| **hydra-analyst (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
+| **hydra-scout (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
+| **hydra-runner (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
+| **hydra-scribe (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
+| **hydra-guard (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Security/quality gate after code changes | *"No secrets. No injection. You're clean."* |
+| **hydra-git (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
+| **hydra-coder (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
+| **hydra-analyst (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
 
 ### Task Routing Cheat Sheet
 
 ```
 Is it read-only? ─── Yes ──→ Finding files?
-    │                           ├── Yes: hydra-scout (Haiku) 🟢
-    │                           └── No:  hydra-analyst (Sonnet) 🔵
+    │                           ├── Yes: hydra-scout (Haiku 4.5) 🟢
+    │                           └── No:  hydra-analyst (Sonnet 4.6) 🔵
     │
-    No ──→ Just running a command? ─── Yes ──→ hydra-runner (Haiku) 🟢
+    No ──→ Is it a git operation? ─── Yes ──→ hydra-git (Haiku 4.5) 🟢
     │
-    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe (Haiku) 🟢
+    No ──→ Is it a security scan? ─── Yes ──→ hydra-guard (Haiku 4.5) 🟢
     │
-    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet) 🔵
+    No ──→ Just running a command? ─── Yes ──→ hydra-runner (Haiku 4.5) 🟢
     │
-    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus (handle it yourself)
+    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe (Haiku 4.5) 🟢
+    │
+    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet 4.6) 🔵
+    │
+    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus 4.6 (handle it yourself)
 ```
 
 ---
@@ -208,17 +227,65 @@ cd hydra
 
 ```
 ~/.claude/agents/          ← User-level (all projects)
-  ├── hydra-scout.md       🟢 hydra-scout (Haiku)
-  ├── hydra-runner.md      🟢 hydra-runner (Haiku)
-  ├── hydra-scribe.md      🟢 hydra-scribe (Haiku)
-  ├── hydra-coder.md       🔵 hydra-coder (Sonnet)
-  └── hydra-analyst.md     🔵 hydra-analyst (Sonnet)
+  ├── hydra-scout.md       🟢 hydra-scout (Haiku 4.5)
+  ├── hydra-runner.md      🟢 hydra-runner (Haiku 4.5)
+  ├── hydra-scribe.md      🟢 hydra-scribe (Haiku 4.5)
+  ├── hydra-guard.md       🟢 hydra-guard (Haiku 4.5)
+  ├── hydra-git.md         🟢 hydra-git (Haiku 4.5)
+  ├── hydra-coder.md       🔵 hydra-coder (Sonnet 4.6)
+  └── hydra-analyst.md     🔵 hydra-analyst (Sonnet 4.6)
 
 .claude/agents/            ← Project-level (one project)
   └── (same files)
 ```
 
 > **Note:** Project-level agents take precedence over user-level when both exist. This lets you customize heads per-project if needed.
+
+---
+
+## ⚙️ Configuration
+
+Customize Hydra's behavior with an optional config file:
+
+```bash
+# Create a default config (user-level — applies to all projects)
+./scripts/install.sh --config
+```
+
+Then edit `~/.claude/hydra/hydra.config.md`:
+
+```markdown
+mode: balanced          # conservative | balanced (default) | aggressive
+dispatch_log: on        # on (default) | off | verbose
+auto_guard: on          # on (default) | off
+```
+
+**Project-level config** (overrides user-level):
+Place at `.claude/hydra/hydra.config.md` in your project root.
+
+See [`config/hydra.config.md`](config/hydra.config.md) for the full reference with all options.
+
+---
+
+## 🧩 Extending Hydra
+
+Add your own specialized head in three steps:
+
+**1. Copy the template:**
+```bash
+cp templates/custom-agent.md agents/hydra-myspecialist.md
+```
+
+**2. Customize the agent** — edit the name, description, tools, and instructions.
+
+**3. Deploy it:**
+```bash
+./scripts/install.sh --user   # or --project
+```
+
+Your new head is now discoverable by Claude Code alongside the built-in seven.
+See [`templates/custom-agent.md`](templates/custom-agent.md) for the full template with
+instructions on writing effective agent descriptions, output formats, and collaboration protocols.
 
 ---
 
@@ -231,12 +298,18 @@ hydra/
 │   ├── hydra-scout.md                   # 🟢 Codebase explorer
 │   ├── hydra-runner.md                  # 🟢 Test & build executor
 │   ├── hydra-scribe.md                  # 🟢 Documentation writer
+│   ├── hydra-guard.md                   # 🟢 Security/quality gate
+│   ├── hydra-git.md                     # 🟢 Git operations
 │   ├── hydra-coder.md                   # 🔵 Code implementer
 │   └── hydra-analyst.md                 # 🔵 Code reviewer & debugger
 ├── 📚 references/
 │   ├── routing-guide.md                 # 30+ task classification examples
 │   └── model-capabilities.md            # What each model excels at
-└── ⚙️ scripts/
+├── ⚙️ config/
+│   └── hydra.config.md                  # User configuration template
+├── 📋 templates/
+│   └── custom-agent.md                  # Template for adding your own heads
+└── 🔧 scripts/
     └── install.sh                       # One-command deployment
 ```
 
@@ -246,8 +319,8 @@ hydra/
 
 | Metric | Without Hydra | With Hydra | Improvement |
 |:-------|:-------------|:-----------|:------------|
-| **Task Speed** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku heads respond ~10× faster |
-| **API Cost** | 1× (Opus for everything) | 0.3–0.4× | 60–70% cheaper |
+| **Task Speed** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku 4.5 heads respond ~10× faster |
+| **API Cost** | 1× (Opus 4.6 for everything) | ~0.5× | ~50% cheaper |
 | **Quality** | Opus-level | Opus-level | Zero degradation |
 | **User Experience** | Normal | Normal | Invisible — zero friction |
 | **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
@@ -255,12 +328,39 @@ hydra/
 
 ### How the Savings Work
 
-| Task Type | % of Work | Model Used | Cost vs Opus |
-|:----------|:----------|:-----------|:-------------|
-| Exploration, search, tests, docs | ~50% | 🟢 Haiku | ~3% of Opus cost |
-| Implementation, review, debugging | ~30% | 🔵 Sonnet | ~17% of Opus cost |
-| Architecture, hard problems | ~20% | 🧠 Opus | 100% (no change) |
-| **Blended effective cost** | | | **~25% of all-Opus** |
+| Task Type | % of Work | Model Used | Input Cost vs Opus 4.6 | Output Cost vs Opus 4.6 |
+|:----------|:----------|:-----------|:----------------------|:-----------------------|
+| Exploration, search, tests, docs | ~50% | 🟢 Haiku 4.5 | 20% ($1 vs $5/MTok) | 20% ($5 vs $25/MTok) |
+| Implementation, review, debugging | ~30% | 🔵 Sonnet 4.6 | 60% ($3 vs $5/MTok) | 60% ($15 vs $25/MTok) |
+| Architecture, hard problems | ~20% | 🧠 Opus 4.6 | 100% (no change) | 100% (no change) |
+| **Blended effective cost** | | | **~48% of all-Opus** | **~48% of all-Opus** |
+
+Note: Blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48%.
+Rounded to **~50% blended cost reduction** overall.
+Savings calculated against Opus 4.6 ($5/$25 per MTok) as of February 2026.
+
+### Measure Your Savings
+
+The most accurate way to measure Hydra's impact — no estimation, real numbers:
+
+1. Start a Claude Code session **without** Hydra installed
+2. Complete a representative coding task
+3. Note the session cost from Claude Code's cost display
+4. Start a **new** session **with** Hydra installed
+5. Complete a similar task
+6. Compare the two costs
+
+That's it. Real data beats theoretical calculations every time.
+
+#### What to expect (based on February 2026 API pricing)
+With a typical task distribution (50% Haiku 4.5, 30% Sonnet 4.6, 20% Opus 4.6):
+- **Input tokens**: ~52% cheaper ($2.40 vs $5.00 per MTok)
+- **Output tokens**: ~52% cheaper ($12.00 vs $25.00 per MTok)
+- **Blended**: ~50% cost reduction
+- **Speed**: 2–3× faster on delegated tasks
+
+> Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
+> Savings would be significantly higher compared to Opus 4.1/4.0 ($15/$75 per MTok).
 
 ---
 

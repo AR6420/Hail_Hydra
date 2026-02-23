@@ -38,7 +38,7 @@ Examples:
   npx hail-hydra-cc --uninstall  Remove all Hydra files
 
 What gets installed:
-  ~/.claude/agents/              5 Hydra agent .md files
+  ~/.claude/agents/              7 Hydra agent .md files
   ~/.claude/hydra/SKILL.md       Core framework instructions
   ~/.claude/hydra/references/    Model capabilities & routing guides
 `);

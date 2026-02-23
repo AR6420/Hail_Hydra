@@ -3,7 +3,7 @@ name: hydra
 description: >
   Hydra — multi-headed task execution framework for Claude Code that dramatically reduces
   latency and API costs. Inspired by speculative decoding in LLM inference, Hydra makes
-  the main Opus agent an intelligent orchestrator that delegates work to Haiku and Sonnet
+  the main Opus agent an intelligent orchestrator that delegates work to Haiku 4.5 and Sonnet 4.6
   "heads," reserving Opus-level reasoning only for tasks that truly require it. ALWAYS
   activate this skill during any Claude Code session. This skill should be triggered for
   EVERY task — it is the default operating mode, not an optional optimization. Think of it
@@ -29,7 +29,7 @@ these are "easy tokens" that a faster model handles just as well. By routing the
 heads and reserving Opus for genuinely hard problems, we get:
 
 - **2–3× faster task completion** (Haiku responds ~10× faster than Opus)
-- **60–70% reduction in API costs** (Haiku is ~30× cheaper per token than Opus)
+- **~50% reduction in API costs** (Haiku 4.5 is 5× cheaper per token than Opus 4.6)
 - **Zero quality loss** on tasks within each model's capability band
 
 ## How Hydra Works — The Multi-Head Loop
@@ -41,7 +41,7 @@ User Request
     │                                                      │
     ▼                                                      ▼
 ┌─────────────────────────────┐            ┌──────────────────────────────┐
-│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku)      │
+│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku 4.5)      │
 │  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
 │  Plans waves                │            │  "Find files relevant to      │
 │  Decides blocking / not     │            │   [user's request]"           │
@@ -364,7 +364,7 @@ Wave 4 → launch E (needs D complete)
 Classify every incoming task before executing. This is fast — just a mental check, not a separate
 step the user sees.
 
-### Tier 1 → Haiku Heads (hydra-scout (Haiku), hydra-runner (Haiku), hydra-scribe (Haiku))
+### Tier 1 → Haiku 4.5 Heads (hydra-scout (Haiku 4.5), hydra-runner (Haiku 4.5), hydra-scribe (Haiku 4.5), hydra-guard (Haiku 4.5), hydra-git (Haiku 4.5))
 
 Route to Haiku when the task is **mechanical, read-heavy, or well-defined**:
 
@@ -376,11 +376,13 @@ Route to Haiku when the task is **mechanical, read-heavy, or well-defined**:
 - Generating boilerplate or repetitive code from clear templates
 - Writing/updating comments, docstrings, simple README sections
 - Quick factual lookups in the codebase
+- Security/quality gate scans on changed code (hydra-guard)
+- Git operations: staging, committing, branching, log inspection (hydra-git)
 
 **Heuristic**: If you could describe the task as a single imperative sentence with no ambiguity
 (e.g., "find all files importing X", "run the test suite"), it's Tier 1.
 
-### Tier 2 → Sonnet Heads (hydra-coder (Sonnet), hydra-analyst (Sonnet))
+### Tier 2 → Sonnet 4.6 Heads (hydra-coder (Sonnet 4.6), hydra-analyst (Sonnet 4.6))
 
 Route to Sonnet when the task requires **reasoning about code, but within well-understood patterns**:
 
@@ -417,7 +419,7 @@ Keep it yourself when the task demands **deep reasoning, novel architecture, or 
 - **When in doubt, go one tier up.** Better to use Sonnet for a Haiku task than Haiku for a
   Sonnet task. Quality is never sacrificed.
 - **Compound tasks should be decomposed.** "Read the codebase and redesign the auth system"
-  becomes: hydra-scout (Haiku) reads, then you design (Opus).
+  becomes: hydra-scout (Haiku 4.5) reads, then you design (Opus).
 - **Iterative tasks escalate naturally.** If a Sonnet draft isn't right, don't retry with Sonnet —
   do it yourself.
 
@@ -499,20 +501,20 @@ These output types require no orchestrator judgment — accept and pass through:
 
 | Agent | Auto-Accept When |
 |-------|-----------------|
-| hydra-scout (Haiku) | Returns file paths, directory listings, search results, grep output — factual data with no interpretation |
-| hydra-runner (Haiku) | Reports all tests passing, clean build, clean lint — unambiguous pass/fail |
-| hydra-scribe (Haiku) | Produces docs/comments for NON-CRITICAL content (internal docstrings, changelogs) |
+| hydra-scout (Haiku 4.5) | Returns file paths, directory listings, search results, grep output — factual data with no interpretation |
+| hydra-runner (Haiku 4.5) | Reports all tests passing, clean build, clean lint — unambiguous pass/fail |
+| hydra-scribe (Haiku 4.5) | Produces docs/comments for NON-CRITICAL content (internal docstrings, changelogs) |
 
 ### Manual Verify (orchestrator reviews before accepting)
 These outputs require judgment — scan before passing to user or downstream agents:
 
 | Agent | Always Verify When |
 |-------|-------------------|
-| hydra-coder (Sonnet) | ALWAYS — code changes are never auto-accepted |
-| hydra-analyst (Sonnet) | ALWAYS — diagnoses and recommendations need validation |
-| hydra-runner (Haiku) | Reports test FAILURES — verify the failures are real and not environment issues |
-| hydra-scribe (Haiku) | Writing user-facing docs (README, API docs) — verify accuracy |
-| hydra-scout (Haiku) | Returns analysis or interpretation (not raw data) — verify conclusions |
+| hydra-coder (Sonnet 4.6) | ALWAYS — code changes are never auto-accepted |
+| hydra-analyst (Sonnet 4.6) | ALWAYS — diagnoses and recommendations need validation |
+| hydra-runner (Haiku 4.5) | Reports test FAILURES — verify the failures are real and not environment issues |
+| hydra-scribe (Haiku 4.5) | Writing user-facing docs (README, API docs) — verify accuracy |
+| hydra-scout (Haiku 4.5) | Returns analysis or interpretation (not raw data) — verify conclusions |
 
 ### Verification Decision Flowchart
 
@@ -550,7 +552,35 @@ When manual verification is required, match depth to risk:
 - Saves 2-3 seconds per auto-accepted output (the time Opus would spend reading/judging)
 - Over a typical 4-agent task: saves ~6-8 seconds of verification overhead
 
-## Verification Report
+## Auto-Guard Protocol
+
+After hydra-coder (Sonnet 4.6) produces any code changes, AUTOMATICALLY dispatch
+hydra-guard (Haiku 4.5) to scan the changes before presenting to the user. This is
+a non-blocking, low-cost quality gate that runs in the same wave as any final validation.
+
+### Dispatch Rules
+- **Always dispatch** hydra-guard when hydra-coder modifies or creates source files
+- **Pass** the list of changed file paths as the scan scope
+- **Do NOT dispatch** for documentation-only changes (hydra-scribe output)
+- **Do NOT dispatch** if the user has set `auto_guard: off` in hydra.config.md
+
+### Response Rules
+- If hydra-guard returns **PASS** → proceed normally, no mention to user
+- If hydra-guard finds **CRITICAL** issues → append a "⚠️ Security Notes" section with specific findings (file:line references)
+- If hydra-guard finds only **WARNING/INFO** issues → append a brief "Quality Notes" section
+
+### Never Block Delivery
+hydra-guard NEVER blocks delivery. Run it in the same wave as hydra-runner (final tests)
+when possible. The code change is presented to the user regardless; hydra-guard only adds
+a footnote.
+
+### Cost of the Gate
+~$0.001 per scan (Haiku 4.5 processing a few hundred tokens on changed files).
+Every code change gets a free security scan.
+
+Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
+
+## Dispatch Log
 
 After completing any task that involved two or more agent dispatches, append a brief
 verification summary at the end of your response. This is not a separate tool call —
@@ -560,25 +590,28 @@ it's a structured footer in plain markdown.
 
 ---
 **🐉 Hydra Dispatch Log**
-| Wave | Agent | Task | Status |
-|------|-------|------|--------|
-| 1 | hydra-scout (Haiku) | Explored auth module | ✅ Verified |
-| 1 | hydra-runner (Haiku) | Ran existing tests | ✅ Verified |
-| 2 | hydra-coder (Sonnet) | Fixed null check bug in auth.py:142 | 🔧 Adjusted |
-| 3 | hydra-runner (Haiku) | Ran tests post-fix | ✅ Verified |
+| Step | Agent | Model | Task | Verdict |
+|------|-------|-------|------|---------|
+| 1 | hydra-scout | Haiku 4.5 | Explored auth module | ✅ Accepted |
+| 1 | hydra-runner | Haiku 4.5 | Ran existing tests | ✅ Accepted |
+| 2 | hydra-coder | Sonnet 4.6 | Fixed null check bug in auth.py:142 | 🔧 Adjusted |
+| 2 | hydra-guard | Haiku 4.5 | Security scan on changes | ✅ Accepted |
+| 3 | hydra-runner | Haiku 4.5 | Ran tests post-fix | ✅ Accepted |
 
-> **Format note:** Agent column uses "agent-name (Model)" shorthand matching the existing
-> SKILL.md convention — e.g., "hydra-scout (Haiku)", "hydra-coder (Sonnet)", not full model IDs.
+> **Format note:** Agent column uses the agent name only; Model column shows the versioned model.
+> e.g., "hydra-scout" / "Haiku 4.5", "hydra-coder" / "Sonnet 4.6"
 
-**Waves**: 3 | **Agents used**: 4 dispatches | **Rejections**: 0
-**Estimated savings**: ~65% cost reduction vs all-Opus execution
+**Waves**: 3 | **Agents used**: 5 dispatches | **Rejections**: 0
+**Estimated savings**: ~50% cost reduction vs all-Opus execution
+
+Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
 ---
 
 ### Status Key
 
 | Symbol | Meaning |
 |--------|---------|
-| ✅ Verified | Output accepted as-is |
+| ✅ Accepted | Output accepted as-is |
 | 🔧 Adjusted | Minor fix applied inline by Opus before presenting |
 | 🔄 Re-executed | Opus redid this task directly (agent output discarded) |
 | ❌ Rejected | Output discarded; reason noted in log |
@@ -586,7 +619,7 @@ it's a structured footer in plain markdown.
 ### Rules for the Dispatch Log
 
 - **Always show it** when 2+ agent dispatches occurred in a session
-- **Wave column**: Same wave number = ran in parallel
+- **Step column**: Same step number = ran in parallel
 - **Keep it brief** — this is a footer, not a report. No explanations, just the table
 - **Inline markers**: If a head's output needed adjustment, say "Adjusting [agent]'s output:
   [what changed]" before presenting the adjusted result. If a head was rejected, say
@@ -596,8 +629,8 @@ it's a structured footer in plain markdown.
 ### Controlling the Dispatch Log
 
 - **Default**: ON — always shown when 2+ agents were used
-- **To suppress**: User says "quiet mode", "no dispatch log", or "stealth mode"
-- **To force on**: User says "show dispatch log", "verbose mode", or "audit mode"
+- **To suppress**: User says "hydra quiet", "quiet mode", "no dispatch log", or "stealth mode"
+- **To force on**: User says "hydra verbose", "show dispatch log", "verbose mode", or "audit mode"
 - In stealth mode, Hydra operates fully invisibly (original behavior — no footer)
 
 ## Handoff Protocol
@@ -682,15 +715,46 @@ Hydra's heads live in `agents/`. Install them where Claude Code discovers subage
 ./scripts/install.sh --both
 ```
 
-## The Five Heads
+## Configuration
+
+At session start, check for a Hydra configuration file at:
+1. `.claude/hydra/hydra.config.md` (project-level, takes precedence)
+2. `~/.claude/hydra/hydra.config.md` (user-level, fallback)
+
+If found, apply the settings. If not found, use defaults:
+- **mode**: balanced
+- **dispatch_log**: on
+- **auto_guard**: on
+
+Do NOT announce that you loaded the config. Apply it silently.
+
+See `config/hydra.config.md` in the repository for the full configuration reference
+with all available options and explanations.
+
+## Quick Commands
+
+If the user types any of these exact phrases, respond with the corresponding action:
+
+| Command | Action |
+|---------|--------|
+| `hydra status` | List all 7 heads by name, model, and whether they appear to be installed (check `agents/` dir) |
+| `hydra config` | Show current configuration settings (mode, dispatch_log, auto_guard) and their source (default/project/user) |
+| `hydra help` | Show available commands and a brief one-line description of each head |
+| `hydra quiet` | Suppress dispatch logs for the rest of the session (equivalent to stealth mode) |
+| `hydra verbose` | Enable verbose dispatch logs with per-agent detail for the rest of the session |
+| `hydra reset` | Clear session index, treat next turn as Turn 1 (rebuild from fresh scout) |
+
+## The Seven Heads
 
 | Head | Model | Role | Tools |
 |------|-------|------|-------|
-| `hydra-scout (Haiku)` | 🟢 Haiku | Codebase exploration, file search, reading | Read, Grep, Glob |
-| `hydra-runner (Haiku)` | 🟢 Haiku | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
-| `hydra-scribe (Haiku)` | 🟢 Haiku | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
-| `hydra-coder (Sonnet)` | 🔵 Sonnet | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
-| `hydra-analyst (Sonnet)` | 🔵 Sonnet | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
+| `hydra-scout (Haiku 4.5)` | 🟢 Haiku 4.5 | Codebase exploration, file search, reading | Read, Grep, Glob |
+| `hydra-runner (Haiku 4.5)` | 🟢 Haiku 4.5 | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
+| `hydra-scribe (Haiku 4.5)` | 🟢 Haiku 4.5 | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
+| `hydra-guard (Haiku 4.5)` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
+| `hydra-git (Haiku 4.5)` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
+| `hydra-coder (Sonnet 4.6)` | 🔵 Sonnet 4.6 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
+| `hydra-analyst (Sonnet 4.6)` | 🔵 Sonnet 4.6 | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
 
 ## Measuring Impact
 

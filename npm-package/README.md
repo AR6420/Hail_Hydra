@@ -1,7 +1,7 @@
 # hail-hydra-cc
 
 > Multi-headed speculative execution framework for Claude Code.
-> Inspired by speculative decoding — same quality, 3x faster, 70% cheaper.
+> Inspired by speculative decoding — same quality, 3x faster, ~50% cheaper.
 
 ## Quick Install
 
@@ -9,21 +9,24 @@
 npx hail-hydra-cc
 ```
 
-Runs an interactive installer that deploys 5 Hydra agents into your Claude Code setup.
+Runs an interactive installer that deploys 7 Hydra agents into your Claude Code setup.
 
 ## What is Hydra?
 
-Hydra makes Claude Code's Opus model an intelligent **orchestrator** instead of doing everything itself. It dispatches fast, cheap Haiku and Sonnet "heads" for routine tasks, reserving Opus-level reasoning only for genuinely hard problems.
+Hydra makes Claude Code's Opus model an intelligent **orchestrator** instead of doing everything itself. It dispatches fast, cheap Haiku 4.5 and Sonnet 4.6 "heads" for routine tasks, reserving Opus-level reasoning only for genuinely hard problems.
 
 | Head | Model | Role |
 |------|-------|------|
-| `hydra-scout` | 🟢 Haiku | Codebase exploration, file search |
-| `hydra-runner` | 🟢 Haiku | Test execution, builds, linting |
-| `hydra-scribe` | 🟢 Haiku | Documentation, READMEs, comments |
-| `hydra-coder` | 🔵 Sonnet | Code implementation, refactoring |
-| `hydra-analyst` | 🔵 Sonnet | Code review, debugging, analysis |
+| `hydra-scout` | 🟢 Haiku 4.5 | Codebase exploration, file search |
+| `hydra-runner` | 🟢 Haiku 4.5 | Test execution, builds, linting |
+| `hydra-scribe` | 🟢 Haiku 4.5 | Documentation, READMEs, comments |
+| `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes |
+| `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff |
+| `hydra-coder` | 🔵 Sonnet 4.6 | Code implementation, refactoring |
+| `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, analysis |
 
-**Expected gains:** 2–3× faster tasks, 60–70% lower API costs, zero quality loss.
+**Expected gains:** 2–3× faster tasks, ~50% lower API costs, zero quality loss.
+(Savings calculated against Opus 4.6 at $5/$25 per MTok — February 2026 pricing)
 
 ## Usage
 
@@ -45,6 +48,8 @@ npx hail-hydra-cc --help         # Show help
 │   ├── hydra-scout.md
 │   ├── hydra-runner.md
 │   ├── hydra-scribe.md
+│   ├── hydra-guard.md
+│   ├── hydra-git.md
 │   ├── hydra-coder.md
 │   └── hydra-analyst.md
 └── hydra/

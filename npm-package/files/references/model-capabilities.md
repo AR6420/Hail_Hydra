@@ -7,7 +7,7 @@ This reference helps calibrate delegation decisions.
 
 ### Strengths
 - Extremely fast response times (~10× faster than Opus)
-- Very low cost per token (~30× cheaper than Opus)
+- Very low cost per token (~5× cheaper than Opus 4.6 — $1/$5 vs $5/$25 per MTok)
 - Excellent at following clear, well-defined instructions
 - Strong at text extraction, search, and pattern matching
 - Good at generating code from templates and clear patterns
@@ -34,7 +34,7 @@ Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguou
 
 ---
 
-## Claude Sonnet 4.5
+## Claude Sonnet 4.6
 
 ### Strengths
 - Strong code generation across most languages and frameworks
@@ -88,17 +88,31 @@ N/A — Opus is the orchestrator, not a delegated head. Opus output goes directl
 
 ---
 
-## Cost and Speed Comparison
+## Cost and Speed Comparison (February 2026 Pricing)
 
-| Model | Relative Speed | Relative Cost | Best For |
-|-------|---------------|---------------|----------|
-| Haiku 4.5 | 10× | 1× | Exploration, execution, docs |
-| Sonnet 4.5 | 3× | 5× | Implementation, review, testing |
-| Opus 4.6 | 1× (baseline) | 30× | Architecture, hard debugging, novel work |
+| Model | Input Cost | Output Cost | Relative Speed | Input Cost vs Opus 4.6 | Output Cost vs Opus 4.6 |
+|-------|-----------|-------------|----------------|----------------------|------------------------|
+| Haiku 4.5 | $1 / MTok | $5 / MTok | ~10× faster | 5× cheaper | 5× cheaper |
+| Sonnet 4.6 | $3 / MTok | $15 / MTok | ~3× faster | ~1.7× cheaper | ~1.7× cheaper |
+| Opus 4.6 | $5 / MTok | $25 / MTok | 1× (baseline) | 1× (baseline) | 1× (baseline) |
 
-These are approximate ratios. The key insight: for 60-70% of coding tasks, Haiku or Sonnet
-produces output identical in quality to what Opus would produce, but dramatically faster and
-cheaper. The skill is in identifying the 30-40% where Opus is genuinely needed.
+Source: https://platform.claude.com/docs/en/about-claude/pricing
+
+### Blended Cost with Hydra (typical 50/30/20 task split)
+
+| Metric | All Opus 4.6 | With Hydra | Savings |
+|--------|-------------|------------|---------|
+| Input cost / MTok | $5.00 | $2.40 | 52% |
+| Output cost / MTok | $25.00 | $12.00 | 52% |
+| Blended effective cost | $30.00 / MTok | $14.40 / MTok | ~50% |
+
+Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
+Savings would be significantly higher when compared to Opus 4.1/4.0 pricing ($15/$75 per MTok).
+
+These are approximate ratios. The key insight: for 60-70% of coding tasks, Haiku 4.5 or
+Sonnet 4.6 produces output identical in quality to what Opus 4.6 would produce, but
+dramatically faster and cheaper. The skill is in identifying the 30-40% where Opus 4.6
+is genuinely needed.
 
 ---
 

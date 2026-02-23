@@ -1,11 +1,11 @@
 ---
-name: hydra-scout (Haiku)
+name: hydra-scout (Haiku 4.5)
 description: >
   🟢 Hydra's fastest head — ultra-fast codebase exploration and information retrieval.
   Use PROACTIVELY whenever Claude needs to search files, read code, find patterns, grep for
   strings, list directories, understand project structure, or answer "where is X?" questions.
   This is the first head to reach for when gathering information before making changes.
-  Runs on Haiku for near-instant responses.
+  Runs on Haiku 4.5 for near-instant responses.
   May run in parallel with other Hydra agents — produces self-contained, clearly structured
   output so the orchestrator can merge results from multiple simultaneous agents.
 tools: Read, Grep, Glob

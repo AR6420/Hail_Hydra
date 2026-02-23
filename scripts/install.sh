@@ -19,7 +19,11 @@ AGENTS_DIR="$(dirname "$SCRIPT_DIR")/agents"
 USER_DIR="$HOME/.claude/agents"
 PROJECT_DIR=".claude/agents"
 
-AGENTS=("hydra-scout" "hydra-runner" "hydra-coder" "hydra-analyst" "hydra-scribe")
+HYDRA_CONFIG_TEMPLATE="$(dirname "$SCRIPT_DIR")/config/hydra.config.md"
+USER_CONFIG_DIR="$HOME/.claude/hydra"
+PROJECT_CONFIG_DIR=".claude/hydra"
+
+AGENTS=("hydra-scout" "hydra-runner" "hydra-scribe" "hydra-guard" "hydra-git" "hydra-coder" "hydra-analyst")
 
 # Colors
 RED='\033[0;31m'
@@ -53,7 +57,7 @@ install_to() {
         count=$((count + 1))
     done
 
-    ok "Deployed $count heads to $label ($target_dir)"
+    ok "Deployed $count/7 heads to $label ($target_dir)"
 }
 
 uninstall_from() {
@@ -76,6 +80,27 @@ uninstall_from() {
     fi
 }
 
+install_config() {
+    local target_dir="$1"
+    local label="$2"
+
+    mkdir -p "$target_dir"
+
+    if [[ -f "$target_dir/hydra.config.md" ]]; then
+        warn "Config already exists at $target_dir/hydra.config.md — not overwriting"
+        warn "Delete it manually if you want a fresh config"
+        return
+    fi
+
+    if [[ ! -f "$HYDRA_CONFIG_TEMPLATE" ]]; then
+        err "Config template not found: $HYDRA_CONFIG_TEMPLATE"
+        return
+    fi
+
+    cp "$HYDRA_CONFIG_TEMPLATE" "$target_dir/hydra.config.md"
+    ok "Created config at $target_dir/hydra.config.md"
+}
+
 show_usage() {
     cat << 'EOF'
 🐉 Hydra — Multi-Headed Speculative Execution
@@ -88,14 +113,17 @@ Usage:
   ./install.sh --both       Deploy to both locations
   ./install.sh --uninstall  Sever all Hydra heads from both locations
   ./install.sh --status     Show where heads are deployed
+  ./install.sh --config     Create default config file in ~/.claude/hydra/
   ./install.sh --help       Show this message
 
-The Five Heads:
-  hydra-scout (Haiku)    🟢 Haiku   — Codebase exploration, file search
-  hydra-runner (Haiku)   🟢 Haiku   — Test execution, builds, validation
-  hydra-scribe (Haiku)   🟢 Haiku   — Documentation writing
-  hydra-coder (Sonnet)   🔵 Sonnet  — Code implementation, refactoring
-  hydra-analyst (Sonnet) 🔵 Sonnet  — Code review, debugging, analysis
+The Seven Heads:
+  hydra-scout (Haiku 4.5)    🟢 Haiku 4.5   — Codebase exploration, file search
+  hydra-runner (Haiku 4.5)   🟢 Haiku 4.5   — Test execution, builds, validation
+  hydra-scribe (Haiku 4.5)   🟢 Haiku 4.5   — Documentation writing
+  hydra-guard (Haiku 4.5)    🟢 Haiku 4.5   — Security/quality gate after code changes
+  hydra-git (Haiku 4.5)      🟢 Haiku 4.5   — Git operations: commit, branch, diff
+  hydra-coder (Sonnet 4.6)   🔵 Sonnet 4.6  — Code implementation, refactoring
+  hydra-analyst (Sonnet 4.6) 🔵 Sonnet 4.6  — Code review, debugging, analysis
 EOF
 }
 
@@ -115,11 +143,13 @@ show_status() {
                 local emoji="🟢"
                 local display_name="$agent"
                 case "$agent" in
-                    hydra-scout)   display_name="hydra-scout (Haiku)" ;;
-                    hydra-runner)  display_name="hydra-runner (Haiku)" ;;
-                    hydra-scribe)  display_name="hydra-scribe (Haiku)" ;;
-                    hydra-coder)   display_name="hydra-coder (Sonnet)"; emoji="🔵" ;;
-                    hydra-analyst) display_name="hydra-analyst (Sonnet)"; emoji="🔵" ;;
+                    hydra-scout)   display_name="hydra-scout (Haiku 4.5)" ;;
+                    hydra-runner)  display_name="hydra-runner (Haiku 4.5)" ;;
+                    hydra-scribe)  display_name="hydra-scribe (Haiku 4.5)" ;;
+                    hydra-guard)   display_name="hydra-guard (Haiku 4.5)" ;;
+                    hydra-git)     display_name="hydra-git (Haiku 4.5)" ;;
+                    hydra-coder)   display_name="hydra-coder (Sonnet 4.6)"; emoji="🔵" ;;
+                    hydra-analyst) display_name="hydra-analyst (Sonnet 4.6)"; emoji="🔵" ;;
                 esac
                 echo "    $emoji ${display_name}.md"
                 found=$((found + 1))
@@ -170,6 +200,12 @@ case "${1:-}" in
         ;;
     --status)
         show_status
+        ;;
+    --config)
+        info "Creating Hydra config..."
+        install_config "$USER_CONFIG_DIR" "user-level"
+        echo ""
+        ok "Edit $USER_CONFIG_DIR/hydra.config.md to customize Hydra behavior."
         ;;
     --help|-h)
         show_usage
