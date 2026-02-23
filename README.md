@@ -48,6 +48,72 @@ The result? **Opus becomes a manager, not a laborer.** It classifies tasks, disp
 
 ---
 
+## 🚀 Installation
+
+> **One command. Done.**
+
+```bash
+npx hail-hydra-cc
+```
+
+```bash
+npm i hail-hydra-cc
+```
+
+Runs the interactive installer — picks user-level or project-level, deploys all 7 heads in seconds.
+
+### Manual Install
+
+```bash
+# Clone the repo
+git clone https://github.com/AR6420/Hail_Hydra.git
+cd hydra
+
+# Deploy heads globally (recommended — always on, every project)
+./scripts/install.sh --user
+
+# 🐉 Hail Hydra! Heads are now active in all Claude Code sessions.
+```
+
+### Installation Options
+
+```bash
+# User-level — available in ALL your Claude Code projects
+./scripts/install.sh --user
+
+# Project-level — just this one project
+./scripts/install.sh --project
+
+# Both — maximum coverage
+./scripts/install.sh --both
+
+# Check what's deployed
+./scripts/install.sh --status
+
+# Remove everything
+./scripts/install.sh --uninstall
+```
+
+### What Gets Installed Where
+
+```
+~/.claude/agents/          ← User-level (all projects)
+  ├── hydra-scout.md       🟢 hydra-scout (Haiku 4.5)
+  ├── hydra-runner.md      🟢 hydra-runner (Haiku 4.5)
+  ├── hydra-scribe.md      🟢 hydra-scribe (Haiku 4.5)
+  ├── hydra-guard.md       🟢 hydra-guard (Haiku 4.5)
+  ├── hydra-git.md         🟢 hydra-git (Haiku 4.5)
+  ├── hydra-coder.md       🔵 hydra-coder (Sonnet 4.6)
+  └── hydra-analyst.md     🔵 hydra-analyst (Sonnet 4.6)
+
+.claude/agents/            ← Project-level (one project)
+  └── (same files)
+```
+
+> **Note:** Project-level agents take precedence over user-level when both exist. This lets you customize heads per-project if needed.
+
+---
+
 ## ✨ Features
 
 - **Seven specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type
@@ -186,60 +252,6 @@ Is it read-only? ─── Yes ──→ Finding files?
     │
     No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus 4.6 (handle it yourself)
 ```
-
----
-
-## 🚀 Installation
-
-### Quick Start (30 seconds)
-
-```bash
-# Clone the repo
-git clone https://github.com/AR6420/Hail_Hydra.git
-cd hydra
-
-# Deploy heads globally (recommended — always on, every project)
-./scripts/install.sh --user
-
-# 🐉 Hail Hydra! Heads are now active in all Claude Code sessions.
-```
-
-### Installation Options
-
-```bash
-# User-level — available in ALL your Claude Code projects
-./scripts/install.sh --user
-
-# Project-level — just this one project
-./scripts/install.sh --project
-
-# Both — maximum coverage
-./scripts/install.sh --both
-
-# Check what's deployed
-./scripts/install.sh --status
-
-# Remove everything
-./scripts/install.sh --uninstall
-```
-
-### What Gets Installed Where
-
-```
-~/.claude/agents/          ← User-level (all projects)
-  ├── hydra-scout.md       🟢 hydra-scout (Haiku 4.5)
-  ├── hydra-runner.md      🟢 hydra-runner (Haiku 4.5)
-  ├── hydra-scribe.md      🟢 hydra-scribe (Haiku 4.5)
-  ├── hydra-guard.md       🟢 hydra-guard (Haiku 4.5)
-  ├── hydra-git.md         🟢 hydra-git (Haiku 4.5)
-  ├── hydra-coder.md       🔵 hydra-coder (Sonnet 4.6)
-  └── hydra-analyst.md     🔵 hydra-analyst (Sonnet 4.6)
-
-.claude/agents/            ← Project-level (one project)
-  └── (same files)
-```
-
-> **Note:** Project-level agents take precedence over user-level when both exist. This lets you customize heads per-project if needed.
 
 ---
 
