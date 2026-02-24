@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
+  <a href="https://github.com/AR6420/Hail_Hydra">
+    <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
+  </a>
 </p>
 
 <h1 align="center">🐉 H Y D R A</h1>
