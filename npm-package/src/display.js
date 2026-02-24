@@ -2,7 +2,7 @@
 
 const chalk = require('chalk');
 
-const VERSION = '1.0.0';
+const VERSION = require('../package.json').version;
 
 // Block-character ASCII art — render in two-tone cyan/green for visual impact
 const LOGO_TOP = `
@@ -39,7 +39,7 @@ function showFileInstalled(displayName, success, errorMsg) {
 
 function showInstallComplete() {
   console.log();
-  console.log(chalk.cyan.bold('  🐉 Hail Hydra! 5 heads deployed and ready.'));
+  console.log(chalk.cyan.bold('  🐉 Hail Hydra! 7 heads deployed and ready.'));
   console.log();
   console.log(chalk.gray('  Launch Claude Code to start using the framework.'));
   console.log(chalk.gray('  GitHub: https://github.com/AR6420/Hail_Hydra'));

@@ -36,7 +36,7 @@ async function runPrompts() {
   // ── Prompt 2: Confirmation with agent preview ─────────────────────────────
 
   console.log();
-  console.log(chalk.bold('  This will install 5 Hydra agents + SKILL.md + reference docs.'));
+  console.log(chalk.bold('  This will install 7 Hydra agents + SKILL.md + reference docs.'));
   console.log();
   console.log('  Agents:');
 
@@ -44,6 +44,8 @@ async function runPrompts() {
     { dot: chalk.green('🟢'), name: 'hydra-scout (Haiku)   ', role: 'Codebase exploration' },
     { dot: chalk.green('🟢'), name: 'hydra-runner (Haiku)  ', role: 'Test execution & validation' },
     { dot: chalk.green('🟢'), name: 'hydra-scribe (Haiku)  ', role: 'Documentation writing' },
+    { dot: chalk.green('🟢'), name: 'hydra-guard (Haiku)   ', role: 'Auto-protection & safety' },
+    { dot: chalk.green('🟢'), name: 'hydra-git (Haiku)     ', role: 'Git operations' },
     { dot: chalk.blue('🔵'),  name: 'hydra-coder (Sonnet)  ', role: 'Code implementation' },
     { dot: chalk.blue('🔵'),  name: 'hydra-analyst (Sonnet)', role: 'Code review & debugging' },
   ];
