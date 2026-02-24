@@ -5,10 +5,6 @@
 <h1 align="center">🐉 H Y D R A</h1>
 
 <p align="center">
-[![npm version](https://img.shields.io/npm/v/hail-hydra-cc.svg?color=blue)](https://www.npmjs.com/package/hail-hydra-cc)
-</p>
-
-<p align="center">
   <strong>Multi-Headed Speculative Execution for Claude Code</strong>
 </p>
 
