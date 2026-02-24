@@ -24,6 +24,12 @@
 </p>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/hail-hydra-cc">
+    <img src="https://img.shields.io/npm/v/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=CB3837" alt="npm version" />
+  </a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Speed-2--3×_Faster-22C55E?style=flat-square&logo=zap&logoColor=white" alt="Speed" />
   <img src="https://img.shields.io/badge/Cost-~50%25_Cheaper-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
   <img src="https://img.shields.io/badge/Quality-Zero_Loss-7C3AED?style=flat-square&logo=shield-check&logoColor=white" alt="Quality" />
