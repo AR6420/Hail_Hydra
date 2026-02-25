@@ -44,7 +44,7 @@ npx hail-hydra-cc --help         # Show help
 
 ```
 ~/.claude/                       (or ./.claude/ for local)
-├── agents/
+├── agents/                      # 7 agent definitions
 │   ├── hydra-scout.md
 │   ├── hydra-runner.md
 │   ├── hydra-scribe.md
@@ -52,8 +52,21 @@ npx hail-hydra-cc --help         # Show help
 │   ├── hydra-git.md
 │   ├── hydra-coder.md
 │   └── hydra-analyst.md
-└── hydra/
-    ├── SKILL.md
+├── commands/hydra/              # 7 slash commands
+│   ├── help.md                  # /hydra:help
+│   ├── status.md                # /hydra:status
+│   ├── update.md                # /hydra:update
+│   ├── config.md                # /hydra:config
+│   ├── guard.md                 # /hydra:guard
+│   ├── quiet.md                 # /hydra:quiet
+│   └── verbose.md               # /hydra:verbose
+├── hooks/                       # 3 lifecycle hooks
+│   ├── hydra-check-update.js    # SessionStart — version check
+│   ├── hydra-statusline.js      # StatusLine — status bar
+│   └── hydra-auto-guard.js      # PostToolUse — file tracker
+└── skills/hydra/                # Skill (Claude Code discoverable via /skills)
+    ├── SKILL.md                 # Orchestrator instructions
+    ├── VERSION                  # Installed version
     └── references/
         ├── routing-guide.md
         └── model-capabilities.md
