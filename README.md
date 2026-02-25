@@ -65,13 +65,13 @@ The result? **Opus becomes a manager, not a laborer.** It classifies tasks, disp
 > **One command. Done.**
 
 ```bash
-npx hail-hydra-cc
+npx hail-hydra-cc@latest
 ```
 
 [OR]
 
 ```bash
-npm i hail-hydra-cc
+npm i hail-hydra-cc@latest
 ```
 
 Runs the interactive installer — deploys 7 agents, 7 slash commands, 3 hooks, and registers
