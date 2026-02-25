@@ -1,15 +1,12 @@
 ---
 name: hydra
 description: >
-  Hydra — multi-headed task execution framework for Claude Code that dramatically reduces
-  latency and API costs. Inspired by speculative decoding in LLM inference, Hydra makes
-  the main Opus agent an intelligent orchestrator that delegates work to Haiku 4.5 and Sonnet 4.6
-  "heads," reserving Opus-level reasoning only for tasks that truly require it. ALWAYS
-  activate this skill during any Claude Code session. This skill should be triggered for
-  EVERY task — it is the default operating mode, not an optional optimization. Think of it
-  as "always on" infrastructure, like an OS scheduler. If you are running as Opus and about
-  to do work that a faster model could handle, delegate it. "Cut off one head, two more
-  shall take its place" — except here, every head is working FOR you.
+  Multi-agent orchestration framework for Claude Code. Automatically delegates
+  tasks to cheaper, faster sub-agents (Haiku 4.5, Sonnet 4.6) while maintaining
+  Opus-level quality through verification. Use when working on any coding task —
+  Hydra activates automatically to route file exploration, test running,
+  documentation, code writing, debugging, security scanning, and git operations
+  to the optimal agent. Saves ~50% on API costs.
 ---
 
 # 🐉 Hydra — Multi-Headed Speculative Execution
@@ -718,8 +715,8 @@ Hydra's heads live in `agents/`. Install them where Claude Code discovers subage
 ## Configuration
 
 At session start, check for a Hydra configuration file at:
-1. `.claude/hydra/hydra.config.md` (project-level, takes precedence)
-2. `~/.claude/hydra/hydra.config.md` (user-level, fallback)
+1. `.claude/skills/hydra/config/hydra.config.md` (project-level, takes precedence)
+2. `~/.claude/skills/hydra/config/hydra.config.md` (user-level, fallback)
 
 If found, apply the settings. If not found, use defaults:
 - **mode**: balanced

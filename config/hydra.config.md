@@ -1,8 +1,8 @@
 # Hydra Configuration
 
 Place this file at one of these locations to customize Hydra's behavior:
-- `.claude/hydra/hydra.config.md` — project-level (takes precedence)
-- `~/.claude/hydra/hydra.config.md` — user-level (fallback)
+- `.claude/skills/hydra/config/hydra.config.md` — project-level (takes precedence)
+- `~/.claude/skills/hydra/config/hydra.config.md` — user-level (fallback)
 
 ---
 

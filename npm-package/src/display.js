@@ -37,17 +37,36 @@ function showFileInstalled(displayName, success, errorMsg) {
   }
 }
 
-function showInstallComplete() {
+function showInstallComplete(statusLineConfigured = true) {
   console.log();
-  console.log(chalk.cyan.bold('  🐉 Hail Hydra! 7 heads deployed and ready.'));
+  console.log(chalk.cyan.bold('  \uD83D\uDC09 Hail Hydra! Framework deployed and ready.'));
+  console.log(chalk.gray('  ' + '\u2500'.repeat(45)));
+  console.log(chalk.green(`    \u2714 7 agents installed`));
+  console.log(chalk.green(`    \u2714 7 slash commands installed`));
+  console.log(chalk.green(`    \u2714 3 hooks registered`));
+  if (statusLineConfigured) {
+    console.log(chalk.green(`    \u2714 StatusLine configured`));
+  } else {
+    console.log(chalk.yellow(`    \u26a0 StatusLine skipped (existing config preserved)`));
+  }
+  console.log(chalk.green(`    \u2714 Version tracked (${VERSION})`));
   console.log();
-  console.log(chalk.gray('  Launch Claude Code to start using the framework.'));
+  console.log(chalk.gray('  Quick start:  /hydra:help'));
+  console.log(chalk.gray('  Check status: /hydra:status'));
   console.log(chalk.gray('  GitHub: https://github.com/AR6420/Hail_Hydra'));
   console.log();
 }
 
 function showStatusTable(globalStatus, localStatus) {
-  const divider = chalk.gray('  ' + '─'.repeat(50));
+  const os = require('os');
+  const path = require('path');
+  const fs = require('fs');
+
+  function fileExists(p) {
+    try { fs.accessSync(p, fs.constants.F_OK); return true; } catch { return false; }
+  }
+
+  const divider = chalk.gray('  ' + '\u2500'.repeat(50));
 
   console.log();
   console.log(chalk.bold('  Installation Status'));
@@ -65,7 +84,9 @@ function showStatusTable(globalStatus, localStatus) {
     const anyInstalled =
       status.agents.some((a) => a.installed) ||
       status.skill ||
-      status.references.some((r) => r.installed);
+      status.references.some((r) => r.installed) ||
+      (status.commands && status.commands.some((c) => c.installed)) ||
+      status.version;
 
     if (!anyInstalled) {
       console.log(chalk.gray('    (not installed)'));
@@ -73,28 +94,59 @@ function showStatusTable(globalStatus, localStatus) {
     }
 
     for (const agent of status.agents) {
-      const dot = agent.model === 'Haiku' ? chalk.green('🟢') : chalk.blue('🔵');
-      const name = chalk.bold(agent.display.split('—')[0].trim());
-      const role = chalk.gray('— ' + agent.display.split('—')[1].trim());
+      const dot = agent.model === 'Haiku' ? chalk.green('\uD83D\uDFE2') : chalk.blue('\uD83D\uDD35');
+      const name = chalk.bold(agent.display.split('\u2014')[0].trim());
+      const role = chalk.gray('\u2014 ' + agent.display.split('\u2014')[1].trim());
       if (agent.installed) {
-        console.log(`    ${dot} ${chalk.green('✔')} ${name} ${role}`);
+        console.log(`    ${dot} ${chalk.green('\u2714')} ${name} ${role}`);
       } else {
-        console.log(`    ${dot} ${chalk.gray('✖')} ${chalk.gray(name)} ${chalk.gray(role + ' (not installed)')}`);
+        console.log(`    ${dot} ${chalk.gray('\u2716')} ${chalk.gray(name)} ${chalk.gray(role + ' (not installed)')}`);
       }
     }
 
     if (status.skill) {
-      console.log(chalk.green('    ✔ SKILL.md'));
+      console.log(chalk.green('    \u2714 SKILL.md'));
     } else {
-      console.log(chalk.gray('    ✖ SKILL.md (not installed)'));
+      console.log(chalk.gray('    \u2716 SKILL.md (not installed)'));
     }
 
     for (const ref of status.references) {
       if (ref.installed) {
-        console.log(chalk.green(`    ✔ ${ref.name}`));
+        console.log(chalk.green(`    \u2714 ${ref.name}`));
       } else {
-        console.log(chalk.gray(`    ✖ ${ref.name} (not installed)`));
+        console.log(chalk.gray(`    \u2716 ${ref.name} (not installed)`));
       }
+    }
+
+    // Commands
+    if (status.commands) {
+      for (const cmd of status.commands) {
+        if (cmd.installed) {
+          console.log(chalk.green(`    \u2714 ${cmd.name}`));
+        } else {
+          console.log(chalk.gray(`    \u2716 ${cmd.name} (not installed)`));
+        }
+      }
+    }
+
+    // Version
+    if (status.version) {
+      console.log(chalk.green(`    \u2714 hydra/VERSION (${status.version})`));
+    } else {
+      console.log(chalk.gray('    \u2716 hydra/VERSION (not installed)'));
+    }
+  }
+
+  // Global hooks (always ~/.claude/hooks/)
+  console.log();
+  console.log(chalk.bold('  Global Hooks (~/.claude/hooks/)'));
+  const hookKeys = ['hydra-check-update', 'hydra-statusline', 'hydra-auto-guard'];
+  for (const key of hookKeys) {
+    const dest = path.join(os.homedir(), '.claude', 'hooks', `${key}.js`);
+    if (fileExists(dest)) {
+      console.log(chalk.green(`    \u2714 ${key}.js`));
+    } else {
+      console.log(chalk.gray(`    \u2716 ${key}.js (not installed)`));
     }
   }
 

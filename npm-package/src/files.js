@@ -62,4 +62,20 @@ const references = {
   'model-capabilities': readBundled('references/model-capabilities.md'),
 };
 
-module.exports = { agents, skill, references };
+const commands = {
+  'update':   readBundled('commands/hydra/update.md'),
+  'status':   readBundled('commands/hydra/status.md'),
+  'help':     readBundled('commands/hydra/help.md'),
+  'config':   readBundled('commands/hydra/config.md'),
+  'guard':    readBundled('commands/hydra/guard.md'),
+  'quiet':    readBundled('commands/hydra/quiet.md'),
+  'verbose':  readBundled('commands/hydra/verbose.md'),
+};
+
+const hooks = {
+  'hydra-check-update': readBundled('hooks/hydra-check-update.js'),
+  'hydra-statusline':   readBundled('hooks/hydra-statusline.js'),
+  'hydra-auto-guard':   readBundled('hooks/hydra-auto-guard.js'),
+};
+
+module.exports = { agents, skill, references, commands, hooks };

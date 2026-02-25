@@ -1,6 +1,6 @@
 {
   "name": "hail-hydra-cc",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Multi-headed speculative execution framework for Claude Code",
   "bin": {
     "hail-hydra-cc": "bin/cli.js"

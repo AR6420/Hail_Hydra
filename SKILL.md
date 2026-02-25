@@ -1,15 +1,12 @@
 ---
 name: hydra
 description: >
-  Hydra — multi-headed task execution framework for Claude Code that dramatically reduces
-  latency and API costs. Inspired by speculative decoding in LLM inference, Hydra makes
-  the main Opus agent an intelligent orchestrator that delegates work to Haiku 4.5 and Sonnet 4.6
-  "heads," reserving Opus-level reasoning only for tasks that truly require it. ALWAYS
-  activate this skill during any Claude Code session. This skill should be triggered for
-  EVERY task — it is the default operating mode, not an optional optimization. Think of it
-  as "always on" infrastructure, like an OS scheduler. If you are running as Opus and about
-  to do work that a faster model could handle, delegate it. "Cut off one head, two more
-  shall take its place" — except here, every head is working FOR you.
+  Multi-agent orchestration framework for Claude Code. Automatically delegates
+  tasks to cheaper, faster sub-agents (Haiku 4.5, Sonnet 4.6) while maintaining
+  Opus-level quality through verification. Use when working on any coding task —
+  Hydra activates automatically to route file exploration, test running,
+  documentation, code writing, debugging, security scanning, and git operations
+  to the optimal agent. Saves ~50% on API costs.
 ---
 
 # 🐉 Hydra — Multi-Headed Speculative Execution
@@ -633,6 +630,52 @@ Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of Februa
 - **To force on**: User says "hydra verbose", "show dispatch log", "verbose mode", or "audit mode"
 - In stealth mode, Hydra operates fully invisibly (original behavior — no footer)
 
+## Slash Commands Available
+
+The user may invoke these Hydra-specific commands. When they do, follow
+the command's instructions:
+
+| Command | Action |
+|---------|--------|
+| `/hydra:help` | Display the help reference |
+| `/hydra:status` | Run status checks and display framework health |
+| `/hydra:update` | Trigger an update via npx |
+| `/hydra:config` | Show current configuration |
+| `/hydra:guard [files]` | Manually invoke the security scan on specified files |
+| `/hydra:quiet` | Suppress dispatch logs for this session |
+| `/hydra:verbose` | Enable detailed dispatch logs with timing |
+
+These slash commands are defined in `~/.claude/commands/hydra/` and are
+separate from natural-language quick commands. Typing "hydra status"
+(without the slash) also works — handled by the Quick Commands section above.
+
+## Auto-Guard File Tracking
+
+A PostToolUse hook (`hydra-auto-guard.js`) automatically tracks every file
+modified during the session. Changed file paths are recorded to:
+
+  /tmp/hydra-guard/{session_id}.txt
+
+When hydra-guard runs (either automatically via the Auto-Guard Protocol or
+manually via `/hydra:guard`), it can reference this file to know exactly
+which files need scanning. The tracking hook adds <1ms overhead per edit.
+
+## Update Notifications
+
+A SessionStart hook (`hydra-check-update.js`) runs once per session in the
+background. It compares the installed version (`~/.claude/skills/hydra/VERSION`)
+against the latest version on npm (`hail-hydra-cc`).
+
+If an update is available, it appears in the statusline:
+
+  🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v1.2.0 available
+
+The user can run `/hydra:update` to update, or update manually:
+  npx hail-hydra-cc@latest --global
+
+The check is throttled to once per hour and runs in a detached background
+process — it NEVER blocks Claude Code startup.
+
 ## Handoff Protocol
 
 When dispatching Wave N+1, pass relevant outputs from Wave N into the next agents'
@@ -718,8 +761,8 @@ Hydra's heads live in `agents/`. Install them where Claude Code discovers subage
 ## Configuration
 
 At session start, check for a Hydra configuration file at:
-1. `.claude/hydra/hydra.config.md` (project-level, takes precedence)
-2. `~/.claude/hydra/hydra.config.md` (user-level, fallback)
+1. `.claude/skills/hydra/config/hydra.config.md` (project-level, takes precedence)
+2. `~/.claude/skills/hydra/config/hydra.config.md` (user-level, fallback)
 
 If found, apply the settings. If not found, use defaults:
 - **mode**: balanced

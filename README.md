@@ -34,6 +34,10 @@
   <img src="https://img.shields.io/badge/Mode-Always_On-darkred?style=flat-square&logo=power&logoColor=white" alt="Always On" />
 </p>
 
+<p align="center">
+  <strong>7 agents &nbsp;·&nbsp; 7 slash commands &nbsp;·&nbsp; 3 hooks &nbsp;·&nbsp; ~50% cost savings</strong>
+</p>
+
 ---
 
 ## 🧬 What is Hydra?
@@ -70,7 +74,8 @@ npx hail-hydra-cc
 npm i hail-hydra-cc
 ```
 
-Runs the interactive installer — picks user-level or project-level, deploys all 7 heads in seconds.
+Runs the interactive installer — deploys 7 agents, 7 slash commands, 3 hooks, and registers
+the statusline and update checker. Done in seconds.
 
 ### Manual Install
 
@@ -82,7 +87,8 @@ cd hydra
 # Deploy heads globally (recommended — always on, every project)
 ./scripts/install.sh --user
 
-# 🐉 Hail Hydra! Heads are now active in all Claude Code sessions.
+# 🐉 Hail Hydra! Framework active in all Claude Code sessions.
+# ✅ 7 agents  ✅ 7 commands  ✅ 3 hooks  ✅ StatusLine  ✅ VERSION
 ```
 
 ### Installation Options
@@ -104,23 +110,108 @@ cd hydra
 ./scripts/install.sh --uninstall
 ```
 
-### What Gets Installed Where
+### What Gets Installed
 
 ```
-~/.claude/agents/          ← User-level (all projects)
-  ├── hydra-scout.md       🟢 hydra-scout (Haiku 4.5)
-  ├── hydra-runner.md      🟢 hydra-runner (Haiku 4.5)
-  ├── hydra-scribe.md      🟢 hydra-scribe (Haiku 4.5)
-  ├── hydra-guard.md       🟢 hydra-guard (Haiku 4.5)
-  ├── hydra-git.md         🟢 hydra-git (Haiku 4.5)
-  ├── hydra-coder.md       🔵 hydra-coder (Sonnet 4.6)
-  └── hydra-analyst.md     🔵 hydra-analyst (Sonnet 4.6)
+~/.claude/
+├── agents/                      # 7 agent definitions
+│   ├── hydra-scout.md           # 🟢 Haiku 4.5 — explore codebase
+│   ├── hydra-runner.md          # 🟢 Haiku 4.5 — run tests/builds
+│   ├── hydra-scribe.md          # 🟢 Haiku 4.5 — write documentation
+│   ├── hydra-guard.md           # 🟢 Haiku 4.5 — security/quality gate
+│   ├── hydra-git.md             # 🟢 Haiku 4.5 — git operations
+│   ├── hydra-coder.md           # 🔵 Sonnet 4.6 — write/edit code
+│   └── hydra-analyst.md         # 🔵 Sonnet 4.6 — debug/diagnose
+├── commands/hydra/              # 7 slash commands
+│   ├── help.md                  # /hydra:help
+│   ├── status.md                # /hydra:status
+│   ├── update.md                # /hydra:update
+│   ├── config.md                # /hydra:config
+│   ├── guard.md                 # /hydra:guard
+│   ├── quiet.md                 # /hydra:quiet
+│   └── verbose.md               # /hydra:verbose
+├── hooks/                       # 3 lifecycle hooks
+│   ├── hydra-check-update.js    # SessionStart — version check (background)
+│   ├── hydra-statusline.js      # StatusLine — status bar display
+│   └── hydra-auto-guard.js      # PostToolUse — file change tracker
+└── skills/
+    └── hydra/                   # Skill (Claude Code discoverable)
+        ├── SKILL.md             # Orchestrator instructions
+        ├── VERSION              # Installed version number
+        ├── config/
+        │   └── hydra.config.md  # User configuration (created by --config)
+        └── references/
+            ├── model-capabilities.md
+            └── routing-guide.md
 
-.claude/agents/            ← Project-level (one project)
-  └── (same files)
+> **Note:** `settings.json` is at `~/.claude/settings.json` — hooks and statusLine are registered there.
 ```
 
-> **Note:** Project-level agents take precedence over user-level when both exist. This lets you customize heads per-project if needed.
+> **Project-level** (`--project`): same files written to `.claude/` in your working
+> directory instead of `~/.claude/`. Project-level takes precedence when both exist.
+
+---
+
+## ⚡ Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/hydra:help` | Show all commands and agents |
+| `/hydra:status` | Show installed agents, version, and update availability |
+| `/hydra:update` | Update Hydra to the latest version |
+| `/hydra:config` | Show current configuration |
+| `/hydra:guard [files]` | Run manual security & quality scan |
+| `/hydra:quiet` | Suppress dispatch logs for this session |
+| `/hydra:verbose` | Enable verbose dispatch logs with timing |
+
+---
+
+## 🖥️ Status Line
+
+After installation, your Claude Code status bar shows real-time framework info:
+
+```
+🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project
+```
+
+| Element | What It Shows |
+|---------|---------------|
+| 🐉 | Hydra is active |
+| Model | Current Claude model (Opus, Sonnet, Haiku) |
+| Ctx: XX% | Context window usage with visual bar |
+| $X.XX | Session API cost so far |
+| Directory | Current working directory |
+
+**Context bar colors:**
+- 🟢 Green (0–49%) — plenty of room
+- 🟡 Yellow (50–79%) — getting full, consider `/compact`
+- 🔴 Red (80%+) — context nearly full, `/compact` or `/clear` recommended
+
+> **Note:** If you already have a custom `statusLine` configured, the installer
+> keeps yours and prints instructions for switching to Hydra's.
+
+---
+
+## 🔄 Auto-Update Notifications
+
+Hydra checks for updates once per session in the background (never blocks startup).
+When a new version is available, you'll see it in the status bar:
+
+```
+🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v1.1.0 available
+```
+
+Update with:
+
+```bash
+# From within Claude Code:
+/hydra:update
+
+# Or from your terminal:
+npx hail-hydra-cc@latest --global
+```
+
+After updating, restart Claude Code to load the new files.
 
 ---
 
@@ -129,7 +220,8 @@ cd hydra
 - **Seven specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type
 - **Auto-Guard** — hydra-guard (Haiku 4.5) automatically scans code changes for security issues after every hydra-coder run
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
-- **Quick commands** — `hydra status`, `hydra quiet`, `hydra verbose`, `hydra config` for session control
+- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose` for full session control
+- **Quick commands** — natural language shortcuts: `hydra status`, `hydra quiet`, `hydra verbose`
 - **Custom agent templates** — Add your own heads using `templates/custom-agent.md`
 - **Session indexing** — Codebase context persists across turns; no re-exploration on every prompt
 - **Speculative pre-dispatch** — hydra-scout launches in parallel with task classification, saving 2–3 seconds per task
@@ -274,7 +366,7 @@ Customize Hydra's behavior with an optional config file:
 ./scripts/install.sh --config
 ```
 
-Then edit `~/.claude/hydra/hydra.config.md`:
+Then edit `~/.claude/skills/hydra/config/hydra.config.md`:
 
 ```markdown
 mode: balanced          # conservative | balanced (default) | aggressive
@@ -283,7 +375,7 @@ auto_guard: on          # on (default) | off
 ```
 
 **Project-level config** (overrides user-level):
-Place at `.claude/hydra/hydra.config.md` in your project root.
+Place at `.claude/skills/hydra/config/hydra.config.md` in your project root.
 
 See [`config/hydra.config.md`](config/hydra.config.md) for the full reference with all options.
 
@@ -459,9 +551,12 @@ Yes. Hydra heads coexist with any other subagents. Claude Code discovers all age
 <summary><strong>How do I uninstall?</strong></summary>
 <br/>
 
+Removes all agents, commands, hooks, and cache files. Deregisters hooks from
+`~/.claude/settings.json`. Your other Claude Code configuration is preserved.
+
 ```bash
 ./scripts/install.sh --uninstall
-# 🐉 All heads severed. Hydra sleeps.
+# or: npx hail-hydra-cc --uninstall
 ```
 
 </details>

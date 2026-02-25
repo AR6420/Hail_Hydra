@@ -5,8 +5,8 @@ const path = require('path');
 const os = require('os');
 const chalk = require('chalk');
 
-const { agents, skill, references } = require('./files');
-const { showInstallHeader, showFileInstalled, showInstallComplete, showStatusTable } = require('./display');
+const { agents, skill, references, commands, hooks } = require('./files');
+const { showInstallHeader, showFileInstalled, showInstallComplete, showStatusTable, VERSION } = require('./display');
 
 // ── Install locations ────────────────────────────────────────────────────────
 
@@ -28,9 +28,9 @@ function buildManifest(base) {
   const skillEntry = {
     type:    'skill',
     key:     'SKILL.md',
-    display: 'SKILL.md',
+    display: 'skills/hydra/SKILL.md',
     content: skill,
-    dest:    path.join(base, 'hydra', 'SKILL.md'),
+    dest:    path.join(base, 'skills', 'hydra', 'SKILL.md'),
   };
 
   const refEntries = Object.entries(references).map(([key, content]) => ({
@@ -38,10 +38,26 @@ function buildManifest(base) {
     key,
     display: `references/${key}.md`,
     content,
-    dest:    path.join(base, 'hydra', 'references', `${key}.md`),
+    dest:    path.join(base, 'skills', 'hydra', 'references', `${key}.md`),
   }));
 
-  return [...agentEntries, skillEntry, ...refEntries];
+  const commandEntries = Object.entries(commands).map(([key, content]) => ({
+    type:    'command',
+    key,
+    display: `commands/hydra/${key}.md`,
+    content,
+    dest:    path.join(base, 'commands', 'hydra', `${key}.md`),
+  }));
+
+  const versionEntry = {
+    type:    'version',
+    key:     'VERSION',
+    display: 'skills/hydra/VERSION',
+    content: VERSION,
+    dest:    path.join(base, 'skills', 'hydra', 'VERSION'),
+  };
+
+  return [...agentEntries, skillEntry, ...refEntries, ...commandEntries, versionEntry];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -66,6 +82,94 @@ function fileExists(filePath) {
 
 function hasAnyInstalled(base) {
   return buildManifest(base).some((entry) => fileExists(entry.dest));
+}
+
+// ── Hooks & settings ─────────────────────────────────────────────────────────
+
+function installHooks() {
+  const hooksDir = path.join(GLOBAL_BASE, 'hooks');
+  ensureDir(hooksDir);
+
+  for (const [key, content] of Object.entries(hooks)) {
+    const dest = path.join(hooksDir, `${key}.js`);
+    try {
+      writeFileSafe(dest, content);
+      try { fs.chmodSync(dest, 0o755); } catch {}
+      showFileInstalled(`hooks/${key}.js`, true);
+    } catch (err) {
+      showFileInstalled(`hooks/${key}.js`, false, err.message);
+    }
+  }
+}
+
+function registerHooksInSettings() {
+  const settingsFile = path.join(GLOBAL_BASE, 'settings.json');
+
+  let settings = {};
+  try {
+    settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+  } catch {}
+
+  if (!settings.hooks) settings.hooks = {};
+  if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
+  if (!settings.hooks.PostToolUse)  settings.hooks.PostToolUse  = [];
+
+  const isHydraHook = (entry) =>
+    Array.isArray(entry.hooks) && entry.hooks.some(h => h.command && h.command.includes('hydra-'));
+
+  // Remove stale Hydra entries (clean reinstall)
+  settings.hooks.SessionStart = settings.hooks.SessionStart.filter(x => !isHydraHook(x));
+  settings.hooks.PostToolUse  = settings.hooks.PostToolUse.filter(x => !isHydraHook(x));
+
+  settings.hooks.SessionStart.push({
+    hooks: [{ type: 'command', command: 'node ~/.claude/hooks/hydra-check-update.js' }]
+  });
+
+  settings.hooks.PostToolUse.push({
+    matcher: 'Write|Edit|MultiEdit',
+    hooks:   [{ type: 'command', command: 'node ~/.claude/hooks/hydra-auto-guard.js' }]
+  });
+
+  let statusLineConfigured = false;
+  if (!settings.statusLine || (settings.statusLine.command && settings.statusLine.command.includes('hydra-'))) {
+    settings.statusLine = {
+      type: 'command',
+      command: 'node ~/.claude/hooks/hydra-statusline.js',
+      padding: 0,
+    };
+    statusLineConfigured = true;
+  }
+
+  writeFileSafe(settingsFile, JSON.stringify(settings, null, 2));
+  return { statusLineConfigured };
+}
+
+function deregisterHooks() {
+  const settingsFile = path.join(GLOBAL_BASE, 'settings.json');
+
+  try {
+    let settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+
+    const isHydraHook = (entry) =>
+      Array.isArray(entry.hooks) && entry.hooks.some(h => h.command && h.command.includes('hydra-'));
+
+    if (settings.hooks?.SessionStart) {
+      settings.hooks.SessionStart = settings.hooks.SessionStart.filter(x => !isHydraHook(x));
+      if (!settings.hooks.SessionStart.length) delete settings.hooks.SessionStart;
+    }
+    if (settings.hooks?.PostToolUse) {
+      settings.hooks.PostToolUse = settings.hooks.PostToolUse.filter(x => !isHydraHook(x));
+      if (!settings.hooks.PostToolUse.length) delete settings.hooks.PostToolUse;
+    }
+    if (settings.hooks && !Object.keys(settings.hooks).length) delete settings.hooks;
+
+    if (settings.statusLine?.command?.includes('hydra-')) delete settings.statusLine;
+
+    writeFileSafe(settingsFile, JSON.stringify(settings, null, 2));
+    console.log(chalk.green('  \u2714 Hooks deregistered from settings.json'));
+  } catch (err) {
+    console.log(chalk.yellow(`  \u26a0 Could not update settings.json: ${err.message}`));
+  }
 }
 
 // ── Core install ─────────────────────────────────────────────────────────────
@@ -125,10 +229,14 @@ async function runInstall(scope) {
     if (results.some((r) => !r.success)) anyFailed = true;
   }
 
+  // Hooks and settings are always global (once, not per-base)
+  installHooks();
+  const { statusLineConfigured } = registerHooksInSettings();
+
   if (!anyFailed) {
-    showInstallComplete();
+    showInstallComplete(statusLineConfigured);
   } else {
-    console.log(chalk.yellow('  ⚠ Some files failed to install. Check errors above.\n'));
+    console.log(chalk.yellow('  \u26a0 Some files failed to install. Check errors above.\n'));
   }
 }
 
@@ -189,11 +297,28 @@ async function runUninstall({ interactive = true } = {}) {
     }
   }
 
+  // Remove hook .js files from ~/.claude/hooks/
+  for (const key of Object.keys(hooks)) {
+    const dest = path.join(GLOBAL_BASE, 'hooks', `${key}.js`);
+    if (fileExists(dest)) {
+      try { fs.unlinkSync(dest); console.log(chalk.green(`  \u2714 Removed hooks/${key}.js`)); }
+      catch (err) { console.log(chalk.red(`  \u2716 Failed: hooks/${key}.js \u2014 ${err.message}`)); }
+    }
+  }
+
+  // Remove cache file
+  const cacheFile = path.join(GLOBAL_BASE, 'cache', 'hydra-update-check.json');
+  if (fileExists(cacheFile)) {
+    try { fs.unlinkSync(cacheFile); } catch {}
+  }
+
+  deregisterHooks();
+
   console.log();
   if (failed === 0) {
-    console.log(chalk.cyan.bold('  🐉 All heads severed. Hydra sleeps.\n'));
+    console.log(chalk.cyan.bold('  \uD83D\uDC09 All heads severed. Hydra sleeps.\n'));
   } else {
-    console.log(chalk.yellow(`  ⚠ ${removed} removed, ${failed} failed.\n`));
+    console.log(chalk.yellow(`  \u26a0 ${removed} removed, ${failed} failed.\n`));
   }
 }
 
@@ -214,10 +339,19 @@ function getStatus(base) {
     installed: fileExists(e.dest),
   }));
 
+  const commandEntries = manifest.filter((e) => e.type === 'command').map((e) => ({
+    name:      e.display,
+    installed: fileExists(e.dest),
+  }));
+
+  const versionEntry = manifest.find((e) => e.type === 'version');
+
   return {
     agents:     agentEntries,
     skill:      skillEntry ? fileExists(skillEntry.dest) : false,
     references: refEntries,
+    commands:   commandEntries,
+    version:    versionEntry ? (fileExists(versionEntry.dest) ? fs.readFileSync(versionEntry.dest, 'utf8').trim() : null) : null,
   };
 }
 

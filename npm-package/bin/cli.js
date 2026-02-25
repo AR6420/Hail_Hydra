@@ -39,8 +39,8 @@ Examples:
 
 What gets installed:
   ~/.claude/agents/              7 Hydra agent .md files
-  ~/.claude/hydra/SKILL.md       Core framework instructions
-  ~/.claude/hydra/references/    Model capabilities & routing guides
+  ~/.claude/skills/hydra/SKILL.md       Core framework instructions
+  ~/.claude/skills/hydra/references/    Model capabilities & routing guides
 `);
 
 // ── Main action ───────────────────────────────────────────────────────────────
