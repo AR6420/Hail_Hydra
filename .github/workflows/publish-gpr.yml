@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Publish to npm
 
 on:
   push:
@@ -11,25 +11,23 @@ jobs:
 
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js for GitHub Packages
+      - name: Set up Node.js for npm
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@ar6420'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         working-directory: npm-package
         run: npm install --ignore-scripts
 
-      - name: Publish to GitHub Packages
+      - name: Publish to npm
         working-directory: npm-package
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

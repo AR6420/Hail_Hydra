@@ -1,5 +1,5 @@
 {
-  "name": "@ar6420/hail-hydra-cc",
+  "name": "hail-hydra-cc",
   "version": "1.2.2",
   "description": "Multi-headed speculative execution framework for Claude Code",
   "bin": {
@@ -38,7 +38,7 @@
     "files/"
   ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
+    "registry": "https://registry.npmjs.org/",
     "access": "public"
   }
 }
