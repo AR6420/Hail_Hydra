@@ -1,5 +1,5 @@
 ---
-name: hydra-analyst (Sonnet 4.6)
+name: hydra-analyst
 description: >
   🔵 Hydra's analysis head — thorough code review, debugging, and analysis agent. Use
   PROACTIVELY whenever Claude needs to review code for quality, analyze a bug with error

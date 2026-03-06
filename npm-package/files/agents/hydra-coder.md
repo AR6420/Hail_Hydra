@@ -1,5 +1,5 @@
 ---
-name: hydra-coder (Sonnet 4.6)
+name: hydra-coder
 description: >
   🔵 Hydra's implementation head — capable code writing and engineering agent. Use PROACTIVELY
   whenever Claude needs to write new code, implement features, refactor existing code, create

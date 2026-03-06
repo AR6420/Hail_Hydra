@@ -1,5 +1,5 @@
 ---
-name: hydra-scribe (Haiku 4.5)
+name: hydra-scribe
 description: >
   🟢 Hydra's documentation head — fast technical writing agent. Use PROACTIVELY whenever
   Claude needs to write or update README files, add code comments or docstrings, create

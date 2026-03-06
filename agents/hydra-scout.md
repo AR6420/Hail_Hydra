@@ -1,5 +1,5 @@
 ---
-name: hydra-scout (Haiku 4.5)
+name: hydra-scout
 description: >
   🟢 Hydra's fastest head — ultra-fast codebase exploration and information retrieval.
   Use PROACTIVELY whenever Claude needs to search files, read code, find patterns, grep for

@@ -38,7 +38,7 @@ User Request
     │                                                      │
     ▼                                                      ▼
 ┌─────────────────────────────┐            ┌──────────────────────────────┐
-│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku 4.5)      │
+│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout                  │
 │  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
 │  Plans waves                │            │  "Find files relevant to      │
 │  Decides blocking / not     │            │   [user's request]"           │
@@ -361,7 +361,7 @@ Wave 4 → launch E (needs D complete)
 Classify every incoming task before executing. This is fast — just a mental check, not a separate
 step the user sees.
 
-### Tier 1 → Haiku 4.5 Heads (hydra-scout (Haiku 4.5), hydra-runner (Haiku 4.5), hydra-scribe (Haiku 4.5), hydra-guard (Haiku 4.5), hydra-git (Haiku 4.5))
+### Tier 1 → Haiku 4.5 Heads (hydra-scout, hydra-runner, hydra-scribe, hydra-guard, hydra-git)
 
 Route to Haiku when the task is **mechanical, read-heavy, or well-defined**:
 
@@ -379,7 +379,7 @@ Route to Haiku when the task is **mechanical, read-heavy, or well-defined**:
 **Heuristic**: If you could describe the task as a single imperative sentence with no ambiguity
 (e.g., "find all files importing X", "run the test suite"), it's Tier 1.
 
-### Tier 2 → Sonnet 4.6 Heads (hydra-coder (Sonnet 4.6), hydra-analyst (Sonnet 4.6))
+### Tier 2 → Sonnet 4.6 Heads (hydra-coder, hydra-analyst)
 
 Route to Sonnet when the task requires **reasoning about code, but within well-understood patterns**:
 
@@ -416,7 +416,7 @@ Keep it yourself when the task demands **deep reasoning, novel architecture, or 
 - **When in doubt, go one tier up.** Better to use Sonnet for a Haiku task than Haiku for a
   Sonnet task. Quality is never sacrificed.
 - **Compound tasks should be decomposed.** "Read the codebase and redesign the auth system"
-  becomes: hydra-scout (Haiku 4.5) reads, then you design (Opus).
+  becomes: hydra-scout reads, then you design (Opus).
 - **Iterative tasks escalate naturally.** If a Sonnet draft isn't right, don't retry with Sonnet —
   do it yourself.
 
@@ -498,20 +498,20 @@ These output types require no orchestrator judgment — accept and pass through:
 
 | Agent | Auto-Accept When |
 |-------|-----------------|
-| hydra-scout (Haiku 4.5) | Returns file paths, directory listings, search results, grep output — factual data with no interpretation |
-| hydra-runner (Haiku 4.5) | Reports all tests passing, clean build, clean lint — unambiguous pass/fail |
-| hydra-scribe (Haiku 4.5) | Produces docs/comments for NON-CRITICAL content (internal docstrings, changelogs) |
+| hydra-scout | Returns file paths, directory listings, search results, grep output — factual data with no interpretation |
+| hydra-runner | Reports all tests passing, clean build, clean lint — unambiguous pass/fail |
+| hydra-scribe | Produces docs/comments for NON-CRITICAL content (internal docstrings, changelogs) |
 
 ### Manual Verify (orchestrator reviews before accepting)
 These outputs require judgment — scan before passing to user or downstream agents:
 
 | Agent | Always Verify When |
 |-------|-------------------|
-| hydra-coder (Sonnet 4.6) | ALWAYS — code changes are never auto-accepted |
-| hydra-analyst (Sonnet 4.6) | ALWAYS — diagnoses and recommendations need validation |
-| hydra-runner (Haiku 4.5) | Reports test FAILURES — verify the failures are real and not environment issues |
-| hydra-scribe (Haiku 4.5) | Writing user-facing docs (README, API docs) — verify accuracy |
-| hydra-scout (Haiku 4.5) | Returns analysis or interpretation (not raw data) — verify conclusions |
+| hydra-coder | ALWAYS — code changes are never auto-accepted |
+| hydra-analyst | ALWAYS — diagnoses and recommendations need validation |
+| hydra-runner | Reports test FAILURES — verify the failures are real and not environment issues |
+| hydra-scribe | Writing user-facing docs (README, API docs) — verify accuracy |
+| hydra-scout | Returns analysis or interpretation (not raw data) — verify conclusions |
 
 ### Verification Decision Flowchart
 
@@ -551,8 +551,8 @@ When manual verification is required, match depth to risk:
 
 ## Auto-Guard Protocol
 
-After hydra-coder (Sonnet 4.6) produces any code changes, AUTOMATICALLY dispatch
-hydra-guard (Haiku 4.5) to scan the changes before presenting to the user. This is
+After hydra-coder produces any code changes, AUTOMATICALLY dispatch
+hydra-guard to scan the changes before presenting to the user. This is
 a non-blocking, low-cost quality gate that runs in the same wave as any final validation.
 
 ### Dispatch Rules
@@ -745,13 +745,13 @@ If the user types any of these exact phrases, respond with the corresponding act
 
 | Head | Model | Role | Tools |
 |------|-------|------|-------|
-| `hydra-scout (Haiku 4.5)` | 🟢 Haiku 4.5 | Codebase exploration, file search, reading | Read, Grep, Glob |
-| `hydra-runner (Haiku 4.5)` | 🟢 Haiku 4.5 | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
-| `hydra-scribe (Haiku 4.5)` | 🟢 Haiku 4.5 | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
-| `hydra-guard (Haiku 4.5)` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
-| `hydra-git (Haiku 4.5)` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
-| `hydra-coder (Sonnet 4.6)` | 🔵 Sonnet 4.6 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
-| `hydra-analyst (Sonnet 4.6)` | 🔵 Sonnet 4.6 | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
+| `hydra-scout` | 🟢 Haiku 4.5 | Codebase exploration, file search, reading | Read, Grep, Glob |
+| `hydra-runner` | 🟢 Haiku 4.5 | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
+| `hydra-scribe` | 🟢 Haiku 4.5 | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
+| `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
+| `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
+| `hydra-coder` | 🔵 Sonnet 4.6 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
+| `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
 
 ## Measuring Impact
 

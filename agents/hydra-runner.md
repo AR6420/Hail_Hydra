@@ -1,5 +1,5 @@
 ---
-name: hydra-runner (Haiku 4.5)
+name: hydra-runner
 description: >
   🟢 Hydra's execution head — fast test runner, build executor, and validation agent.
   Use PROACTIVELY whenever Claude needs to run tests, execute builds, check linting, verify
