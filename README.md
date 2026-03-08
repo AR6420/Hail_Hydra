@@ -25,6 +25,9 @@
   <a href="https://www.npmjs.com/package/hail-hydra-cc">
     <img src="https://img.shields.io/npm/v/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=CB3837" alt="npm version" />
   </a>
+  <a href="https://www.npmjs.com/package/hail-hydra-cc">
+    <img src="https://img.shields.io/npm/dt/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=22C55E&label=downloads" alt="npm downloads" />
+  </a>
 </p>
 
 <p align="center">
