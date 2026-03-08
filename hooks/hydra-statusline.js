@@ -78,6 +78,13 @@ process.stdin.on('end', () => {
       parts.push(updateNotice);
     }
 
+    // Compaction warning — only show at 70%+ context usage
+    if (ctxPct >= 80) {
+      parts.push(`\x1b[31m\u26A0 Compacting soon!\x1b[0m`);
+    } else if (ctxPct >= 70) {
+      parts.push(`\x1b[31m\u26A0 Auto-compact at 85%\x1b[0m`);
+    }
+
     process.stdout.write(parts.join(' \u2502 '));
 
   } catch (e) {
