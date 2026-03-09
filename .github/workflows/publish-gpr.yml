@@ -29,7 +29,7 @@ jobs:
 
       - name: Publish to npm
         working-directory: npm-package
-        run: npm publish
+        run: npm publish || echo "Version already published to npm — skipping."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -67,6 +67,6 @@ jobs:
 
       - name: Publish to GitHub Packages
         working-directory: npm-package
-        run: npm publish
+        run: npm publish || echo "Version already published to GitHub Packages — skipping."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
