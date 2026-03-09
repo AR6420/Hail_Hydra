@@ -1,12 +1,13 @@
-name: Publish to npm
+name: Publish to npm & GitHub Packages
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
-  publish:
+  publish-npm:
     runs-on: ubuntu-latest
 
     permissions:
@@ -31,3 +32,41 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-gpr:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Install dependencies
+        working-directory: npm-package
+        run: npm install --ignore-scripts
+
+      - name: Scope package for GitHub Packages
+        working-directory: npm-package
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.name = '@ar6420/hail-hydra-cc';
+            pkg.publishConfig = { registry: 'https://npm.pkg.github.com/' };
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Publish to GitHub Packages
+        working-directory: npm-package
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
