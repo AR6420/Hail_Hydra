@@ -184,11 +184,20 @@ After installation, your Claude Code status bar shows real-time framework info:
 | Ctx: XX% | Context window usage with visual bar |
 | $X.XX | Session API cost so far |
 | Directory | Current working directory |
+| ⚠ Warning | Compaction warning (only at 70%+ context usage) |
 
 **Context bar colors:**
 - 🟢 Green (0–49%) — plenty of room
 - 🟡 Yellow (50–79%) — getting full, consider `/compact`
 - 🔴 Red (80%+) — context nearly full, `/compact` or `/clear` recommended
+
+**Compaction warnings** (appended automatically at 70%+):
+```
+🐉 │ Opus │ Ctx: 73% ███████░░░ │ $1.87 │ my-project │ ⚠ Auto-compact at 85%
+🐉 │ Opus │ Ctx: 83% ████████░░ │ $3.14 │ my-project │ ⚠ Compacting soon!
+```
+- ⚠ **Auto-compact at 85%** (70–79%) — heads-up that compaction is approaching
+- ⚠ **Compacting soon!** (80%+) — compaction is imminent, consider `/compact` now
 
 > **Note:** If you already have a custom `statusLine` configured, the installer
 > keeps yours and prints instructions for switching to Hydra's.
