@@ -9,7 +9,7 @@
 npx hail-hydra-cc
 ```
 
-Runs an interactive installer that deploys 7 Hydra agents into your Claude Code setup.
+Runs an interactive installer that deploys 9 Hydra agents into your Claude Code setup.
 
 ## What is Hydra?
 
@@ -24,6 +24,8 @@ Hydra makes Claude Code's Opus model an intelligent **orchestrator** instead of 
 | `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff |
 | `hydra-coder` | 🔵 Sonnet 4.6 | Code implementation, refactoring |
 | `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, analysis |
+| `hydra-sentinel-scan` | 🟢 Haiku 4.5 | Fast integration sweep |
+| `hydra-sentinel` | 🔵 Sonnet 4.6 | Deep integration analysis |
 
 **Expected gains:** 2–3× faster tasks, ~50% lower API costs, zero quality loss.
 (Savings calculated against Opus 4.6 at $5/$25 per MTok — February 2026 pricing)
@@ -44,14 +46,16 @@ npx hail-hydra-cc --help         # Show help
 
 ```
 ~/.claude/                       (or ./.claude/ for local)
-├── agents/                      # 7 agent definitions
+├── agents/                      # 9 agent definitions
 │   ├── hydra-scout.md
 │   ├── hydra-runner.md
 │   ├── hydra-scribe.md
 │   ├── hydra-guard.md
 │   ├── hydra-git.md
+│   ├── hydra-sentinel-scan.md
 │   ├── hydra-coder.md
-│   └── hydra-analyst.md
+│   ├── hydra-analyst.md
+│   └── hydra-sentinel.md
 ├── commands/hydra/              # 7 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status

@@ -36,18 +36,20 @@ async function runPrompts() {
   // ── Prompt 2: Confirmation with agent preview ─────────────────────────────
 
   console.log();
-  console.log(chalk.bold('  This will install 7 Hydra agents + SKILL.md + reference docs.'));
+  console.log(chalk.bold('  This will install 9 Hydra agents + SKILL.md + reference docs.'));
   console.log();
   console.log('  Agents:');
 
   const agentList = [
-    { dot: chalk.green('🟢'), name: 'hydra-scout (Haiku)   ', role: 'Codebase exploration' },
-    { dot: chalk.green('🟢'), name: 'hydra-runner (Haiku)  ', role: 'Test execution & validation' },
-    { dot: chalk.green('🟢'), name: 'hydra-scribe (Haiku)  ', role: 'Documentation writing' },
-    { dot: chalk.green('🟢'), name: 'hydra-guard (Haiku)   ', role: 'Auto-protection & safety' },
-    { dot: chalk.green('🟢'), name: 'hydra-git (Haiku)     ', role: 'Git operations' },
-    { dot: chalk.blue('🔵'),  name: 'hydra-coder (Sonnet)  ', role: 'Code implementation' },
-    { dot: chalk.blue('🔵'),  name: 'hydra-analyst (Sonnet)', role: 'Code review & debugging' },
+    { dot: chalk.green('🟢'), name: 'hydra-scout (Haiku)          ', role: 'Codebase exploration' },
+    { dot: chalk.green('🟢'), name: 'hydra-runner (Haiku)         ', role: 'Test execution & validation' },
+    { dot: chalk.green('🟢'), name: 'hydra-scribe (Haiku)         ', role: 'Documentation writing' },
+    { dot: chalk.green('🟢'), name: 'hydra-guard (Haiku)          ', role: 'Auto-protection & safety' },
+    { dot: chalk.green('🟢'), name: 'hydra-git (Haiku)            ', role: 'Git operations' },
+    { dot: chalk.green('🟢'), name: 'hydra-sentinel-scan (Haiku)  ', role: 'Fast integration sweep' },
+    { dot: chalk.blue('🔵'),  name: 'hydra-coder (Sonnet)         ', role: 'Code implementation' },
+    { dot: chalk.blue('🔵'),  name: 'hydra-analyst (Sonnet)       ', role: 'Code review & debugging' },
+    { dot: chalk.blue('🔵'),  name: 'hydra-sentinel (Sonnet)      ', role: 'Deep integration analysis' },
   ];
 
   for (const a of agentList) {

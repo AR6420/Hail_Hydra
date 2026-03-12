@@ -32,6 +32,14 @@ Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguou
 - **hydra-scribe**: Internal docstrings, inline comments, changelog entries
 - **Requires verify**: Any analysis, interpretation, or user-facing documentation
 
+### hydra-sentinel-scan (Haiku 4.5)
+- **Strengths**: Pattern matching, grep-level analysis, import tracing,
+  fast structural checks
+- **Limitations**: Cannot understand semantic meaning of data shapes,
+  may produce false positives on complex contract changes
+- **Memory focus**: Codebase dependency graph, coupling patterns,
+  false positive history
+
 ---
 
 ## Claude Sonnet 4.6
@@ -60,6 +68,14 @@ the approach is established even if the specific implementation requires thought
 Sonnet outputs always require orchestrator review — code changes and analysis are never auto-accepted:
 - **hydra-coder**: ALWAYS verify — scan for correctness, edge cases, project pattern alignment
 - **hydra-analyst**: ALWAYS verify — validate reasoning, check suggested fix against actual code
+
+### hydra-sentinel (Sonnet 4.6)
+- **Strengths**: Semantic understanding of data flow, contract validation
+  across component boundaries, accurate false positive filtering,
+  specific fix suggestions
+- **Limitations**: Slower and more expensive — only triggered when needed
+- **Memory focus**: API patterns, architectural boundaries, historical
+  breakage patterns, component communication flows
 
 ---
 
@@ -124,6 +140,8 @@ Drawing from speculative decoding theory, track these metrics mentally:
 |-------------|------------------------|-------|
 | Haiku → Opus verification | ~85-90% | For well-classified Tier 1 tasks |
 | Sonnet → Opus verification | ~90-95% | For well-classified Tier 2 tasks |
+| sentinel-scan → sentinel escalation | ~20% | ~80%+ of scans return clean — only ~20% escalate to deep analysis |
+| sentinel → Opus verification | ~95% | Sonnet's deep analysis is highly accurate; Opus rarely overrides |
 
 If your acceptance rate drops below 80%, you're likely misclassifying tasks — shift borderline
 tasks to a higher tier. If it's consistently above 95%, you might be too conservative.

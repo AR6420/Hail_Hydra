@@ -41,7 +41,7 @@ function showInstallComplete(statusLineConfigured = true) {
   console.log();
   console.log(chalk.cyan.bold('  \uD83D\uDC09 Hail Hydra! Framework deployed and ready.'));
   console.log(chalk.gray('  ' + '\u2500'.repeat(45)));
-  console.log(chalk.green(`    \u2714 7 agents installed`));
+  console.log(chalk.green(`    \u2714 9 agents installed`));
   console.log(chalk.green(`    \u2714 7 slash commands installed`));
   console.log(chalk.green(`    \u2714 3 hooks registered`));
   if (statusLineConfigured) {
@@ -49,6 +49,7 @@ function showInstallComplete(statusLineConfigured = true) {
   } else {
     console.log(chalk.yellow(`    \u26a0 StatusLine skipped (existing config preserved)`));
   }
+  console.log(chalk.green(`    \u2714 Sentinel pipeline active`));
   console.log(chalk.green(`    \u2714 Version tracked (${VERSION})`));
   console.log();
   console.log(chalk.gray('  Quick start:  /hydra:help'));

@@ -114,14 +114,19 @@ Many real user requests contain multiple subtasks at different tiers. Decompose 
 ### Example 1: "Fix the bug in auth.py and add tests"
 1. **hydra-scout (Haiku 4.5)** [BLOCKING] → Find auth.py, read it, understand the context
 2. **hydra-coder (Sonnet 4.6)** [BLOCKING] → Fix the bug and write tests
-3. **hydra-guard (Haiku 4.5)** [NON-BLOCKING] → Security scan on changed files
+3. **hydra-sentinel-scan (Haiku 4.5)** [BLOCKING] → Integration sweep on changed files
+   **hydra-guard (Haiku 4.5)** [BLOCKING] → Security scan on changed files
    **hydra-runner (Haiku 4.5)** [BLOCKING] → Run the tests to verify
+4. *(If sentinel-scan flags issues)* **hydra-sentinel (Sonnet 4.6)** [BLOCKING] → Deep analysis
 
 ### Example 2: "Refactor the API module and update the docs"
 1. **hydra-scout (Haiku 4.5)** [BLOCKING] → Map the current API module structure
 2. **hydra-coder (Sonnet 4.6)** [BLOCKING] → Perform the refactoring
-3. **hydra-runner (Haiku 4.5)** [BLOCKING] → Run tests to verify nothing broke
+3. **hydra-sentinel-scan (Haiku 4.5)** [BLOCKING] → Integration sweep on refactored code
+   **hydra-guard (Haiku 4.5)** [BLOCKING] → Security scan on changed files
+   **hydra-runner (Haiku 4.5)** [BLOCKING] → Run tests to verify nothing broke
    **hydra-scribe (Haiku 4.5)** [NON-BLOCKING] → Update documentation (fire & forget)
+4. *(If sentinel-scan flags issues)* **hydra-sentinel (Sonnet 4.6)** [BLOCKING] → Deep analysis
 
 ### Example 3: "Review the codebase and suggest architecture improvements"
 1. **hydra-scout (Haiku 4.5)** → Map the project structure and key files
@@ -185,3 +190,18 @@ Does it need architectural judgment? ─── Yes ──→ Opus 4.6 (you)
     │
     No ──→ hydra-coder (Sonnet 4.6), but monitor output closely
 ```
+
+## Sentinel Routing
+
+Sentinel is NOT manually routed. It triggers AUTOMATICALLY after code changes:
+
+| Event | Triggers |
+|-------|----------|
+| hydra-coder writes/edits code | → sentinel-scan (always) |
+| hydra-analyst suggests code changes | → sentinel-scan (always) |
+| Orchestrator makes direct code changes | → sentinel-scan (always) |
+| sentinel-scan finds issues | → sentinel deep analysis |
+| sentinel-scan is clean | → nothing (done) |
+| hydra-scribe writes docs | → nothing (skip) |
+| hydra-git commits | → nothing (skip) |
+| hydra-runner runs tests | → nothing (skip) |

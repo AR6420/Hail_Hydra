@@ -53,6 +53,16 @@ const agents = {
     model: 'Haiku',
     display: 'hydra-git (Haiku)      — Git operations',
   },
+  'hydra-sentinel-scan': {
+    content: readBundled('agents/hydra-sentinel-scan.md'),
+    model: 'Haiku',
+    display: 'hydra-sentinel-scan (Haiku) — Fast integration sweep',
+  },
+  'hydra-sentinel': {
+    content: readBundled('agents/hydra-sentinel.md'),
+    model: 'Sonnet',
+    display: 'hydra-sentinel (Sonnet) — Deep integration analysis',
+  },
 };
 
 const skill = readBundled('SKILL.md');

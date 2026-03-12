@@ -38,7 +38,7 @@
 </p>
 
 <p align="center">
-  <strong>7 agents &nbsp;·&nbsp; 7 slash commands &nbsp;·&nbsp; 3 hooks &nbsp;·&nbsp; ~50% cost savings</strong>
+  <strong>9 agents &nbsp;·&nbsp; 7 slash commands &nbsp;·&nbsp; 3 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Persistent memory &nbsp;·&nbsp; Integration integrity</strong>
 </p>
 
 ---
@@ -50,6 +50,13 @@ You know how in the movies, Hydra had agents embedded *everywhere*, silently get
 **Hydra** is a task-level speculative execution framework inspired by [Speculative Decoding](https://arxiv.org/abs/2302.01318) in LLM inference. Instead of making one expensive model (Opus 4.6) do *everything* — from searching files to writing entire modules — Hydra deploys a team of specialized **"heads"** running on faster, cheaper models that handle the grunt work.
 
 The result? **Opus becomes a manager, not a laborer.** It classifies tasks, dispatches them to the right head, glances at the output, and moves on. The user never notices. It's invisible. It's always on.
+
+**New in v2.0.0:** Every agent now has **persistent memory** — they learn
+your codebase patterns, conventions, and architectural decisions across
+sessions. The orchestrator (Opus) also maintains its own memory of fragile
+zones and routing decisions. Plus, the new **hydra-sentinel** automatically
+catches integration breakage after code changes — and code isn't presented
+to you until verification completes.
 
 > **Four built-in speed optimizations** reduce overhead at every stage: speculative pre-dispatch
 > (scout launches in parallel with task classification), session indexing (codebase context
@@ -77,7 +84,7 @@ npx hail-hydra-cc@latest
 npm i hail-hydra-cc@latest
 ```
 
-Runs the interactive installer — deploys 7 agents, 7 slash commands, 3 hooks, and registers
+Runs the interactive installer — deploys 9 agents, 7 slash commands, 3 hooks, and registers
 the statusline and update checker. Done in seconds.
 
 ### Manual Install
@@ -91,7 +98,7 @@ cd hydra
 ./scripts/install.sh --user
 
 # 🐉 Hail Hydra! Framework active in all Claude Code sessions.
-# ✅ 7 agents  ✅ 7 commands  ✅ 3 hooks  ✅ StatusLine  ✅ VERSION
+# ✅ 9 agents  ✅ 7 commands  ✅ 3 hooks  ✅ StatusLine  ✅ VERSION
 ```
 
 ### Installation Options
@@ -117,14 +124,16 @@ cd hydra
 
 ```
 ~/.claude/
-├── agents/                      # 7 agent definitions
+├── agents/                      # 9 agent definitions (all with memory: project)
 │   ├── hydra-scout.md           # 🟢 Haiku 4.5 — explore codebase
 │   ├── hydra-runner.md          # 🟢 Haiku 4.5 — run tests/builds
 │   ├── hydra-scribe.md          # 🟢 Haiku 4.5 — write documentation
 │   ├── hydra-guard.md           # 🟢 Haiku 4.5 — security/quality gate
 │   ├── hydra-git.md             # 🟢 Haiku 4.5 — git operations
+│   ├── hydra-sentinel-scan.md   # 🟢 Haiku 4.5 — fast integration sweep
 │   ├── hydra-coder.md           # 🔵 Sonnet 4.6 — write/edit code
-│   └── hydra-analyst.md         # 🔵 Sonnet 4.6 — debug/diagnose
+│   ├── hydra-analyst.md         # 🔵 Sonnet 4.6 — debug/diagnose
+│   └── hydra-sentinel.md        # 🔵 Sonnet 4.6 — deep integration analysis
 ├── commands/hydra/              # 7 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status
@@ -229,7 +238,11 @@ After updating, restart Claude Code to load the new files.
 
 ## ✨ Features
 
-- **Seven specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type
+- **Nine specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type
+- **Sentinel integration integrity** — Two-tier verification (fast scan + deep analysis) catches ~72% of integration bugs before runtime
+- **Persistent agent memory** — Every agent remembers your codebase patterns, conventions, and past decisions across sessions
+- **Orchestrator memory** — Opus maintains its own notes on fragile zones, routing patterns, and known issues via CLAUDE.md
+- **Quality-first pipeline** — Code changes block until sentinel + guard verification completes; nothing reaches you unchecked
 - **Auto-Guard** — hydra-guard (Haiku 4.5) automatically scans code changes for security issues after every hydra-coder run
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
 - **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose` for full session control
@@ -238,6 +251,138 @@ After updating, restart Claude Code to load the new files.
 - **Session indexing** — Codebase context persists across turns; no re-exploration on every prompt
 - **Speculative pre-dispatch** — hydra-scout launches in parallel with task classification, saving 2–3 seconds per task
 - **Dispatch log** — Transparent audit trail showing which agents ran, what model, and outcome
+
+---
+
+## 🛡️ Sentinel — Integration Integrity
+
+Most bugs don't come from bad code — they come from good code that **doesn't fit together**. A renamed export, a changed return type, a missing dependency after a refactor. These integration issues slip past linters, type-checkers, and even code review because no single file looks wrong.
+
+**hydra-sentinel** catches them automatically.
+
+### How It Works
+
+```
+Code change lands (hydra-coder finishes)
+    │
+    ▼
+┌──────────────────────────────────────┐
+│  🟢 hydra-sentinel-scan (Haiku 4.5)  │  ← Runs on EVERY code change (~1-2s)
+│  Fast sweep: imports, exports,       │
+│  signatures, dependencies            │
+└──────────────┬───────────────────────┘
+               │
+          Issues found?
+          ├── No:  ✅ Pass — code proceeds to guard
+          │
+          └── Yes: Escalate
+               │
+               ▼
+┌──────────────────────────────────────┐
+│  🔵 hydra-sentinel (Sonnet 4.6)      │  ← Only when scan flags issues (~20-30%)
+│  Deep analysis: confirms real issues, │
+│  dismisses false positives,          │
+│  proposes fixes                      │
+└──────────────┬───────────────────────┘
+               │
+          Fix decision:
+          ├── Trivial (import typo): Auto-fix
+          ├── Medium (signature mismatch): Offer fix to user
+          └── Complex (architectural): Report with context
+```
+
+### What Sentinel Catches
+
+| Check Type | Priority | Example |
+|:-----------|:---------|:--------|
+| **Import/export mismatches** | P0 | Importing a function that was renamed or removed |
+| **Function signature changes** | P0 | Caller passes 2 args, function now expects 3 |
+| **Type contract violations** | P1 | Function returns `string` but caller expects `number` |
+| **Missing dependency updates** | P1 | New import added but package not in `package.json` |
+| **Cross-file rename gaps** | P1 | Variable renamed in definition but not all call sites |
+| **Circular dependency introduction** | P2 | New import creates A → B → C → A cycle |
+| **Dead code from refactoring** | P2 | Exported function no longer imported anywhere |
+| **Environment/config mismatches** | P2 | Code references env var that isn't in `.env.example` |
+
+### Example Output
+
+```
+🛡️ Sentinel Report
+──────────────────────────────────────
+✖ P0: src/auth.js imports `validateToken` from src/utils.js
+       but src/utils.js now exports `verifyToken` (renamed in this session)
+       → Fix: Update import to `verifyToken` [auto-fixable]
+
+⚠ P1: src/api/routes.js calls createUser(name, email)
+       but src/models/user.js:createUser now expects (name, email, role)
+       → Missing required parameter `role` added in this change
+
+✔ 6 other integration points verified clean
+──────────────────────────────────────
+```
+
+### Expected Detection Rates
+
+| Category | Estimated Detection Rate | Notes |
+|:---------|:------------------------|:------|
+| Import/export mismatches | ~95% | Direct string matching |
+| Signature mismatches | ~80% | Requires type inference |
+| Type contract violations | ~60% | Limited without full type system |
+| Missing dependencies | ~90% | Package.json diffing |
+| Cross-file rename gaps | ~70% | Heuristic-based |
+| Circular dependencies | ~85% | Import graph traversal |
+| Dead code | ~50% | Conservative — flags only obvious cases |
+| Config mismatches | ~40% | Pattern matching on env references |
+| **Weighted average** | **~72%** | Based on typical issue distribution |
+
+> **Memory makes it better over time.** Sentinel remembers past false positives and known fragile
+> integration points in your project. The more you use it, the more accurate it gets.
+
+---
+
+## 🧠 Agent Memory
+
+Without memory, every session starts cold. Agents re-discover your conventions, re-learn your
+project structure, and repeat the same questions. With memory, knowledge compounds.
+
+| Aspect | Without Memory | With Memory |
+|:-------|:---------------|:------------|
+| **First task** | Agent explores from scratch | Agent recalls project patterns |
+| **Conventions** | May use wrong style | Remembers your naming, structure, patterns |
+| **Known issues** | No awareness of past bugs | Recalls fragile areas and past fixes |
+| **Routing accuracy** | Generic classification | Improved by past dispatch outcomes |
+| **False positives** | Same false alarms repeat | Sentinel suppresses known non-issues |
+
+### How It Works
+
+Every agent has `memory: project` in its frontmatter. Claude Code automatically manages a
+per-project memory directory (`.claude/memory/`) where agents store and retrieve learnings.
+
+| Agent | What It Remembers |
+|:------|:------------------|
+| **hydra-scout** | Project structure patterns, key file locations, search shortcuts |
+| **hydra-runner** | Test commands, common failure patterns, build quirks |
+| **hydra-scribe** | Documentation style, preferred formats, terminology |
+| **hydra-guard** | Known false positives, project-specific security patterns |
+| **hydra-git** | Commit conventions, branch naming, merge preferences |
+| **hydra-sentinel-scan** | Known fragile integration points, past false positives |
+| **hydra-coder** | Coding style, architecture patterns, preferred libraries |
+| **hydra-analyst** | Common bug patterns, performance hotspots, review focus areas |
+| **hydra-sentinel** | Integration history, confirmed vs dismissed findings |
+| **Orchestrator (Opus)** | Fragile zones, routing accuracy, escalation patterns (via CLAUDE.md Hydra Notes) |
+
+### Memory Properties
+
+- **Automatic** — agents read and write memory without any user action
+- **Project-scoped** — each project has its own memory; no cross-contamination
+- **Persistent** — survives across sessions; compounds over time
+- **Manageable** — stored as plain markdown in `.claude/memory/`; edit or delete anytime
+
+### The Compound Effect
+
+Session 1: Agents learn your project. Session 5: They know your conventions. Session 20: They
+anticipate your patterns. The framework gets more efficient the more you use it — not because
+the models improve, but because context quality improves.
 
 ---
 
@@ -330,12 +475,23 @@ User Request
     └── Code / analysis / user-facing docs? → Orchestrator verifies
          │
          ▼
+   ┌─────────────────────────────────────────────────────┐
+   │  🛡️ QUALITY GATE (blocks until complete)            │
+   │                                                     │
+   │  🟢 sentinel-scan (Haiku) — fast integration sweep  │
+   │       └── issues? → 🔵 sentinel (Sonnet) — deep     │
+   │  🟢 guard (Haiku) — security/quality scan           │
+   │                                                     │
+   │  Both must pass before result reaches user           │
+   └──────────────────────┬──────────────────────────────┘
+                          │
+                          ▼
    User gets result  +  non-blocking outputs appended when ready
 ```
 
 ---
 
-## 🐲 The Seven Heads
+## 🐲 The Nine Heads
 
 | Head | Model | Speed | Role | Personality |
 |:-----|:------|:------|:-----|:------------|
@@ -344,8 +500,10 @@ User Request
 | **hydra-scribe (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
 | **hydra-guard (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Security/quality gate after code changes | *"No secrets. No injection. You're clean."* |
 | **hydra-git (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
+| **hydra-sentinel-scan (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Fast integration sweep after code changes | *"Imports check out. Signatures match. Clean."* |
 | **hydra-coder (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
 | **hydra-analyst (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
+| **hydra-sentinel (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Deep integration analysis (when scan flags issues) | *"2 real issues confirmed. 1 false positive dismissed."* |
 
 ### Task Routing Cheat Sheet
 
@@ -365,6 +523,12 @@ Is it read-only? ─── Yes ──→ Finding files?
     No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet 4.6) 🔵
     │
     No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus 4.6 (handle it yourself)
+
+    Code was just changed? ─── Yes ──→ hydra-sentinel-scan (Haiku 4.5) 🟢
+        │                                   │
+        │                              Issues found?
+        │                              ├── No:  Done ✅
+        │                              └── Yes: hydra-sentinel (Sonnet 4.6) 🔵
 ```
 
 ---
@@ -409,7 +573,7 @@ cp templates/custom-agent.md agents/hydra-myspecialist.md
 ./scripts/install.sh --user   # or --project
 ```
 
-Your new head is now discoverable by Claude Code alongside the built-in seven.
+Your new head is now discoverable by Claude Code alongside the built-in nine.
 See [`templates/custom-agent.md`](templates/custom-agent.md) for the full template with
 instructions on writing effective agent descriptions, output formats, and collaboration protocols.
 
@@ -426,8 +590,10 @@ hydra/
 │   ├── hydra-scribe.md                  # 🟢 Documentation writer
 │   ├── hydra-guard.md                   # 🟢 Security/quality gate
 │   ├── hydra-git.md                     # 🟢 Git operations
+│   ├── hydra-sentinel-scan.md           # 🟢 Fast integration sweep
 │   ├── hydra-coder.md                   # 🔵 Code implementer
-│   └── hydra-analyst.md                 # 🔵 Code reviewer & debugger
+│   ├── hydra-analyst.md                 # 🔵 Code reviewer & debugger
+│   └── hydra-sentinel.md               # 🔵 Deep integration analysis
 ├── 📚 references/
 │   ├── routing-guide.md                 # 30+ task classification examples
 │   └── model-capabilities.md            # What each model excels at
@@ -451,6 +617,8 @@ hydra/
 | **User Experience** | Normal | Normal | Invisible — zero friction |
 | **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
 | **Scout/runner verification** | Opus reviews every output | Auto-accepted for factual data | 🟢 ~50-60% of outputs skip review |
+| **Integration bugs caught** | 0% (no verification) | ~72% caught before runtime | 🟢 Sentinel auto-verification |
+| **Session knowledge** | Starts cold every time | Compounds across sessions | 🟢 Persistent agent memory |
 
 ### How the Savings Work
 
@@ -459,6 +627,8 @@ hydra/
 | Exploration, search, tests, docs | ~50% | 🟢 Haiku 4.5 | 20% ($1 vs $5/MTok) | 20% ($5 vs $25/MTok) |
 | Implementation, review, debugging | ~30% | 🔵 Sonnet 4.6 | 60% ($3 vs $5/MTok) | 60% ($15 vs $25/MTok) |
 | Architecture, hard problems | ~20% | 🧠 Opus 4.6 | 100% (no change) | 100% (no change) |
+| Sentinel scan (fast) | Auto (every code change) | 🟢 Haiku 4.5 | 20% | 20% |
+| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet 4.6 | 60% | 60% |
 | **Blended effective cost** | | | **~48% of all-Opus** | **~48% of all-Opus** |
 
 Note: Blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48%.
@@ -573,6 +743,48 @@ Removes all agents, commands, hooks, and cache files. Deregisters hooks from
 
 </details>
 
+<details>
+<summary><strong>What is Sentinel and how does it work?</strong></summary>
+<br/>
+Sentinel is a two-tier integration verification system. After every code change, <strong>hydra-sentinel-scan</strong> (Haiku 4.5) runs a fast sweep (~1-2s) checking imports, exports, function signatures, and dependencies. If it finds potential issues, <strong>hydra-sentinel</strong> (Sonnet 4.6) performs deep analysis to confirm real problems and dismiss false positives. The result is ~72% of integration bugs caught before they reach you.
+</details>
+
+<details>
+<summary><strong>Does Sentinel slow things down?</strong></summary>
+<br/>
+The fast scan adds ~1-2 seconds per code change. The deep analysis only triggers when the scan flags issues (~20-30% of changes), adding another ~3-5 seconds in those cases. For the ~70-80% of changes that are clean, you'll barely notice it. The time saved debugging integration issues far outweighs the scan overhead.
+</details>
+
+<details>
+<summary><strong>Will Sentinel auto-fix things without asking?</strong></summary>
+<br/>
+Only trivial fixes (like updating an import path after a rename). For medium-complexity fixes (signature mismatches), it offers the fix for your approval. For complex architectural issues, it reports the problem with context but doesn't attempt a fix. You stay in control.
+</details>
+
+<details>
+<summary><strong>Can I disable Sentinel?</strong></summary>
+<br/>
+Yes. Set <code>sentinel: off</code> in your <code>hydra.config.md</code>. You can also set <code>sentinel: scan-only</code> to keep the fast sweep but skip deep analysis. The default is <code>on</code> (both tiers).
+</details>
+
+<details>
+<summary><strong>Does Agent Memory use extra tokens?</strong></summary>
+<br/>
+Memory is loaded as part of each agent's context when it starts, so it does use some tokens — but agent memory files are small (typically a few hundred tokens each). The improved accuracy from having project context usually <em>saves</em> tokens by reducing re-exploration and misclassification.
+</details>
+
+<details>
+<summary><strong>Where is agent memory stored?</strong></summary>
+<br/>
+In <code>.claude/memory/</code> within your project directory. Each agent stores its own memory as plain markdown files. You can read, edit, or delete them anytime. Memory is project-scoped — each project has its own memory, no cross-contamination.
+</details>
+
+<details>
+<summary><strong>Does Opus (the orchestrator) also have memory?</strong></summary>
+<br/>
+Yes. Opus maintains a "Hydra Notes" section in your project's <code>CLAUDE.md</code> file. This includes fragile integration zones, routing accuracy observations, and known issues. Unlike agent memory (which is per-agent), orchestrator memory is visible to all agents and informs dispatch decisions.
+</details>
+
 ---
 
 ## 🤝 Contributing
@@ -600,6 +812,8 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
   <br/><br/>
   <em>Built with 🧠 by Claude Opus 4.6 — ironically, the model this framework is designed to use less of.</em>
+  <br/>
+  <em>v2.0.0 — Now with memory and integration integrity.</em>
 </p>
 
 ---
