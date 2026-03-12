@@ -197,17 +197,16 @@ function installToBase(base, label) {
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-async function runInstall(scope) {
-  const inquirer = require('inquirer');
-
+async function runInstall(scope, { nonInteractive = false } = {}) {
   const bases =
     scope === 'both'   ? [[GLOBAL_BASE, 'Global (~/.claude/)'], [LOCAL_BASE, 'Local (./.claude/)']] :
     scope === 'global' ? [[GLOBAL_BASE, 'Global (~/.claude/)']] :
                          [[LOCAL_BASE,  'Local (./.claude/)']];
 
-  // Check for existing files and ask about overwrite
+  // Check for existing files and ask about overwrite (skip in non-interactive mode)
   const anyExisting = bases.some(([base]) => hasAnyInstalled(base));
-  if (anyExisting) {
+  if (anyExisting && !nonInteractive) {
+    const inquirer = require('inquirer');
     const { overwrite } = await inquirer.prompt([
       {
         type:    'confirm',

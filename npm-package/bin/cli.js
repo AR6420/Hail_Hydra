@@ -59,17 +59,17 @@ program.action(async (options) => {
     }
 
     if (options.global) {
-      await installer.runInstall('global');
+      await installer.runInstall('global', { nonInteractive: true });
       return;
     }
 
     if (options.local) {
-      await installer.runInstall('local');
+      await installer.runInstall('local', { nonInteractive: true });
       return;
     }
 
     if (options.both) {
-      await installer.runInstall('both');
+      await installer.runInstall('both', { nonInteractive: true });
       return;
     }
 
