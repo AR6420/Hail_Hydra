@@ -47,6 +47,32 @@ process.stdin.on('end', () => {
       fs.appendFileSync(trackingFile, filePath + '\n');
     }
 
+    // === Sentinel Pending Flag ===
+    // Write a flag file that the statusline hook reads.
+    // This shows "⚠ Sentinel pending" in the status bar until cleared.
+    const sentinelDir = path.join(os.tmpdir(), 'hydra-sentinel');
+    const sentinelFlag = path.join(sentinelDir, `${sessionId}-pending.json`);
+
+    if (!fs.existsSync(sentinelDir)) {
+      fs.mkdirSync(sentinelDir, { recursive: true });
+    }
+
+    // Read existing pending data or create new
+    let pending = { files: [], created_at: Date.now() };
+    try {
+      pending = JSON.parse(fs.readFileSync(sentinelFlag, 'utf8'));
+    } catch (e) {
+      // New flag
+    }
+
+    // Add file to pending list (dedup)
+    if (!pending.files.includes(filePath)) {
+      pending.files.push(filePath);
+    }
+    pending.updated_at = Date.now();
+
+    fs.writeFileSync(sentinelFlag, JSON.stringify(pending));
+
   } catch (e) {
     // Silently fail — NEVER block Claude Code
   }

@@ -95,3 +95,21 @@ You may be running in parallel with other Hydra agents. Your output must be:
   even if you notice adjacent issues. Flag them for the orchestrator instead.
 - **Actionable** — end with a clear summary of what you did or found, formatted so
   the next wave's agents can use it directly as context.
+
+## MANDATORY: Sentinel Trigger Footer
+
+When your analysis results in code changes or code change recommendations,
+you MUST end your response with this exact block:
+
+---
+⚠️ HYDRA_SENTINEL_REQUIRED
+Files changed: [list every file modified]
+Exports modified: [list any renamed/added/removed exports]
+Signatures changed: [list any function signature changes]
+---
+
+If your task was analysis-only with no code changes, end with:
+
+---
+✅ HYDRA_NO_CODE_CHANGES
+---

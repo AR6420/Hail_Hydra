@@ -85,6 +85,30 @@ process.stdin.on('end', () => {
       parts.push(`\x1b[31m\u26A0 Auto-compact at 85%\x1b[0m`);
     }
 
+    // === Sentinel Pending Warning ===
+    // Check if code changes were made but sentinel hasn't run yet
+    let sentinelWarning = '';
+    try {
+      const sentinelDir = path.join(os.tmpdir(), 'hydra-sentinel');
+      const sessionId = data.session_id || 'unknown';
+      const sentinelFlag = path.join(sentinelDir, `${sessionId}-pending.json`);
+      const pendingData = JSON.parse(fs.readFileSync(sentinelFlag, 'utf8'));
+
+      // Only show if flag is recent (within last 10 minutes)
+      // and has files pending
+      const age = Date.now() - (pendingData.updated_at || 0);
+      if (pendingData.files?.length > 0 && age < 600000) {
+        const count = pendingData.files.length;
+        sentinelWarning = ` \x1b[31m\u26A0 Sentinel pending (${count} files)\x1b[0m`;
+      }
+    } catch (e) {
+      // No flag file — sentinel is clean or hasn't been needed
+    }
+
+    if (sentinelWarning) {
+      parts.push(sentinelWarning);
+    }
+
     process.stdout.write(parts.join(' \u2502 '));
 
   } catch (e) {

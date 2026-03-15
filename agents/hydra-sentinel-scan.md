@@ -7,7 +7,7 @@ description: >
   If issues are found, the orchestrator escalates to hydra-sentinel for
   deep analysis. If clean — done, zero additional cost.
 model: haiku
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, Bash
 memory: project
 ---
 
@@ -139,3 +139,19 @@ You may be running in parallel with other Hydra agents. Your output must be:
 - **Clearly structured** — use the JSON format above so the orchestrator can parse it
 - **Focused on YOUR task only** — integration integrity, nothing else
 - **Actionable** — every issue includes file:line and a specific suggestion
+
+## Cleanup: Clear Sentinel Pending Flag
+
+After completing your scan (whether clean or issues found), clear the
+sentinel pending flag by deleting the flag file:
+```bash
+rm -f /tmp/hydra-sentinel/${session_id}-pending.json
+```
+
+Use the session_id from your context. This clears the "⚠ Sentinel pending"
+warning from the status bar.
+
+If you can't determine the session_id, run:
+```bash
+rm -f /tmp/hydra-sentinel/*-pending.json
+```
