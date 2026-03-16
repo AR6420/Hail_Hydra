@@ -1,18 +1,18 @@
-# Routing Guide — Detailed Classification Examples
+# Routing Guide — Mandatory Delegation Examples
 
-This reference provides concrete examples to help calibrate task classification.
-Read this when you need to resolve ambiguous cases.
+This reference provides concrete examples to see mandatory delegation in action.
+Read this when you need to see how delegation rules apply to real tasks.
 
 ## Table of Contents
-1. [Tier 1 (Haiku 4.5) Examples](#tier-1-haiku)
-2. [Tier 2 (Sonnet 4.6) Examples](#tier-2-sonnet)
-3. [Tier 3 (Opus 4.6) Examples](#tier-3-opus)
+1. [ALWAYS Delegate — Haiku 4.5 Agents](#always-delegate-haiku)
+2. [ALWAYS Delegate — Sonnet 4.6 Agents](#always-delegate-sonnet)
+3. [ALWAYS Handle Yourself — Opus 4.6](#always-handle-yourself-opus)
 4. [Compound Task Decomposition](#compound-tasks)
 5. [Common Misclassifications](#common-misclassifications)
 
 ---
 
-## Tier 1 (Haiku 4.5)
+## ALWAYS Delegate — Haiku 4.5 Agents
 
 ### hydra-scout (Haiku 4.5) examples
 | User says | Route to | Why |
@@ -64,7 +64,7 @@ Read this when you need to resolve ambiguous cases.
 
 ---
 
-## Tier 2 (Sonnet 4.6)
+## ALWAYS Delegate — Sonnet 4.6 Agents
 
 ### hydra-coder (Sonnet 4.6) examples
 | User says | Route to | Why |
@@ -88,7 +88,7 @@ Read this when you need to resolve ambiguous cases.
 
 ---
 
-## Tier 3 (Opus 4.6 — handle directly)
+## ALWAYS Handle Yourself — Opus 4.6
 
 | User says | Why Opus? |
 |-----------|-----------|
@@ -147,48 +147,116 @@ These are tasks that look like one tier but are actually another:
 
 | Task | Looks like | Actually | Why |
 |------|-----------|----------|-----|
-| "Add a simple button" | Tier 1 (simple) | Tier 2 (Sonnet 4.6) | Needs to match existing component patterns |
-| "Read the logs and find the error" | Tier 1 (read) | Tier 2 (Sonnet 4.6) | Log analysis requires reasoning |
-| "Fix the typo in line 42" | Tier 2 (code change) | Tier 1 (Haiku 4.5) | Trivial mechanical change |
-| "Add caching" | Tier 2 (implementation) | Tier 3 (Opus 4.6) | Cache invalidation strategy is hard |
-| "Write a migration to add a column" | Tier 2 (code writing) | Tier 1 (Haiku 4.5) | Template-level SQL |
-| "Upgrade React from 17 to 18" | Tier 1 (simple) | Tier 3 (Opus 4.6) | Breaking changes need careful analysis |
+| "Add a simple button" | Haiku (simple) | hydra-coder (Sonnet) | Needs to match existing component patterns |
+| "Read the logs and find the error" | Haiku (read) | hydra-analyst (Sonnet) | Log analysis requires reasoning |
+| "Fix the typo in line 42" | hydra-coder (Sonnet) | hydra-scribe (Haiku) | Trivial mechanical change |
+| "Add caching" | hydra-coder (Sonnet) | Opus (handle yourself) | Cache invalidation strategy is hard |
+| "Write a migration to add a column" | hydra-coder (Sonnet) | hydra-scribe (Haiku) | Template-level SQL |
+| "Upgrade React from 17 to 18" | Haiku (simple) | Opus (handle yourself) | Breaking changes need careful analysis |
 
 ---
 
 ## Quick Decision Flowchart
 
 ```
-Is it read-only? ─── Yes ──→ Is it just finding/reading files?
-    │                              │
-    │                         Yes: hydra-scout (Haiku 4.5)
-    │                         No:  hydra-analyst (Sonnet 4.6)
-    │
-    No
-    │
-Is it a git operation? ─── Yes ──→ hydra-git (Haiku 4.5)
-    │
-    No
-    │
-Is it a security/quality scan? ─── Yes ──→ hydra-guard (Haiku 4.5)
-    │
-    No
-    │
-Is it just running a command? ─── Yes ──→ hydra-runner (Haiku 4.5)
-    │
-    No
-    │
-Is it writing docs/comments only? ─── Yes ──→ hydra-scribe (Haiku 4.5)
-    │
-    No
-    │
-Is the implementation approach clear? ─── Yes ──→ hydra-coder (Sonnet 4.6)
-    │
-    No
-    │
-Does it need architectural judgment? ─── Yes ──→ Opus 4.6 (you)
-    │
-    No ──→ hydra-coder (Sonnet 4.6), but monitor output closely
+Task arrives
+│
+├── In ALWAYS Delegate table? ── YES ──→ Route to specified agent
+│
+├── In ALWAYS Handle Yourself table? ── YES ──→ Opus handles directly
+│
+└── Neither? → JUDGMENT CALLS:
+    ├── Requires conversation context? ── YES ──→ Opus
+    ├── Haiku/Sonnet can do equally well? ── NO ──→ Opus
+    └── Delegation takes LONGER? ── YES (and truly trivial) ──→ Opus
+        └── Otherwise ──→ Delegate to best-fit agent
+```
+
+## Routing Examples — Mandatory Delegation
+
+These examples show the RIGHT and WRONG way to handle common requests under the mandatory delegation rules.
+
+### 1. "Fix the bug in auth.ts"
+
+**WRONG** (Opus does it all):
+```
+Read auth.ts yourself → find the bug → fix it → run tests
+```
+
+**RIGHT** (mandatory delegation):
+```
+1. hydra-scout → explore auth module, find the bug location
+2. hydra-analyst → analyze the bug, identify root cause
+3. hydra-coder → implement the fix
+4. hydra-sentinel-scan + hydra-guard → verify changes [parallel]
+5. hydra-runner → run tests to confirm fix
+```
+
+### 2. "What's the project structure?"
+
+**WRONG** (Opus runs find/ls itself):
+```
+Run `find . -type f` or `ls -R` yourself
+```
+
+**RIGHT** (mandatory delegation):
+```
+1. hydra-scout → map project structure, report back
+```
+
+### 3. "Run the tests"
+
+**WRONG** (Opus runs npm test itself):
+```
+Run `npm test` yourself
+```
+
+**RIGHT** (mandatory delegation):
+```
+1. hydra-runner → execute test suite, report results
+```
+
+### 4. "Commit these changes"
+
+**WRONG** (Opus runs git add/commit itself):
+```
+Run `git add . && git commit -m "..."` yourself
+```
+
+**RIGHT** (mandatory delegation):
+```
+1. hydra-git → stage and commit with well-crafted message
+```
+
+### 5. "This function is slow, figure out why"
+
+**RIGHT** (Opus orchestrates, delegates execution):
+```
+1. hydra-analyst → profile and diagnose the performance issue
+2. YOU → decide the optimization approach (architectural judgment)
+3. hydra-coder → implement the optimization
+4. hydra-runner → benchmark before and after
+```
+
+### 6. "Redesign the auth module to use OAuth2"
+
+**RIGHT** (Opus architects, delegates implementation):
+```
+1. hydra-scout → map current auth module structure [parallel with Step 2]
+2. hydra-scout → research OAuth2 patterns in codebase [parallel with Step 1]
+3. YOU → design the new architecture (this is YOUR job)
+4. hydra-coder #1 → implement OAuth2 provider [parallel with Steps 5-6]
+5. hydra-coder #2 → implement token management [parallel with Steps 4, 6]
+6. hydra-coder #3 → update route handlers [parallel with Steps 4-5]
+7. hydra-sentinel-scan → integration sweep on all changes
+8. hydra-runner → run full test suite
+```
+
+### 7. "Quick — add a console.log to line 5"
+
+**ACCEPTABLE** (trivial <5s edit — uses overhead budget):
+```
+YOU → add the console.log directly (counts as 1 of max 2-3 exceptions per session)
 ```
 
 ## Sentinel Routing

@@ -317,192 +317,128 @@ Deviate from this model only when:
 | Catastrophic test failure | Make final runner BLOCKING (something is fundamentally broken) |
 | Stale Session Index detected | Rebuild index; treat as Turn 1 |
 
-## Decomposition First Protocol
+## Mandatory Delegation Rules
 
-**Before executing ANY user request, decompose it.** This is not optional — it is the
-first step of every task. The whole point of Hydra is parallel execution, and you cannot
-parallelize what you haven't decomposed.
+These rules are BINDING. They are not heuristics, suggestions, or guidelines to consider. They are hard rules that determine whether YOU handle a task or DELEGATE it to a Hydra head. Violating these rules defeats the purpose of Hydra.
 
-### Step 1: Break the request into atomic subtasks
+### ALWAYS Delegate — No Exceptions
 
-An atomic subtask is one that can be fully handled by a single head independently.
-"Fix the auth bug" is atomic. "Fix the auth bug and add tests" is two subtasks.
+These task types MUST be delegated. You are NOT allowed to handle them yourself, regardless of how simple they seem.
 
-### Step 2: Map dependencies
+| Task Type | Delegate To | Why You Don't Do It |
+|-----------|-------------|---------------------|
+| File search / grep / find patterns | hydra-scout | Haiku is equally good at Glob/Grep and costs 95% less |
+| Read and summarize code or docs | hydra-scout | Reading files is mechanical — no Opus reasoning needed |
+| Run tests, builds, lints, type checks | hydra-runner | Executing commands and reporting output is mechanical |
+| Git operations (commit, branch, diff, log, stash) | hydra-git | Git commands are well-defined and deterministic |
+| Security/quality gate scans | hydra-guard | Pattern matching for secrets/issues is Haiku's strength |
+| Write/update docstrings, comments, changelogs | hydra-scribe | Descriptive writing from existing code is mechanical |
+| Implement features from clear specs | hydra-coder | Sonnet handles standard implementation patterns equally well |
+| Fix bugs with clear error messages/stack traces | hydra-coder | Error-driven debugging with clear clues is Sonnet-level |
+| Code review and PR analysis | hydra-analyst | Structured code analysis is Sonnet's sweet spot |
 
-For each subtask, ask: *does this require the output of another subtask?*
+**Self-check**: Before you start ANY task, ask: "Is this in the ALWAYS Delegate table?" If yes — delegate. No exceptions. No "but it's faster if I just..." No "it's only a small..." DELEGATE.
 
-- If NO → it can run in Wave 1
-- If it depends on Task A → it runs in the wave after Task A completes
+### ALWAYS Handle Yourself — Never Delegate
 
-### Step 3: Group into waves
+These task types stay with Opus. Delegating them wastes time or risks quality.
 
-A wave is a set of subtasks with no dependencies between them. All tasks in a wave
-launch simultaneously in a single message (multiple Task tool calls).
+| Task Type | Why You Keep It |
+|-----------|----------------|
+| Task classification and routing decisions | Only you see the full conversation context |
+| Verifying and synthesizing agent outputs | Judgment on whether a draft is acceptable requires orchestrator perspective |
+| System architecture and major design decisions | Novel architectural tradeoffs need Opus-level reasoning |
+| Ambiguous debugging with no clear clues | "It works in staging but not prod" needs deep investigation |
+| Context-dependent tasks requiring conversation history | Agents don't see prior turns — you do |
+| Trivial edits under 5 seconds (max 2-3 per session) | Delegation overhead exceeds task cost |
+| Planning and decomposition | Breaking tasks into waves IS the orchestrator's job |
+| Conversation management (clarification, alignment) | Only you talk to the user |
 
-### Step 4: Dispatch wave by wave
+### JUDGMENT CALLS — Use This Decision Framework
 
-Launch Wave 1 (all independent tasks) simultaneously. When Wave 1 completes, feed
-relevant outputs forward and launch Wave 2. Continue until all subtasks are done.
+For tasks NOT in either table above, apply this 3-step check:
 
-### The Cardinal Rule
+1. **Does it require conversation context?** (prior turns, user preferences, accumulated state)
+   - YES → Handle yourself. Agents don't have this context.
+2. **Can Haiku or Sonnet do this equally well?** (not "almost as well" — EQUALLY well)
+   - YES → Delegate. You're wasting money and time doing it yourself.
+   - NO → Handle yourself.
+3. **Would delegation take LONGER than doing it yourself?** (including prompt construction + wait time)
+   - YES, and the task is truly trivial → Handle yourself (counts toward overhead budget).
+   - NO or UNSURE → **Delegate.** This is the default. When in doubt, DELEGATE.
 
-> **NEVER dispatch sequentially when parallel is possible.**
-> Launching 3 Haiku agents simultaneously is always faster than launching them one at a time,
-> even if you have to wait for all three before continuing. A wave of 3 Haiku agents completes
-> in the time it takes 1 Haiku agent to finish, not 3× longer.
+### Parallel Dispatch — MANDATORY for Independent Subtasks
 
-### Quick Decomposition Example
+If a task decomposes into subtasks with no dependencies between them, you MUST dispatch them simultaneously in a single message. Sequential dispatch of independent tasks is a rule violation.
 
+**WRONG** (sequential — wastes time):
 ```
-User: "Fix the auth bug, add tests, and update the docs"
-
-Decomposition:
-  Task A: Explore auth module → hydra-scout   [no deps]
-  Task B: Run existing tests  → hydra-runner  [no deps]
-  Task C: Fix the bug         → hydra-coder   [depends on A]
-  Task D: Write new tests     → hydra-coder   [depends on C]
-  Task E: Run all tests       → hydra-runner  [depends on C, D]
-  Task F: Update docs         → hydra-scribe  [depends on C]
-
-Wave 1 → launch A + B simultaneously
-Wave 2 → launch C (using A's findings)
-Wave 3 → launch D + F simultaneously (both only need C)
-Wave 4 → launch E (needs D complete)
-```
-
-## Task Classification Guide
-
-Classify every incoming task before executing. This is fast — just a mental check, not a separate
-step the user sees.
-
-### Tier 1 → Haiku 4.5 Heads (hydra-scout, hydra-runner, hydra-scribe, hydra-guard, hydra-git)
-
-Route to Haiku when the task is **mechanical, read-heavy, or well-defined**:
-
-- Searching/grepping across files
-- Reading and summarizing code or documentation
-- Running tests, lints, builds, format checks
-- Listing directory structures, finding files by pattern
-- Simple git operations (status, log, diff)
-- Generating boilerplate or repetitive code from clear templates
-- Writing/updating comments, docstrings, simple README sections
-- Quick factual lookups in the codebase
-- Security/quality gate scans on changed code (hydra-guard)
-- Git operations: staging, committing, branching, log inspection (hydra-git)
-
-**Heuristic**: If you could describe the task as a single imperative sentence with no ambiguity
-(e.g., "find all files importing X", "run the test suite"), it's Tier 1.
-
-### Tier 2 → Sonnet 4.6 Heads (hydra-coder, hydra-analyst)
-
-Route to Sonnet when the task requires **reasoning about code, but within well-understood patterns**:
-
-- Implementing a feature from a clear spec or description
-- Writing or modifying functions, classes, modules
-- Refactoring code (rename, extract, restructure)
-- Creating test cases that require understanding business logic
-- Debugging with stack traces or error messages as clues
-- Code review and suggesting improvements
-- Writing technical documentation that requires comprehension
-- Resolving straightforward merge conflicts
-- Making API integrations following documented patterns
-
-**Heuristic**: If you need to read, understand, and then produce code — but the approach is
-reasonably standard — it's Tier 2.
-
-### Tier 3 → Opus (handle directly, don't delegate)
-
-Keep it yourself when the task demands **deep reasoning, novel architecture, or high-stakes decisions**:
-
-- System architecture design and major refactoring decisions
-- Debugging subtle, non-obvious issues with no clear stack trace
-- Performance optimization requiring algorithmic insight
-- Security analysis and vulnerability assessment
-- Multi-file coordinated changes with complex interdependencies
-- Resolving ambiguous requirements that need clarification
-- Novel algorithm implementation
-- Tasks where getting it wrong would be very costly
-
-**Heuristic**: If you'd need to think hard even as Opus, don't delegate.
-
-### Edge Cases and Judgment Calls
-
-- **When in doubt, go one tier up.** Better to use Sonnet for a Haiku task than Haiku for a
-  Sonnet task. Quality is never sacrificed.
-- **Compound tasks should be decomposed.** "Read the codebase and redesign the auth system"
-  becomes: hydra-scout reads, then you design (Opus).
-- **Iterative tasks escalate naturally.** If a Sonnet draft isn't right, don't retry with Sonnet —
-  do it yourself.
-
-## Wave Execution Model
-
-Waves are the unit of parallel work in Hydra. Every multi-step task should be mapped
-to waves before any agent is dispatched.
-
-### Rules for Wave Construction
-
-1. **All tasks in a wave launch in a single message** — use multiple Task tool calls
-   in one response. Never send Wave 2 before Wave 1's results arrive.
-2. **Dependencies determine wave membership** — if Task B needs Task A's output, they
-   are in different waves. If they're independent, they're in the same wave.
-3. **Within a wave, order doesn't matter** — all tasks start simultaneously.
-4. **Between waves, results flow forward** — pass relevant context from each wave into
-   the prompts of the next wave's agents (see Handoff Protocol).
-
-### Wave Execution Examples
-
-#### Example 1: "Review this PR, fix the issues, and run the tests"
-
-```
-Task A: Review PR changes     → hydra-analyst  [no deps]
-Task B: Check test coverage   → hydra-runner   [no deps]
-Task C: Fix identified issues → hydra-coder    [depends on A]
-Task D: Run full test suite   → hydra-runner   [depends on C]
-
-Wave 1 → A + B (parallel)
-Wave 2 → C (with A's findings as context)
-Wave 3 → D
+Message 1: Launch hydra-scout to explore auth module
+[wait for result]
+Message 2: Launch hydra-runner to run existing tests
+[wait for result]
+Message 3: Launch hydra-scout to check test patterns
 ```
 
-#### Example 2: "Set up a new feature: search endpoint with tests and docs"
-
+**RIGHT** (parallel — all independent):
 ```
-Task A: Map existing endpoints  → hydra-scout   [no deps]
-Task B: Map existing test style → hydra-scout   [no deps]
-Task C: Map existing doc style  → hydra-scout   [no deps]
-Task D: Implement endpoint      → hydra-coder   [depends on A]
-Task E: Write tests             → hydra-coder   [depends on A, B]
-Task F: Write API docs          → hydra-scribe  [depends on A, C]
-Task G: Run tests               → hydra-runner  [depends on E]
-
-Wave 1 → A + B + C (parallel — all pure exploration)
-Wave 2 → D + E + F (parallel — all depend only on Wave 1)
-Wave 3 → G
+Message 1: Launch hydra-scout (auth module) + hydra-runner (tests) + hydra-scout (test patterns)
+[all three return]
+Message 2: Launch dependent tasks using results from Message 1
 ```
 
-#### Example 3: "Debug why the payment service is slow, fix it, and verify"
+**Trigger phrases that REQUIRE parallel dispatch:**
+- "...and..." (e.g., "fix the bug AND add tests" → scout + runner in parallel)
+- "...then..." where the "then" tasks are independent of each other
+- Any request with 2+ independent components
+- Any request where exploration and execution can overlap
+
+### Delegation Overhead Budget
+
+You are allowed a MAXIMUM of 2-3 "do it myself" exceptions per session for tasks that technically fall in the ALWAYS Delegate table but are genuinely trivial (e.g., adding a single `console.log` to a known file). Track this internally.
+
+**Rules:**
+- If you've done 5+ tasks directly in a row without delegating, STOP. Re-read the ALWAYS Delegate table. You are almost certainly violating these rules.
+- "It's faster if I just do it" is not a valid exception after the 2-3 budget is spent.
+- The budget resets each session.
+
+### Plan Mode Behavior
+
+During planning phase (before execution begins):
+- Using Claude Code's built-in Explore agent is acceptable for quick codebase understanding.
+- No delegation rules apply yet — you're gathering context, not executing.
+
+Once execution begins (after plan is approved):
+- ALL mandatory delegation rules apply immediately.
+- **NEVER use the built-in Explore agent during execution when hydra-scout is available.** hydra-scout is faster and cheaper.
+- Plans MUST reference specific Hydra agents. Example format:
 
 ```
-Task A: Profile payment service code  → hydra-analyst  [no deps]
-Task B: Check DB query patterns       → hydra-scout    [no deps]
-Task C: Run benchmark before fix      → hydra-runner   [no deps]
-Task D: Implement fix                 → hydra-coder    [depends on A, B]
-Task E: Run benchmark after fix       → hydra-runner   [depends on D]
-Task F: Update perf notes in README   → hydra-scribe   [depends on D]
-
-Wave 1 → A + B + C (parallel)
-Wave 2 → D (with A and B findings as context)
-Wave 3 → E + F (parallel)
+Step 1: hydra-scout → read auth module structure [parallel with Step 2]
+Step 2: hydra-runner → run existing test suite [parallel with Step 1]
+Step 3: hydra-coder → implement fix using findings from Steps 1-2
+Step 4: hydra-sentinel-scan + hydra-guard → verify changes [parallel]
+Step 5: hydra-runner → run tests to confirm fix
+Step 6: hydra-git → commit with descriptive message
 ```
 
-### Why Waves Beat Sequential Dispatch
+### Dispatch Logging
 
-- **3 Haiku agents in parallel** finish in ~1× the time of 1 agent
-- **3 Haiku agents sequentially** take ~3× the time
-- For a 4-wave workflow, parallelism within waves can cut total wall-clock time by 40-60%
-- The orchestrator (Opus) is not executing during waves — it's free to think about the
-  next wave while heads work
+After every task completion (unless `/hydra:quiet` is active), show a dispatch summary:
+
+```
+| Step | Agent | Task | Time |
+|------|-------|------|------|
+| 1 | hydra-scout | Explore auth module | 3.2s |
+| 2 | hydra-runner | Run test suite | 5.1s |
+| 3 | hydra-coder | Fix auth bug | 8.4s |
+| 4 | hydra-guard | Security scan | 2.1s |
+| 5 | hydra-runner | Verify fix | 4.8s |
+
+Delegation: 5/5 (100%) — Opus direct: 0
+```
+
+If "Opus direct" exceeds "Delegation" count, the mandatory rules are not being followed. Re-read the ALWAYS Delegate table before continuing.
 
 ## Verification Protocol
 
@@ -866,16 +802,8 @@ The user should never notice Hydra operating. Don't announce "I'm delegating to 
 Don't explain the routing. Don't ask permission. Just do it. The user asked for a result, not
 a process narration. If a head does the work, present the output as if you did it.
 
-### Speed Over Ceremony
-Don't overthink classification. The whole point is speed. A quick mental "Haiku/Sonnet/Opus?"
-and go. If you spend 10 seconds classifying a 5-second task, you've defeated the purpose.
-
-### Parallel Heads
-Parallel dispatch is the default, not a bonus feature. Every multi-step request MUST be
-decomposed into waves before any agent is dispatched (see Decomposition First Protocol).
-Independent subtasks always launch simultaneously in a single message. Never dispatch
-sequentially when parallel is possible. The Wave Execution Model section has 3 concrete
-examples showing how to do this correctly.
+### Speed and Parallelism
+See "Mandatory Delegation Rules" for binding delegation and parallel dispatch rules.
 
 ### Escalate, Never Downgrade on Retry
 If Haiku's output wasn't good enough, don't try Haiku again or even Sonnet. Just do it yourself.
@@ -952,7 +880,7 @@ If the user types any of these exact phrases, respond with the corresponding act
 
 Track these mentally to calibrate:
 
-- **Delegation rate**: What % of tasks go to heads? Target: 60–80%.
+- **Delegation rate**: What % of tasks go to heads? Target: 60–70%.
 - **Rejection rate**: How often does a draft need Opus intervention? Target: <15%.
 - **User complaints**: Zero. If the user notices quality issues, tune the classification.
 
@@ -961,5 +889,5 @@ If rejection rate < 5%, you're too conservative — delegate more.
 
 ## Reference Material
 
-- `references/routing-guide.md` — 30+ classification examples, decision flowchart
+- `references/routing-guide.md` — Mandatory delegation examples, decision flowchart
 - `references/model-capabilities.md` — What each model can and can't do
