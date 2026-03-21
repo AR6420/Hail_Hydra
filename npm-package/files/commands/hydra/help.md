@@ -17,6 +17,7 @@ COMMANDS
   /hydra:guard     Run security scan on files (usage: /hydra:guard src/auth.py)
   /hydra:quiet     Suppress dispatch logs for this session
   /hydra:verbose   Enable verbose dispatch logs with timing
+  /hydra:report    Report a bug, request a feature, or share feedback
 
 AGENTS
   🟢 hydra-scout    (Haiku 4.5)   — Explore codebase, find files, map structure

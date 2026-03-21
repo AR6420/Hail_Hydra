@@ -42,8 +42,8 @@ function showInstallComplete(statusLineConfigured = true) {
   console.log(chalk.cyan.bold('  \uD83D\uDC09 Hail Hydra! Framework deployed and ready.'));
   console.log(chalk.gray('  ' + '\u2500'.repeat(45)));
   console.log(chalk.green(`    \u2714 9 agents installed`));
-  console.log(chalk.green(`    \u2714 7 slash commands installed`));
-  console.log(chalk.green(`    \u2714 3 hooks registered`));
+  console.log(chalk.green(`    \u2714 8 slash commands installed`));
+  console.log(chalk.green(`    \u2714 4 hooks registered`));
   if (statusLineConfigured) {
     console.log(chalk.green(`    \u2714 StatusLine configured`));
   } else {
@@ -141,7 +141,7 @@ function showStatusTable(globalStatus, localStatus) {
   // Global hooks (always ~/.claude/hooks/)
   console.log();
   console.log(chalk.bold('  Global Hooks (~/.claude/hooks/)'));
-  const hookKeys = ['hydra-check-update', 'hydra-statusline', 'hydra-auto-guard'];
+  const hookKeys = ['hydra-check-update', 'hydra-statusline', 'hydra-auto-guard', 'hydra-notify'];
   for (const key of hookKeys) {
     const dest = path.join(os.homedir(), '.claude', 'hooks', `${key}.js`);
     if (fileExists(dest)) {

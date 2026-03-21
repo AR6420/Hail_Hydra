@@ -5,7 +5,7 @@ const path = require('path');
 const os = require('os');
 const chalk = require('chalk');
 
-const { agents, skill, references, commands, hooks } = require('./files');
+const { agents, skill, references, commands, hooks, binaryHooks } = require('./files');
 const { showInstallHeader, showFileInstalled, showInstallComplete, showStatusTable, VERSION } = require('./display');
 
 // ── Install locations ────────────────────────────────────────────────────────
@@ -100,6 +100,17 @@ function installHooks() {
       showFileInstalled(`hooks/${key}.js`, false, err.message);
     }
   }
+
+  // Copy binary hook files (e.g., .wav) that can't be read as UTF-8 text
+  for (const [filename, srcPath] of Object.entries(binaryHooks)) {
+    const dest = path.join(hooksDir, filename);
+    try {
+      fs.copyFileSync(srcPath, dest);
+      showFileInstalled(`hooks/${filename}`, true);
+    } catch (err) {
+      showFileInstalled(`hooks/${filename}`, false, err.message);
+    }
+  }
 }
 
 function registerHooksInSettings() {
@@ -128,6 +139,12 @@ function registerHooksInSettings() {
   settings.hooks.PostToolUse.push({
     matcher: 'Write|Edit|MultiEdit',
     hooks:   [{ type: 'command', command: 'node ~/.claude/hooks/hydra-auto-guard.js' }]
+  });
+
+  if (!settings.hooks.Notification) settings.hooks.Notification = [];
+  settings.hooks.Notification = settings.hooks.Notification.filter(x => !isHydraHook(x));
+  settings.hooks.Notification.push({
+    hooks: [{ type: 'command', command: 'node ~/.claude/hooks/hydra-notify.js' }]
   });
 
   let statusLineConfigured = false;
@@ -160,6 +177,10 @@ function deregisterHooks() {
     if (settings.hooks?.PostToolUse) {
       settings.hooks.PostToolUse = settings.hooks.PostToolUse.filter(x => !isHydraHook(x));
       if (!settings.hooks.PostToolUse.length) delete settings.hooks.PostToolUse;
+    }
+    if (settings.hooks?.Notification) {
+      settings.hooks.Notification = settings.hooks.Notification.filter(x => !isHydraHook(x));
+      if (!settings.hooks.Notification.length) delete settings.hooks.Notification;
     }
     if (settings.hooks && !Object.keys(settings.hooks).length) delete settings.hooks;
 
@@ -302,6 +323,15 @@ async function runUninstall({ interactive = true } = {}) {
     if (fileExists(dest)) {
       try { fs.unlinkSync(dest); console.log(chalk.green(`  \u2714 Removed hooks/${key}.js`)); }
       catch (err) { console.log(chalk.red(`  \u2716 Failed: hooks/${key}.js \u2014 ${err.message}`)); }
+    }
+  }
+
+  // Remove binary hook files (e.g., .wav)
+  for (const filename of Object.keys(binaryHooks)) {
+    const dest = path.join(GLOBAL_BASE, 'hooks', filename);
+    if (fileExists(dest)) {
+      try { fs.unlinkSync(dest); console.log(chalk.green(`  \u2714 Removed hooks/${filename}`)); }
+      catch (err) { console.log(chalk.red(`  \u2716 Failed: hooks/${filename} \u2014 ${err.message}`)); }
     }
   }
 

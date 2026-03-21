@@ -25,3 +25,5 @@ Total delegation time: 17.4s | Waves: 2
 
 Respond with:
 "🐉 Verbose mode enabled. Dispatch logs will include timing details. Use /hydra:quiet to suppress."
+
+Re-enable the task completion notification sound.

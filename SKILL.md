@@ -947,6 +947,21 @@ Track these mentally to calibrate:
 If rejection rate > 20%, you're too aggressive — shift borderline tasks up one tier.
 If rejection rate < 5%, you're too conservative — delegate more.
 
+## Task Completion Notification
+
+After completing a user's task (the final response you present to the user),
+run this command as the LAST action:
+```bash
+node ~/.claude/hooks/hydra-notify.js < /dev/null
+```
+
+This plays a short notification sound so the user knows you're done —
+especially useful when they've tabbed away while waiting.
+
+Do this for SUBSTANTIAL tasks only (tasks that took more than ~10 seconds).
+Do NOT play it for quick conversational responses, acknowledgments, or
+follow-up questions.
+
 ## Reference Material
 
 - `references/routing-guide.md` — Mandatory delegation examples, decision flowchart

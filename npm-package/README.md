@@ -56,18 +56,21 @@ npx hail-hydra-cc --help         # Show help
 │   ├── hydra-coder.md
 │   ├── hydra-analyst.md
 │   └── hydra-sentinel.md
-├── commands/hydra/              # 7 slash commands
+├── commands/hydra/              # 8 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status
 │   ├── update.md                # /hydra:update
 │   ├── config.md                # /hydra:config
 │   ├── guard.md                 # /hydra:guard
 │   ├── quiet.md                 # /hydra:quiet
-│   └── verbose.md               # /hydra:verbose
-├── hooks/                       # 3 lifecycle hooks
+│   ├── verbose.md               # /hydra:verbose
+│   └── report.md                # /hydra:report
+├── hooks/                       # 4 lifecycle hooks
 │   ├── hydra-check-update.js    # SessionStart — version check
 │   ├── hydra-statusline.js      # StatusLine — status bar
-│   └── hydra-auto-guard.js      # PostToolUse — file tracker
+│   ├── hydra-auto-guard.js      # PostToolUse — file tracker
+│   ├── hydra-notify.js          # Notification — task completion sound
+│   └── hydra-task-complete.wav  # Notification sound file
 └── skills/hydra/                # Skill (Claude Code discoverable via /skills)
     ├── SKILL.md                 # Orchestrator instructions
     ├── VERSION                  # Installed version

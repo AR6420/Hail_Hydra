@@ -12,3 +12,5 @@ Respond with:
 "🐉 Quiet mode enabled. Dispatch logs suppressed for this session. Use /hydra:verbose to re-enable."
 
 Continue operating Hydra normally (delegation, verification, auto-guard) — just don't show the dispatch log table.
+
+Also suppress the task completion notification sound for this session.

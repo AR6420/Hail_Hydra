@@ -14,6 +14,49 @@ description: >
 > *"Cut off one head, two more shall take its place."*
 > Except here — every head is doing your work faster and cheaper.
 
+## ⛔ MANDATORY PROTOCOLS — NEVER SKIP
+
+These protocols are NON-NEGOTIABLE. Skipping them is a framework violation.
+
+### Protocol 1: Sentinel Scan After Code Changes
+
+When ANY agent returns output containing `⚠️ HYDRA_SENTINEL_REQUIRED`, you
+MUST — before doing ANYTHING else, before presenting results to the user,
+before running any other agents — dispatch hydra-sentinel-scan with the
+files and changes listed in the trigger block.
+
+**This is blocking.** The user does NOT see the code changes until sentinel
+completes. If you present code changes to the user without running sentinel
+first, you have violated the framework's core safety guarantee.
+
+Sequence:
+1. Receive agent output containing ⚠️ HYDRA_SENTINEL_REQUIRED
+2. IMMEDIATELY dispatch hydra-sentinel-scan AND hydra-guard in parallel
+3. WAIT for both to complete
+4. If sentinel-scan finds issues → dispatch hydra-sentinel (deep analysis)
+5. WAIT for deep analysis
+6. THEN — and ONLY then — present results to the user
+
+If the agent output contains `✅ HYDRA_NO_CODE_CHANGES`, skip sentinel. Present
+results immediately.
+
+### Protocol 2: Sentinel Fix Decision Tree
+
+When hydra-sentinel confirms real issues:
+
+**TRIVIAL** (auto-fix without asking):
+  Import renames, file path updates, barrel file re-exports.
+  → Dispatch hydra-coder to fix. Re-run sentinel-scan to verify.
+  → Tell user: "Sentinel caught [issue]. Auto-fixed."
+
+**MEDIUM** (present to user, offer to fix):
+  API contract mismatches, missing env vars, signature mismatches.
+  → Show the sentinel report. Ask: "Want me to fix these?"
+
+**COMPLEX** (report only):
+  Architectural changes, migration needed, business logic decisions.
+  → Show the report. Let user decide.
+
 ## Why Hydra Exists
 
 Autoregressive LLM inference is memory-bandwidth bound — the time per token scales with model
@@ -505,6 +548,10 @@ When manual verification is required, match depth to risk:
 
 ## Sentinel Protocol — Integration Integrity
 
+> **REMINDER:** If you see `⚠️ HYDRA_SENTINEL_REQUIRED` in any agent's output
+> and you skip sentinel, you are violating the framework's core protocol.
+> See "⛔ MANDATORY PROTOCOLS" at the top of this document.
+
 After EVERY code change made by hydra-coder or hydra-analyst (or yourself),
 you MUST run the sentinel pipeline BEFORE presenting results to the user.
 
@@ -703,6 +750,19 @@ Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of Februa
   "Re-executing [task] directly — [agent]'s output was insufficient because [reason]"
 - **If accepted as-is**, no inline comment needed — the dispatch log covers it
 
+### Sentinel Status in Dispatch Log
+
+The dispatch log MUST show sentinel status for every task involving code changes:
+
+| Step | Agent | Task | Verdict |
+|------|-------|------|---------|
+| 1 | hydra-coder (Sonnet 4.6) | Fixed auth bug | ✅ Accepted |
+| 2 | hydra-sentinel-scan (Haiku) | Integration sweep | ✅ Clean |
+| 3 | hydra-guard (Haiku 4.5) | Security scan | ✅ Clean |
+
+If sentinel-scan is missing from the dispatch log after a code change,
+something went wrong. This is your self-check.
+
 ### Controlling the Dispatch Log
 
 - **Default**: ON — always shown when 2+ agents were used
@@ -886,6 +946,21 @@ Track these mentally to calibrate:
 
 If rejection rate > 20%, you're too aggressive — shift borderline tasks up one tier.
 If rejection rate < 5%, you're too conservative — delegate more.
+
+## Task Completion Notification
+
+After completing a user's task (the final response you present to the user),
+run this command as the LAST action:
+```bash
+node ~/.claude/hooks/hydra-notify.js < /dev/null
+```
+
+This plays a short notification sound so the user knows you're done —
+especially useful when they've tabbed away while waiting.
+
+Do this for SUBSTANTIAL tasks only (tasks that took more than ~10 seconds).
+Do NOT play it for quick conversational responses, acknowledgments, or
+follow-up questions.
 
 ## Reference Material
 

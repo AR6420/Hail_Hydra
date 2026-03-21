@@ -38,7 +38,7 @@
 </p>
 
 <p align="center">
-  <strong>9 agents &nbsp;·&nbsp; 7 slash commands &nbsp;·&nbsp; 3 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Persistent memory &nbsp;·&nbsp; Integration integrity</strong>
+  <strong>9 agents &nbsp;·&nbsp; 8 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Persistent memory &nbsp;·&nbsp; Integration integrity</strong>
 </p>
 
 ---
@@ -84,7 +84,7 @@ npx hail-hydra-cc@latest
 npm i hail-hydra-cc@latest
 ```
 
-Runs the interactive installer — deploys 9 agents, 7 slash commands, 3 hooks, and registers
+Runs the interactive installer — deploys 9 agents, 8 slash commands, 4 hooks, and registers
 the statusline and update checker. Done in seconds.
 
 ### Manual Install
@@ -98,7 +98,7 @@ cd hydra
 ./scripts/install.sh --user
 
 # 🐉 Hail Hydra! Framework active in all Claude Code sessions.
-# ✅ 9 agents  ✅ 7 commands  ✅ 3 hooks  ✅ StatusLine  ✅ VERSION
+# ✅ 9 agents  ✅ 8 commands  ✅ 4 hooks  ✅ StatusLine  ✅ VERSION
 ```
 
 ### Installation Options
@@ -134,18 +134,21 @@ cd hydra
 │   ├── hydra-coder.md           # 🔵 Sonnet 4.6 — write/edit code
 │   ├── hydra-analyst.md         # 🔵 Sonnet 4.6 — debug/diagnose
 │   └── hydra-sentinel.md        # 🔵 Sonnet 4.6 — deep integration analysis
-├── commands/hydra/              # 7 slash commands
+├── commands/hydra/              # 8 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status
 │   ├── update.md                # /hydra:update
 │   ├── config.md                # /hydra:config
 │   ├── guard.md                 # /hydra:guard
 │   ├── quiet.md                 # /hydra:quiet
-│   └── verbose.md               # /hydra:verbose
-├── hooks/                       # 3 lifecycle hooks
+│   ├── verbose.md               # /hydra:verbose
+│   └── report.md                # /hydra:report
+├── hooks/                       # 4 lifecycle hooks
 │   ├── hydra-check-update.js    # SessionStart — version check (background)
 │   ├── hydra-statusline.js      # StatusLine — status bar display
-│   └── hydra-auto-guard.js      # PostToolUse — file change tracker
+│   ├── hydra-auto-guard.js      # PostToolUse — file change tracker
+│   ├── hydra-notify.js          # Notification — task completion sound
+│   └── hydra-task-complete.wav  # Notification sound file
 └── skills/
     └── hydra/                   # Skill (Claude Code discoverable)
         ├── SKILL.md             # Orchestrator instructions
@@ -175,6 +178,7 @@ cd hydra
 | `/hydra:guard [files]` | Run manual security & quality scan |
 | `/hydra:quiet` | Suppress dispatch logs for this session |
 | `/hydra:verbose` | Enable verbose dispatch logs with timing |
+| `/hydra:report` | Report a bug, request a feature, or share feedback |
 
 ---
 
@@ -213,6 +217,19 @@ After installation, your Claude Code status bar shows real-time framework info:
 
 ---
 
+## 🔔 Task Completion Sound
+
+Hydra plays a short notification sound when Claude Code finishes a substantial task — so you know it's done even if you've tabbed away.
+
+- **Cross-platform** — macOS (`afplay`), Windows (PowerShell), Linux (`paplay`/`aplay`)
+- **Non-blocking** — the sound plays detached; it never delays Claude's response
+- **Smart triggers** — only fires on substantial tasks (>~10 seconds), not quick replies
+- **Controllable** — `/hydra:quiet` suppresses it, `/hydra:verbose` re-enables it
+
+The notification hook is registered automatically during installation.
+
+---
+
 ## 🔄 Auto-Update Notifications
 
 Hydra checks for updates once per session in the background (never blocks startup).
@@ -245,7 +262,8 @@ After updating, restart Claude Code to load the new files.
 - **Quality-first pipeline** — Code changes block until sentinel + guard verification completes; nothing reaches you unchecked
 - **Auto-Guard** — hydra-guard (Haiku 4.5) automatically scans code changes for security issues after every hydra-coder run
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
-- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose` for full session control
+- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose`, `/hydra:report` for full session control
+- **Task completion sound** — plays a notification when Claude finishes substantial tasks
 - **Quick commands** — natural language shortcuts: `hydra status`, `hydra quiet`, `hydra verbose`
 - **Custom agent templates** — Add your own heads using `templates/custom-agent.md`
 - **Session indexing** — Codebase context persists across turns; no re-exploration on every prompt
@@ -787,6 +805,22 @@ Yes. Opus maintains a "Hydra Notes" section in your project's <code>CLAUDE.md</c
 
 ---
 
+## 💬 Feedback
+
+Found a bug? Have a feature idea? Want to share feedback?
+
+**From within Claude Code:**
+```
+/hydra:report
+```
+
+**Or directly on GitHub:**
+- [Report a Bug](https://github.com/AR6420/Hail_Hydra/issues/new?template=bug_report.md)
+- [Request a Feature](https://github.com/AR6420/Hail_Hydra/issues/new?template=feature_request.md)
+- [Share Feedback](https://github.com/AR6420/Hail_Hydra/issues/new?template=feedback.md)
+
+---
+
 ## 🤝 Contributing
 
 Found a task type that gets misclassified? Have an idea for a new head? Contributions are welcome!
@@ -813,7 +847,7 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/><br/>
   <em>Built with 🧠 by Claude Opus 4.6 — ironically, the model this framework is designed to use less of.</em>
   <br/>
-  <em>v2.0.0 — Now with memory and integration integrity.</em>
+  <em>v2.0.4 — Now with memory, integration integrity, and task notifications.</em>
 </p>
 
 ---

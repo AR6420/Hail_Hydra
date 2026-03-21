@@ -80,12 +80,18 @@ const commands = {
   'guard':    readBundled('commands/hydra/guard.md'),
   'quiet':    readBundled('commands/hydra/quiet.md'),
   'verbose':  readBundled('commands/hydra/verbose.md'),
+  'report':   readBundled('commands/hydra/report.md'),
 };
 
 const hooks = {
   'hydra-check-update': readBundled('hooks/hydra-check-update.js'),
   'hydra-statusline':   readBundled('hooks/hydra-statusline.js'),
   'hydra-auto-guard':   readBundled('hooks/hydra-auto-guard.js'),
+  'hydra-notify':       readBundled('hooks/hydra-notify.js'),
 };
 
-module.exports = { agents, skill, references, commands, hooks };
+const binaryHooks = {
+  'hydra-task-complete.wav': path.join(FILES_DIR, 'hooks', 'hydra-task-complete.wav'),
+};
+
+module.exports = { agents, skill, references, commands, hooks, binaryHooks };

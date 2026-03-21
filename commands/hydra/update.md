@@ -1,35 +1,78 @@
 ---
 description: Update the Hydra framework to the latest version from npm
-allowed-tools: Bash
+allowed-tools: Bash, Read
 ---
 
 # Hydra Update
 
 Run the following steps to update Hydra to the latest version:
 
-1. First, check the current installed version:
+## Step 1 — Check versions
+
 ```bash
-   cat ~/.claude/skills/hydra/VERSION 2>/dev/null || echo "VERSION file not found"
+cat ~/.claude/skills/hydra/VERSION 2>/dev/null || echo "VERSION file not found"
+```
+```bash
+npm view hail-hydra-cc version 2>/dev/null || echo "Package not found on npm"
 ```
 
-2. Check the latest available version on npm:
+If the installed version matches the latest npm version, tell the user:
+"🐉 Hydra is already at the latest version ([version])."
+and stop here.
+
+## Step 2 — Show changelog preview
+
+Fetch the CHANGELOG from GitHub:
 ```bash
-   npm view hail-hydra-cc version 2>/dev/null || echo "Package not found on npm"
+curl -sL "https://raw.githubusercontent.com/AR6420/Hail_Hydra/main/CHANGELOG.md"
 ```
 
-3. If an update is available (versions differ), run the installer:
-```bash
-   npx hail-hydra-cc@latest --global
+Parse the changelog to extract entries between the installed version and the latest version. Display a formatted "What's New" section:
+
+```
+🐉 Hydra Update Available: [installed] → [latest]
+═══════════════════════════════════════════════════
+
+📋 What's New:
+[changelog entries for versions between installed and latest]
 ```
 
-4. After installation completes, verify the new version:
-```bash
-   cat ~/.claude/skills/hydra/VERSION
+If the changelog fetch fails, skip the preview and continue with the update.
+
+## Step 3 — Show safety note
+
+Display:
+```
+⚠️  What gets replaced:
+   • Agent definitions (agents/*.md)
+   • SKILL.md, references, commands, hooks
+   • VERSION file
+
+✅ What's preserved:
+   • Your hydra.config.md settings
+   • Agent memory directories (memory/)
+   • CLAUDE.md orchestrator notes
+   • settings.json hook registrations (re-registered automatically)
 ```
 
-5. Report to the user:
-   - If updated: "🐉 Hydra updated from [old] → [new]. All heads refreshed."
-   - If already current: "🐉 Hydra is already at the latest version ([version])."
-   - If error: Show the error and suggest running `npx hail-hydra-cc@latest --global` manually in their terminal.
+## Step 4 — Ask for confirmation
 
-**Important**: After updating, the user should restart Claude Code to reload the updated agent files, commands, and hooks.
+Ask the user: "Proceed with update? [Y/n]"
+
+If they decline, respond: "🐉 Update cancelled." and stop.
+
+## Step 5 — Run the update
+
+```bash
+npx hail-hydra-cc@latest --global
+```
+
+## Step 6 — Verify
+
+```bash
+cat ~/.claude/skills/hydra/VERSION
+```
+
+Report to the user:
+- If updated: "🐉 Hydra updated from [old] → [new]. All heads refreshed. Restart Claude Code to load the new files."
+- If error: Show the error and suggest running `npx hail-hydra-cc@latest --global` manually in their terminal.
