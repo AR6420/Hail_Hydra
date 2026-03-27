@@ -43,6 +43,16 @@ cat .claude/skills/hydra/config/hydra.config.md 2>/dev/null || \
 echo "No config file found (using defaults)"
 ```
 
+## 6. Codebase Map
+```bash
+if [ -f ".claude/hydra/codebase-map.json" ]; then
+  echo "Map: ✅ Exists"
+  node -e "const m=JSON.parse(require('fs').readFileSync('.claude/hydra/codebase-map.json','utf8'));console.log('Files:',m._meta.file_count);console.log('Built:',m._meta.built_at);console.log('Hash:',m._meta.git_hash);"
+else
+  echo "Map: ❌ Not built yet (run /hydra:map rebuild)"
+fi
+```
+
 ## Display Format
 
 Present results as a clean status card:
@@ -60,8 +70,9 @@ Agents (7):
   🟢 hydra-git      (Haiku 4.5)   ✅
   🔵 hydra-coder    (Sonnet 4.6)  ✅
   🔵 hydra-analyst  (Sonnet 4.6)  ✅
-Commands (7): update, status, help, config, guard, quiet, verbose
-Hooks (3):    check-update ✅, statusline ✅, auto-guard ✅
+Commands (9): update, status, help, config, guard, quiet, verbose, report, map
+Hooks (4):    check-update ✅, statusline ✅, auto-guard ✅, notify ✅
+Map:          ✅ Current (487 files, built 2026-03-26)
 Config:       balanced mode, dispatch log on, auto-guard on
 ──────────────────────────────
 ```

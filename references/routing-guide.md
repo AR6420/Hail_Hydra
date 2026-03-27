@@ -156,6 +156,34 @@ These are tasks that look like one tier but are actually another:
 
 ---
 
+## Map-Aware Routing Examples
+
+These examples show how the codebase map changes routing decisions by providing
+risk scores and blast radius data upfront.
+
+### "Fix the bug in auth.ts"
+1. Check map: auth.ts has risk=critical, 12 dependents
+2. hydra-scout → verify map is current (incremental update if needed)
+3. hydra-analyst → diagnose the bug
+4. hydra-coder → implement the fix
+5. hydra-sentinel-scan → map shows blast radius of 12 files, check all 12
+   (without map, would have to grep the entire codebase)
+6. hydra-sentinel → deep analysis (auto-escalated because risk=critical)
+
+### "Add a new utility function"
+1. Check map: new file, risk=low (zero dependents initially)
+2. hydra-coder → write the function
+3. hydra-sentinel-scan → low risk, quick scan, auto-accept if clean
+   (without map, would run the same expensive scan as a critical file)
+
+### "Refactor the database connection module"
+1. Check map: src/db/connection.ts has risk=critical, 15 dependents
+2. Plan execution with full blast radius awareness
+3. Dispatch parallel hydra-coders for each affected file
+4. Sentinel deep analysis is MANDATORY (critical risk)
+
+---
+
 ## Quick Decision Flowchart
 
 ```

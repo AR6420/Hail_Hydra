@@ -81,6 +81,7 @@ const commands = {
   'quiet':    readBundled('commands/hydra/quiet.md'),
   'verbose':  readBundled('commands/hydra/verbose.md'),
   'report':   readBundled('commands/hydra/report.md'),
+  'map':      readBundled('commands/hydra/map.md'),
 };
 
 const hooks = {

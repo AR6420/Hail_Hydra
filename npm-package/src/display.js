@@ -42,7 +42,7 @@ function showInstallComplete(statusLineConfigured = true) {
   console.log(chalk.cyan.bold('  \uD83D\uDC09 Hail Hydra! Framework deployed and ready.'));
   console.log(chalk.gray('  ' + '\u2500'.repeat(45)));
   console.log(chalk.green(`    \u2714 9 agents installed`));
-  console.log(chalk.green(`    \u2714 8 slash commands installed`));
+  console.log(chalk.green(`    \u2714 9 slash commands installed`));
   console.log(chalk.green(`    \u2714 4 hooks registered`));
   if (statusLineConfigured) {
     console.log(chalk.green(`    \u2714 StatusLine configured`));
@@ -50,9 +50,11 @@ function showInstallComplete(statusLineConfigured = true) {
     console.log(chalk.yellow(`    \u26a0 StatusLine skipped (existing config preserved)`));
   }
   console.log(chalk.green(`    \u2714 Sentinel pipeline active`));
+  console.log(chalk.green(`    \u2714 Codebase map ready (run /hydra:map rebuild)`));
   console.log(chalk.green(`    \u2714 Version tracked (${VERSION})`));
   console.log();
   console.log(chalk.gray('  Quick start:  /hydra:help'));
+  console.log(chalk.gray('  Build map:    /hydra:map rebuild'));
   console.log(chalk.gray('  Check status: /hydra:status'));
   console.log(chalk.gray('  GitHub: https://github.com/AR6420/Hail_Hydra'));
   console.log();

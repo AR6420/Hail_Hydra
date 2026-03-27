@@ -32,9 +32,21 @@ Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguou
 - **hydra-scribe**: Internal docstrings, inline comments, changelog entries
 - **Requires verify**: Any analysis, interpretation, or user-facing documentation
 
-### hydra-sentinel-scan (Haiku 4.5)
+### hydra-scout (Haiku 4.5) — Updated in v2.1.0
+- **Strengths**: Codebase exploration, file search, reading, AND codebase
+  map building/maintenance
+- **New capability**: Builds and incrementally updates the codebase dependency
+  map using grep-based import extraction. No external parsers required.
+- **Memory focus**: Codebase structure, key file locations, module boundaries,
+  map build history, files that failed to parse
+
+### hydra-sentinel-scan (Haiku 4.5) — Updated in v2.1.0
 - **Strengths**: Pattern matching, grep-level analysis, import tracing,
-  fast structural checks
+  fast structural checks, AND map-based instant blast-radius lookups
+- **New capability**: Reads codebase map for instant dependency lookups
+  instead of grepping. Falls back to grep if map doesn't exist.
+- **Map-aware checks**: Risk-based severity, test coverage warnings,
+  env var index lookups, blast radius reporting
 - **Limitations**: Cannot understand semantic meaning of data shapes,
   may produce false positives on complex contract changes
 - **Memory focus**: Codebase dependency graph, coupling patterns,

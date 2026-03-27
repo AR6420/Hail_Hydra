@@ -43,6 +43,33 @@ After analysis, update your memory with:
 2. The sentinel-scan report (JSON with flagged issues)
 3. Context from the orchestrator about what task was being performed
 
+## Codebase Map Integration
+
+Before analyzing, read `.claude/hydra/codebase-map.json` if it exists.
+
+### How to Use the Map
+
+1. **Understand the blast radius before reading files.**
+   The map tells you which files depend on the changed files. Read the
+   blast radius files FIRST — these are the most likely to have issues.
+
+2. **Check env_vars section for missing variables.**
+   The map's env_vars index tells you every env var reference in the project.
+   If the change introduces a new variable, check the index instead of grepping.
+
+3. **Use risk scores to prioritize.**
+   Focus your deepest analysis on `critical` and `high` risk files. For `low`
+   risk files, a quick check is sufficient.
+
+4. **Flag untested files.**
+   If a file with integration issues also has `"test_coverage": "untested"`,
+   escalate the severity and explicitly recommend adding tests.
+
+5. **Cross-reference test coverage.**
+   The map's `tested_by` field tells you which test files cover each source file.
+   If you confirm a real issue, you can tell the user exactly which tests to run
+   to verify the fix: "Run tests/auth.test.ts to verify this fix."
+
 ## Deep Analysis Checklist
 
 ### For EVERY issue flagged by sentinel-scan:

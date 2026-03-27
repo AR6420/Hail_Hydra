@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-03-26
+
+### Added
+- **Codebase Map** — persistent JSON dependency map built by hydra-scout
+  - File-level import/export tracking with automatic reverse indexing
+  - Risk scores per file (low/medium/high/critical based on dependent count)
+  - Environment variable index (tracks every env var reference across the codebase)
+  - Test coverage mapping (covered/partial/untested per file)
+  - Git hash staleness detection — incremental updates, only re-maps changed files
+  - Stored at `.claude/hydra/codebase-map.json`, no external dependencies
+- `/hydra:map` slash command — view summary, query blast radius, force rebuild
+- Map-aware sentinel scanning — instant blast-radius lookups instead of grep
+- Risk-based sentinel triggering — critical files always get deep analysis,
+  low-risk files get fast-track acceptance
+- Map-aware orchestration — Opus uses risk scores for smarter routing decisions
+
+### Changed
+- hydra-scout now builds and maintains the codebase map alongside exploration
+- hydra-sentinel-scan uses map for dependency checks (falls back to grep if no map)
+- hydra-sentinel reads map for blast radius context during deep analysis
+- SKILL.md updated with Map-Aware Orchestration protocol
+- Routing guide updated with map-aware examples
+- Slash commands increased from 8 to 9
+
+### Improved
+- Sentinel scanning ~3-5x faster with map (JSON lookup vs grep)
+- Sentinel scanning ~3-5x fewer tokens with map (reads only blast radius files)
+- Scout exploration dramatically faster on repeat sessions (reads map, skips full scan)
+- Risk-proportional verification reduces unnecessary sentinel runs on low-risk changes
+
 ## [2.0.3] - 2026-03-16
 
 ### Changed
@@ -97,7 +127,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wave execution, verification reports, handoff protocol
 - 4 orchestrator-level speed optimizations
 
-[Unreleased]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.3...HEAD
+[Unreleased]: https://github.com/AR6420/Hail_Hydra/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.3...v2.1.0
 [2.0.3]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.0...v2.0.3
 [2.0.2]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.0...v2.0.1

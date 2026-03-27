@@ -178,6 +178,54 @@ The index is stale if:
 - The user switches to a different project/directory
 When stale, rebuild the index on the next scout dispatch.
 
+## Codebase Map — Orchestrator Protocol
+
+Hydra maintains a codebase map at `.claude/hydra/codebase-map.json`. This map
+is built and maintained by hydra-scout. It contains file dependencies, blast
+radius data, risk scores, env var references, and test coverage.
+
+### Session Start — Map Check
+
+At the start of EVERY session, before any work:
+
+1. Check if `.claude/hydra/codebase-map.json` exists.
+2. If yes: read the `_meta` section. Check if `git_hash` matches current HEAD.
+   - If current: map is ready. Note this internally.
+   - If stale: dispatch hydra-scout to do an incremental update before proceeding.
+3. If no: dispatch hydra-scout to build the map on the first exploration task.
+   Don't block the session — but prioritize building the map early.
+
+### Risk-Based Sentinel Triggering
+
+Use the map's risk scores to decide sentinel behavior:
+
+| Modified File Risk | Sentinel Behavior |
+|-------------------|-------------------|
+| `critical` (7+ dependents) | ALWAYS run sentinel-scan, ALWAYS escalate to deep |
+| `high` (4-6 dependents) | ALWAYS run sentinel-scan, escalate if issues found |
+| `medium` (2-3 dependents) | Run sentinel-scan, escalate only if P0 issues found |
+| `low` (0-1 dependents) | Run sentinel-scan, but auto-accept if clean |
+
+This replaces the previous "always run sentinel-scan the same way" approach
+with risk-proportional verification.
+
+### When Dispatching Sentinel-Scan
+
+Include the map's relevant data in the task description:
+- The blast radius for the changed files (from the map)
+- The risk score of each changed file
+- The test coverage status of each changed file
+- Any env vars referenced by the changed files
+
+This gives sentinel-scan a head start — it doesn't need to compute the
+blast radius itself, the map already has it.
+
+### Map Staleness
+
+If you notice the map's git_hash doesn't match HEAD and hydra-scout hasn't
+been dispatched yet, dispatch scout to update the map BEFORE running sentinel.
+A stale map is worse than no map — it could have incorrect dependency data.
+
 ## Blocking vs Non-Blocking Dispatch
 
 Not all agents need to finish before the next wave starts. Classify each dispatch as
@@ -782,6 +830,7 @@ the command's instructions:
 | `/hydra:update` | Trigger an update via npx |
 | `/hydra:config` | Show current configuration |
 | `/hydra:guard [files]` | Manually invoke the security scan on specified files |
+| `/hydra:map [file]` | View, rebuild, or query the codebase dependency map |
 | `/hydra:quiet` | Suppress dispatch logs for this session |
 | `/hydra:verbose` | Enable detailed dispatch logs with timing |
 
@@ -921,12 +970,13 @@ If the user types any of these exact phrases, respond with the corresponding act
 | `hydra quiet` | Suppress dispatch logs for the rest of the session (equivalent to stealth mode) |
 | `hydra verbose` | Enable verbose dispatch logs with per-agent detail for the rest of the session |
 | `hydra reset` | Clear session index, treat next turn as Turn 1 (rebuild from fresh scout) |
+| `hydra map` | Show codebase map summary, or query a specific file's blast radius |
 
 ## The Nine Heads
 
 | Head | Model | Role | Tools |
 |------|-------|------|-------|
-| `hydra-scout` | 🟢 Haiku 4.5 | Codebase exploration, file search, reading | Read, Grep, Glob |
+| `hydra-scout` | 🟢 Haiku 4.5 | Codebase exploration, file search, reading, map building | Read, Grep, Glob, Bash, Write |
 | `hydra-runner` | 🟢 Haiku 4.5 | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
 | `hydra-scribe` | 🟢 Haiku 4.5 | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
 | `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
