@@ -94,18 +94,18 @@ User Request
     ════════════════════════════════════════════════════════
     Wave N  (parallel dispatch, index context injected)
     ┌───────────────────┬──────────────────────────────────┐
-    │  BLOCKING         │  NON-BLOCKING (fire & forget)    │
+    │  SEQUENTIAL       │  PARALLEL (wait for all)         │
     ▼                   ▼                                  │
  [coder]            [scribe] ──────────────────────────────┘
     │
     ▼
- Results arrive
+ ALL agents complete (Opus waits for every dispatched agent)
     │
     ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
     └── Code / analysis / user-facing docs? → Orchestrator verifies
          │
          ▼
-   User gets result  +  non-blocking outputs appended when ready
+   User gets result (single response, all agent outputs included)
 ```
 
 This mirrors speculative decoding's "draft → score → accept/reject" loop, but at task granularity.
@@ -226,45 +226,44 @@ If you notice the map's git_hash doesn't match HEAD and hydra-scout hasn't
 been dispatched yet, dispatch scout to update the map BEFORE running sentinel.
 A stale map is worse than no map — it could have incorrect dependency data.
 
-## Blocking vs Non-Blocking Dispatch
+## Sequential vs Parallel Dispatch
 
-Not all agents need to finish before the next wave starts. Classify each dispatch as
-blocking or non-blocking to maximize throughput.
+Not all agents need to be dispatched one-by-one. When agents are independent,
+dispatch them simultaneously and wait for ALL to complete before responding.
 
-### Blocking Dispatch (wait for result before continuing)
+> ⚠️ **NEVER use fire-and-forget or background dispatch.** Background agent
+> completion triggers an empty user turn in Claude Code, causing Claude to respond
+> to nothing. Every dispatched agent MUST be awaited before presenting results.
+
+### Sequential Dispatch (one wave at a time)
 Use when downstream agents DEPEND on this agent's output:
 - hydra-scout exploring files that hydra-coder needs to edit
 - hydra-analyst diagnosing a bug that hydra-coder needs to fix
 - hydra-coder making changes that hydra-runner needs to test
 
-### Non-Blocking Dispatch (fire and forget, merge results later)
-Use when the output is a FINAL deliverable with no downstream dependents:
-- hydra-scribe writing docs (ALWAYS non-blocking unless user only asked for docs)
-- hydra-runner running final validation tests (the fix is already done)
-- hydra-scout exploring supplementary context (nice-to-have, not critical-path)
+### Parallel Dispatch (all at once — wait for ALL before responding)
+Use when agents are INDEPENDENT of each other:
+- hydra-scribe writing docs + hydra-runner running final tests
+- hydra-guard scanning + hydra-sentinel-scan sweeping (already enforced by Protocol 1)
+- hydra-scout exploring supplementary context + any other independent agent
 
-### Execution Flow with Non-Blocking
+### Execution Flow
 
 ```
-Wave 1 (blocking): scout explores → returns file paths
-Wave 2 (blocking): coder implements fix → returns changed files
-Wave 3 (mixed):
-  runner tests the fix   (BLOCKING — need to confirm it works)
-  scribe updates docs    (NON-BLOCKING — fire and forget)
-
-Wave 3 completes when: runner returns (don't wait for scribe)
-Present results to user. Scribe's docs are appended when ready.
+Wave 1 (sequential): scout explores → returns file paths
+Wave 2 (sequential): coder implements fix → returns changed files
+Wave 3 (parallel):   dispatch runner AND scribe simultaneously
+                     WAIT for BOTH to complete
+                     Present single response to user (all outputs included)
 ```
 
 ### Rules
-1. A wave completes when all BLOCKING agents in it return
-2. Non-blocking agents run in background — their output is merged into the final
-   response or presented as a follow-up
-3. NEVER mark hydra-coder as non-blocking — code changes always need verification
-4. NEVER mark hydra-analyst as non-blocking — diagnoses feed into fixes
-5. hydra-scribe is non-blocking by DEFAULT unless it's the primary task
-6. hydra-runner is non-blocking ONLY when it's the final validation step
-7. If in doubt, make it blocking — correctness over speed
+1. A wave completes when ALL agents in it return — no exceptions
+2. NEVER present results while any dispatched agent is still running
+3. NEVER dispatch hydra-coder without awaiting the result — code changes always need verification
+4. NEVER dispatch hydra-analyst without awaiting the result — diagnoses feed into fixes
+5. hydra-scribe runs IN PARALLEL with hydra-runner by default (not after)
+6. If in doubt, wait for everything — correctness over speed
 
 ## Integrated Execution Model
 
@@ -284,7 +283,7 @@ User Prompt arrives
     │   "Find files relevant to: [prompt]"                                             │
     │                                                                                  │
     ├── IN PARALLEL: Classify task, plan waves,                                        │
-    │   decide blocking/non-blocking per agent                                         │
+    │   decide sequential/parallel per agent                                           │
     │                                                                                  │
     ▼                                                                                  │
 Scout returns                                                                          │
@@ -299,10 +298,10 @@ Scout returns                                                                   
                         (index context injected into each agent prompt)
                                           │
                      ┌────────────────────┴───────────────────────┐
-                     │ BLOCKING agents       ◄── Opt 3: Non-Block  │ NON-BLOCKING agents
-                     │ (wait for result)                           │ (fire & forget)
+                     │ SEQUENTIAL agents     ◄── Opt 3: Parallel   │ PARALLEL agents
+                     │ (one wave at a time)                        │ (dispatched together)
                      ▼                                             ▼
-              Results arrive                              Background — merge when ready
+              Results arrive                              All complete together
                      │                                             │
               ┌──────┴──────┐                                      │
               │             │                                      │
@@ -332,7 +331,7 @@ Scout returns                                                                   
                     → Wait → Decision tree → Present to user       │
                                                                    │
           Next wave OR present result ◄──────────────────────────►┘
-          (non-blocking outputs appended when ready)
+          (all parallel agents completed before this point)
 ```
 
 ### Optimization Interaction Rules
@@ -347,27 +346,27 @@ New prompt arrives → Check Session Index coverage
     └── Not covered: Pre-dispatch scout → Update index → Wave 1 starts
 ```
 
-#### Rule 2: Non-Blocking + Auto-Accept = Zero-Overhead Path
-When an agent is both non-blocking AND its output qualifies for auto-accept:
-- Dispatch it
+#### Rule 2: Parallel + Auto-Accept = Zero-Overhead Path
+When an agent runs in parallel with others AND its output qualifies for auto-accept:
+- Dispatch it alongside other parallel agents
 - When it returns: auto-accept without orchestrator review
-- Append result to response
+- Append result to response (all parallel agents finish before the response is sent)
 - **Total orchestrator overhead: 0 seconds**
 
 This is the highest-throughput path. Common cases:
-- Non-blocking hydra-runner (final validation) reporting all-pass → zero overhead
-- Non-blocking hydra-scribe (internal docstrings) → zero overhead
-- Non-blocking hydra-scout (supplementary context) → zero overhead, index updated
+- Parallel hydra-runner (final validation) reporting all-pass → zero overhead
+- Parallel hydra-scribe (internal docstrings) → zero overhead
+- Parallel hydra-scout (supplementary context) → zero overhead, index updated
 
 #### Rule 3: Auto-Accepted Scout Output ALWAYS Updates Session Index
 Every scout output that passes auto-accept is immediately folded into the Session Index.
 No separate step. The act of auto-accepting IS the index update.
 
-#### Rule 4: Non-Blocking Does Not Override Verification Requirements
-Non-blocking governs TIMING (don't wait), not VERIFICATION (do review).
+#### Rule 4: Parallel Dispatch Does Not Override Verification Requirements
+Parallel dispatch governs TIMING (run together), not VERIFICATION (do review).
 If scribe writes user-facing docs (README, API docs), verification is still required —
-it happens when scribe's output arrives asynchronously, not before the next wave.
-The next wave starts without waiting; verification happens as a follow-up step.
+it happens when all parallel agents complete, before the response is sent.
+Opus always waits for every dispatched agent before presenting results.
 
 ### Timing Profile: Optimized vs Baseline
 
@@ -388,11 +387,11 @@ OPTIMIZED (all 4 optimizations active):
   t=3s   Scout auto-accepted, index built                      [0s overhead]
   t=3s   Dispatch coder (index context injected), wait         [5s]
   t=8s   Quick-scan coder (code → verify)                      [1s]
-  t=9s   Dispatch runner (blocking) + scribe (non-blocking)    [3s runner]
-         Scribe runs in background simultaneously
-  t=12s  Runner: all-pass → auto-accept                        [0s overhead]
-  t=12s  Present result to user
-         Scribe arrives ~t=13s → auto-accept internal docs → appended
+  t=9s   Dispatch runner (parallel) + scribe (parallel)          [3s — both run at once]
+         Scribe and runner run simultaneously, Opus waits for both
+  t=12s  Runner: all-pass → auto-accept                          [0s overhead]
+         Scribe: internal docs → auto-accept                     [0s overhead]
+  t=12s  Present result to user (single response, all outputs included)
   Total wall-clock: ~12 seconds (33% faster, zero quality loss)
 ```
 

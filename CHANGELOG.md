@@ -5,7 +5,19 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.1] — Bug Fix
+
+### Fixed
+- **Ghost message bug** (#2): Background agent dispatch (fire-and-forget) caused an
+  empty user turn to appear in Claude Code after agent completion, triggering Claude
+  to respond to nothing. All agents are now dispatched in parallel foreground mode —
+  Opus waits for every dispatched agent before presenting results. Same speed benefit
+  (agents still run simultaneously), no ghost messages.
+
+### Changed
+- `SKILL.md`: "Blocking vs Non-Blocking Dispatch" section renamed to
+  "Sequential vs Parallel Dispatch". All fire-and-forget language removed.
+  Parallel dispatch is now the model for independent agents running simultaneously.
 
 ## [2.1.0] - 2026-03-26
 
@@ -127,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wave execution, verification reports, handoff protocol
 - 4 orchestrator-level speed optimizations
 
-[Unreleased]: https://github.com/AR6420/Hail_Hydra/compare/v2.1.0...HEAD
+[2.1.1]: https://github.com/AR6420/Hail_Hydra/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.3...v2.1.0
 [2.0.3]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.0...v2.0.3
 [2.0.2]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.1...v2.0.2
