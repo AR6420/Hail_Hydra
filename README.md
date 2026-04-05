@@ -65,8 +65,8 @@ faster and 3-5× cheaper per scan.
 
 > **Four built-in speed optimizations** reduce overhead at every stage: speculative pre-dispatch
 > (scout launches in parallel with task classification), session indexing (codebase context
-> persists across turns — no re-exploration), fire-and-forget dispatch (non-critical agents run
-> in the background without blocking downstream work), and confidence-based auto-accept (raw
+> persists across turns — no re-exploration), parallel dispatch (independent agents run
+> simultaneously — Opus waits for all before responding), and confidence-based auto-accept (raw
 > factual outputs skip Opus review entirely).
 
 > **Think of it this way:**
@@ -565,12 +565,12 @@ User Request
     ════════════════════════════════════════════════════════
     Wave N  (parallel dispatch, index context injected)
     ┌───────────────────┬──────────────────────────────────┐
-    │  BLOCKING         │  NON-BLOCKING (fire & forget)    │
+    │  SEQUENTIAL       │  PARALLEL (wait for all)         │
     ▼                   ▼                                  │
  [coder]            [scribe] ──────────────────────────────┘
     │
     ▼
- Results arrive
+ ALL agents complete (Opus waits for every dispatched agent)
     │
     ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
     └── Code / analysis / user-facing docs? → Orchestrator verifies
@@ -587,7 +587,7 @@ User Request
    └──────────────────────┬──────────────────────────────┘
                           │
                           ▼
-   User gets result  +  non-blocking outputs appended when ready
+   User gets result (single response, all agent outputs included)
 ```
 
 ---
