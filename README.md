@@ -38,7 +38,7 @@
 </p>
 
 <p align="center">
-  <strong>9 agents &nbsp;·&nbsp; 9 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Persistent memory &nbsp;·&nbsp; Integration integrity</strong>
+  <strong>10 agents &nbsp;·&nbsp; 10 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Preflight checks &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
@@ -89,7 +89,7 @@ npx hail-hydra-cc@latest
 npm i hail-hydra-cc@latest
 ```
 
-Runs the interactive installer — deploys 9 agents, 9 slash commands, 4 hooks, and registers
+Runs the interactive installer — deploys 10 agents, 10 slash commands, 4 hooks, and registers
 the statusline and update checker. Done in seconds.
 
 ### Manual Install
@@ -103,7 +103,7 @@ cd hydra
 ./scripts/install.sh --user
 
 # 🐉 Hail Hydra! Framework active in all Claude Code sessions.
-# ✅ 9 agents  ✅ 9 commands  ✅ 4 hooks  ✅ StatusLine  ✅ VERSION
+# ✅ 10 agents  ✅ 10 commands  ✅ 4 hooks  ✅ StatusLine  ✅ VERSION
 ```
 
 ### Installation Options
@@ -129,17 +129,18 @@ cd hydra
 
 ```
 ~/.claude/
-├── agents/                      # 9 agent definitions (all with memory: project)
+├── agents/                      # 10 agent definitions (all with memory: project)
 │   ├── hydra-scout.md           # 🟢 Haiku 4.5 — explore codebase
 │   ├── hydra-runner.md          # 🟢 Haiku 4.5 — run tests/builds
 │   ├── hydra-scribe.md          # 🟢 Haiku 4.5 — write documentation
 │   ├── hydra-guard.md           # 🟢 Haiku 4.5 — security/quality gate
 │   ├── hydra-git.md             # 🟢 Haiku 4.5 — git operations
 │   ├── hydra-sentinel-scan.md   # 🟢 Haiku 4.5 — fast integration sweep
+│   ├── hydra-preflight.md       # 🟢 Haiku 4.5 — environment preflight check
 │   ├── hydra-coder.md           # 🔵 Sonnet 4.6 — write/edit code
 │   ├── hydra-analyst.md         # 🔵 Sonnet 4.6 — debug/diagnose
 │   └── hydra-sentinel.md        # 🔵 Sonnet 4.6 — deep integration analysis
-├── commands/hydra/              # 9 slash commands
+├── commands/hydra/              # 10 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status
 │   ├── update.md                # /hydra:update
@@ -148,7 +149,8 @@ cd hydra
 │   ├── quiet.md                 # /hydra:quiet
 │   ├── verbose.md               # /hydra:verbose
 │   ├── report.md                # /hydra:report
-│   └── map.md                   # /hydra:map
+│   ├── map.md                   # /hydra:map
+│   └── preflight.md             # /hydra:preflight
 ├── hooks/                       # 4 lifecycle hooks
 │   ├── hydra-check-update.js    # SessionStart — version check (background)
 │   ├── hydra-statusline.js      # StatusLine — status bar display
@@ -186,6 +188,21 @@ cd hydra
 | `/hydra:verbose` | Enable verbose dispatch logs with timing |
 | `/hydra:report` | Report a bug, request a feature, or share feedback |
 | `/hydra:map` | View codebase dependency map, query blast radius, rebuild |
+| `/hydra:preflight` | Two-phase environment and compatibility check before starting a new project build |
+
+### `/hydra:preflight` — Environment Validation
+
+Run before starting any new project build. Catches broken GPU stacks, missing env
+vars, and incompatible dependency pairs before they cost you hours of debugging.
+
+```
+/hydra:preflight
+```
+
+Hydra runs a two-phase check:
+1. **Detection** (Haiku 4.5): probes runtimes, CUDA stack, deps, env vars, services
+2. **Analysis** (Sonnet 4.6): cross-references against compatibility matrices, flags
+   ✅ COMPATIBLE / ⚠️ KNOWN RISK / ❌ CONFIRMED BREAK
 
 ---
 
@@ -262,7 +279,7 @@ After updating, restart Claude Code to load the new files.
 
 ## ✨ Features
 
-- **Nine specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type
+- **Ten specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type, including preflight detection for new projects
 - **Sentinel integration integrity** — Two-tier verification (fast scan + deep analysis) catches ~72% of integration bugs before runtime
 - **Persistent agent memory** — Every agent remembers your codebase patterns, conventions, and past decisions across sessions
 - **Orchestrator memory** — Opus maintains its own notes on fragile zones, routing patterns, and known issues via CLAUDE.md
@@ -592,7 +609,7 @@ User Request
 
 ---
 
-## 🐲 The Nine Heads
+## 🐲 The Ten Heads
 
 | Head | Model | Speed | Role | Personality |
 |:-----|:------|:------|:-----|:------------|
@@ -602,6 +619,7 @@ User Request
 | **hydra-guard (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Security/quality gate after code changes | *"No secrets. No injection. You're clean."* |
 | **hydra-git (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
 | **hydra-sentinel-scan (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Fast integration sweep after code changes | *"Imports check out. Signatures match. Clean."* |
+| **hydra-preflight (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Environment detection, version probing, dep inventory | *"Your PyTorch/CUDA pair is broken. Pin torch==2.7.0."* |
 | **hydra-coder (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
 | **hydra-analyst (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
 | **hydra-sentinel (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Deep integration analysis (when scan flags issues) | *"2 real issues confirmed. 1 false positive dismissed."* |
@@ -674,7 +692,7 @@ cp templates/custom-agent.md agents/hydra-myspecialist.md
 ./scripts/install.sh --user   # or --project
 ```
 
-Your new head is now discoverable by Claude Code alongside the built-in nine.
+Your new head is now discoverable by Claude Code alongside the built-in ten.
 See [`templates/custom-agent.md`](templates/custom-agent.md) for the full template with
 instructions on writing effective agent descriptions, output formats, and collaboration protocols.
 
@@ -692,6 +710,7 @@ hydra/
 │   ├── hydra-guard.md                   # 🟢 Security/quality gate
 │   ├── hydra-git.md                     # 🟢 Git operations
 │   ├── hydra-sentinel-scan.md           # 🟢 Fast integration sweep
+│   ├── hydra-preflight.md               # 🟢 Environment preflight check
 │   ├── hydra-coder.md                   # 🔵 Code implementer
 │   ├── hydra-analyst.md                 # 🔵 Code reviewer & debugger
 │   └── hydra-sentinel.md               # 🔵 Deep integration analysis

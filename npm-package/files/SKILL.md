@@ -94,18 +94,18 @@ User Request
     ════════════════════════════════════════════════════════
     Wave N  (parallel dispatch, index context injected)
     ┌───────────────────┬──────────────────────────────────┐
-    │  BLOCKING         │  NON-BLOCKING (fire & forget)    │
+    │  SEQUENTIAL       │  PARALLEL (wait for all)         │
     ▼                   ▼                                  │
  [coder]            [scribe] ──────────────────────────────┘
     │
     ▼
- Results arrive
+ ALL agents complete (Opus waits for every dispatched agent)
     │
     ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
     └── Code / analysis / user-facing docs? → Orchestrator verifies
          │
          ▼
-   User gets result  +  non-blocking outputs appended when ready
+   User gets result (single response, all agent outputs included)
 ```
 
 This mirrors speculative decoding's "draft → score → accept/reject" loop, but at task granularity.
@@ -226,45 +226,145 @@ If you notice the map's git_hash doesn't match HEAD and hydra-scout hasn't
 been dispatched yet, dispatch scout to update the map BEFORE running sentinel.
 A stale map is worse than no map — it could have incorrect dependency data.
 
-## Blocking vs Non-Blocking Dispatch
+## Preflight Protocol — /hydra:preflight
 
-Not all agents need to finish before the next wave starts. Classify each dispatch as
-blocking or non-blocking to maximize throughput.
+Run this before starting work on any new project or unfamiliar codebase.
+It catches environment and compatibility issues before they become multi-hour
+debugging sessions.
 
-### Blocking Dispatch (wait for result before continuing)
+### When to run
+
+- User types `hydra preflight` or `/hydra:preflight`
+- User says "check my environment", "validate my setup", "is this project ready to build"
+- You are about to begin a substantial build task on a project you have not seen before
+  in this session AND the Session Index has no prior context for this project
+
+### Execution — Two Phases, Always in Sequence
+
+**Phase 1 (Detection) — dispatch hydra-preflight:**
+
+Prompt:
+
+```
+Run a full preflight check on this project. Collect runtime versions, run all
+GPU/CUDA probe scripts, inventory installed packages, compare .env.example against
+.env, verify build tools exist, and check service connectivity. Return the full
+structured PREFLIGHT_INVENTORY JSON. Do not make recommendations.
+```
+
+Wait for hydra-preflight to return `PREFLIGHT_INVENTORY_COMPLETE` before proceeding.
+
+**Phase 2 (Analysis) — dispatch hydra-analyst:**
+
+Pass the full PREFLIGHT_INVENTORY from Phase 1. Prompt:
+
+```
+You are performing a compatibility analysis on the following environment inventory.
+Cross-reference all detected versions against known compatibility matrices.
+Pay special attention to GPU stack combinations (PyTorch/CUDA/cuDNN),
+framework pairs (React/Next, Python/TF), and Node/native addon combinations.
+
+For each component or pair, return one of three verdicts:
+  ✅ COMPATIBLE — versions are known-good together
+  ⚠️  KNOWN RISK — this combination has known issues or is untested
+  ❌ CONFIRMED BREAK — probe output or known matrix confirms incompatibility
+
+For ❌ verdicts, include the specific fix (e.g. "pin pytorch==2.7.0").
+For ⚠️  verdicts, include what to watch for.
+For unknowns, flag as "UNVERIFIED — test before building" rather than assuming green.
+
+INVENTORY:
+[paste full PREFLIGHT_INVENTORY here]
+```
+
+### Presenting Results to User
+
+After both phases complete, present a unified report:
+
+```
+🐉 Hydra Preflight — [project name]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RUNTIMES
+  ✅ Node 22.4.0 (matches .nvmrc)
+  ✅ Python 3.11.9 (matches .python-version)
+
+GPU STACK
+  ❌ PyTorch 2.6.0 + CUDA 13.0 — incompatible
+     Fix: pip install torch==2.7.0
+
+ENVIRONMENT
+  ⚠️  Missing: DATABASE_URL, REDIS_URL (declared in .env.example)
+
+DEPENDENCIES
+  ✅ node_modules present (1,847 packages)
+  ✅ venv present
+
+SERVICES
+  ❌ PostgreSQL: unreachable (DATABASE_URL not set)
+  ✅ Redis: reachable
+
+BUILD TOOLS
+  ✅ vite, tsc, pytest all found
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2 confirmed breaks, 1 known risk, 1 warning
+Fix the ❌ items before building.
+```
+
+Auto-apply trivial fixes (e.g. updating a pin in requirements.txt) only if the user
+says "fix it" or "apply fixes". Never auto-apply without being asked.
+
+### Three-State Verdict Reference
+
+| State | Meaning | Source |
+|-------|---------|--------|
+| ✅ COMPATIBLE | Versions are known-good together | Analyst matrix knowledge |
+| ⚠️ KNOWN RISK | Combination has known issues or limited testing | Analyst matrix knowledge |
+| ❌ CONFIRMED BREAK | Probe output OR known matrix confirms failure | Probe output (ground truth) or analyst |
+| ❓ UNVERIFIED | Combination not in training data | Analyst — flag and move on |
+
+Ground truth from probes always beats matrix knowledge. If `torch.cuda.is_available()`
+returns False, that is a ❌ regardless of what the version matrix says.
+
+## Sequential vs Parallel Dispatch
+
+Not all agents need to be dispatched one-by-one. When agents are independent,
+dispatch them simultaneously and wait for ALL to complete before responding.
+
+> ⚠️ **NEVER use fire-and-forget or background dispatch.** Background agent
+> completion triggers an empty user turn in Claude Code, causing Claude to respond
+> to nothing. Every dispatched agent MUST be awaited before presenting results.
+
+### Sequential Dispatch (one wave at a time)
 Use when downstream agents DEPEND on this agent's output:
 - hydra-scout exploring files that hydra-coder needs to edit
 - hydra-analyst diagnosing a bug that hydra-coder needs to fix
 - hydra-coder making changes that hydra-runner needs to test
 
-### Non-Blocking Dispatch (fire and forget, merge results later)
-Use when the output is a FINAL deliverable with no downstream dependents:
-- hydra-scribe writing docs (ALWAYS non-blocking unless user only asked for docs)
-- hydra-runner running final validation tests (the fix is already done)
-- hydra-scout exploring supplementary context (nice-to-have, not critical-path)
+### Parallel Dispatch (all at once — wait for ALL before responding)
+Use when agents are INDEPENDENT of each other:
+- hydra-scribe writing docs + hydra-runner running final tests
+- hydra-guard scanning + hydra-sentinel-scan sweeping (already enforced by Protocol 1)
+- hydra-scout exploring supplementary context + any other independent agent
 
-### Execution Flow with Non-Blocking
+### Execution Flow
 
 ```
-Wave 1 (blocking): scout explores → returns file paths
-Wave 2 (blocking): coder implements fix → returns changed files
-Wave 3 (mixed):
-  runner tests the fix   (BLOCKING — need to confirm it works)
-  scribe updates docs    (NON-BLOCKING — fire and forget)
-
-Wave 3 completes when: runner returns (don't wait for scribe)
-Present results to user. Scribe's docs are appended when ready.
+Wave 1 (sequential): scout explores → returns file paths
+Wave 2 (sequential): coder implements fix → returns changed files
+Wave 3 (parallel):   dispatch runner AND scribe simultaneously
+                     WAIT for BOTH to complete
+                     Present single response to user (all outputs included)
 ```
 
 ### Rules
-1. A wave completes when all BLOCKING agents in it return
-2. Non-blocking agents run in background — their output is merged into the final
-   response or presented as a follow-up
-3. NEVER mark hydra-coder as non-blocking — code changes always need verification
-4. NEVER mark hydra-analyst as non-blocking — diagnoses feed into fixes
-5. hydra-scribe is non-blocking by DEFAULT unless it's the primary task
-6. hydra-runner is non-blocking ONLY when it's the final validation step
-7. If in doubt, make it blocking — correctness over speed
+1. A wave completes when ALL agents in it return — no exceptions
+2. NEVER present results while any dispatched agent is still running
+3. NEVER dispatch hydra-coder without awaiting the result — code changes always need verification
+4. NEVER dispatch hydra-analyst without awaiting the result — diagnoses feed into fixes
+5. hydra-scribe runs IN PARALLEL with hydra-runner by default (not after)
+6. If in doubt, wait for everything — correctness over speed
 
 ## Integrated Execution Model
 
@@ -284,7 +384,7 @@ User Prompt arrives
     │   "Find files relevant to: [prompt]"                                             │
     │                                                                                  │
     ├── IN PARALLEL: Classify task, plan waves,                                        │
-    │   decide blocking/non-blocking per agent                                         │
+    │   decide sequential/parallel per agent                                           │
     │                                                                                  │
     ▼                                                                                  │
 Scout returns                                                                          │
@@ -299,10 +399,10 @@ Scout returns                                                                   
                         (index context injected into each agent prompt)
                                           │
                      ┌────────────────────┴───────────────────────┐
-                     │ BLOCKING agents       ◄── Opt 3: Non-Block  │ NON-BLOCKING agents
-                     │ (wait for result)                           │ (fire & forget)
+                     │ SEQUENTIAL agents     ◄── Opt 3: Parallel   │ PARALLEL agents
+                     │ (one wave at a time)                        │ (dispatched together)
                      ▼                                             ▼
-              Results arrive                              Background — merge when ready
+              Results arrive                              All complete together
                      │                                             │
               ┌──────┴──────┐                                      │
               │             │                                      │
@@ -332,7 +432,7 @@ Scout returns                                                                   
                     → Wait → Decision tree → Present to user       │
                                                                    │
           Next wave OR present result ◄──────────────────────────►┘
-          (non-blocking outputs appended when ready)
+          (all parallel agents completed before this point)
 ```
 
 ### Optimization Interaction Rules
@@ -347,27 +447,27 @@ New prompt arrives → Check Session Index coverage
     └── Not covered: Pre-dispatch scout → Update index → Wave 1 starts
 ```
 
-#### Rule 2: Non-Blocking + Auto-Accept = Zero-Overhead Path
-When an agent is both non-blocking AND its output qualifies for auto-accept:
-- Dispatch it
+#### Rule 2: Parallel + Auto-Accept = Zero-Overhead Path
+When an agent runs in parallel with others AND its output qualifies for auto-accept:
+- Dispatch it alongside other parallel agents
 - When it returns: auto-accept without orchestrator review
-- Append result to response
+- Append result to response (all parallel agents finish before the response is sent)
 - **Total orchestrator overhead: 0 seconds**
 
 This is the highest-throughput path. Common cases:
-- Non-blocking hydra-runner (final validation) reporting all-pass → zero overhead
-- Non-blocking hydra-scribe (internal docstrings) → zero overhead
-- Non-blocking hydra-scout (supplementary context) → zero overhead, index updated
+- Parallel hydra-runner (final validation) reporting all-pass → zero overhead
+- Parallel hydra-scribe (internal docstrings) → zero overhead
+- Parallel hydra-scout (supplementary context) → zero overhead, index updated
 
 #### Rule 3: Auto-Accepted Scout Output ALWAYS Updates Session Index
 Every scout output that passes auto-accept is immediately folded into the Session Index.
 No separate step. The act of auto-accepting IS the index update.
 
-#### Rule 4: Non-Blocking Does Not Override Verification Requirements
-Non-blocking governs TIMING (don't wait), not VERIFICATION (do review).
+#### Rule 4: Parallel Dispatch Does Not Override Verification Requirements
+Parallel dispatch governs TIMING (run together), not VERIFICATION (do review).
 If scribe writes user-facing docs (README, API docs), verification is still required —
-it happens when scribe's output arrives asynchronously, not before the next wave.
-The next wave starts without waiting; verification happens as a follow-up step.
+it happens when all parallel agents complete, before the response is sent.
+Opus always waits for every dispatched agent before presenting results.
 
 ### Timing Profile: Optimized vs Baseline
 
@@ -388,11 +488,11 @@ OPTIMIZED (all 4 optimizations active):
   t=3s   Scout auto-accepted, index built                      [0s overhead]
   t=3s   Dispatch coder (index context injected), wait         [5s]
   t=8s   Quick-scan coder (code → verify)                      [1s]
-  t=9s   Dispatch runner (blocking) + scribe (non-blocking)    [3s runner]
-         Scribe runs in background simultaneously
-  t=12s  Runner: all-pass → auto-accept                        [0s overhead]
-  t=12s  Present result to user
-         Scribe arrives ~t=13s → auto-accept internal docs → appended
+  t=9s   Dispatch runner (parallel) + scribe (parallel)          [3s — both run at once]
+         Scribe and runner run simultaneously, Opus waits for both
+  t=12s  Runner: all-pass → auto-accept                          [0s overhead]
+         Scribe: internal docs → auto-accept                     [0s overhead]
+  t=12s  Present result to user (single response, all outputs included)
   Total wall-clock: ~12 seconds (33% faster, zero quality loss)
 ```
 
@@ -964,15 +1064,16 @@ If the user types any of these exact phrases, respond with the corresponding act
 
 | Command | Action |
 |---------|--------|
-| `hydra status` | List all 9 heads by name, model, and whether they appear to be installed (check `agents/` dir) |
+| `hydra status` | List all 10 heads by name, model, and whether they appear to be installed (check `agents/` dir) |
 | `hydra config` | Show current configuration settings (mode, dispatch_log, auto_guard) and their source (default/project/user) |
 | `hydra help` | Show available commands and a brief one-line description of each head |
 | `hydra quiet` | Suppress dispatch logs for the rest of the session (equivalent to stealth mode) |
 | `hydra verbose` | Enable verbose dispatch logs with per-agent detail for the rest of the session |
 | `hydra reset` | Clear session index, treat next turn as Turn 1 (rebuild from fresh scout) |
 | `hydra map` | Show codebase map summary, or query a specific file's blast radius |
+| `hydra preflight` | Run two-phase environment and compatibility check before starting a new project build |
 
-## The Nine Heads
+## The Ten Heads
 
 | Head | Model | Role | Tools |
 |------|-------|------|-------|
@@ -982,6 +1083,7 @@ If the user types any of these exact phrases, respond with the corresponding act
 | `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
 | `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
 | `hydra-sentinel-scan` | 🟢 Haiku 4.5 | Fast integration sweep after code changes | Read, Grep, Glob |
+| `hydra-preflight` | 🟢 Haiku 4.5 | Environment detection, version probing, dep inventory | Read, Bash, Glob |
 | `hydra-coder` | 🔵 Sonnet 4.6 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
 | `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
 | `hydra-sentinel` | 🔵 Sonnet 4.6 | Deep integration analysis (when scan flags issues) | Read, Grep, Glob, Write |
@@ -991,6 +1093,7 @@ If the user types any of these exact phrases, respond with the corresponding act
 Track these mentally to calibrate:
 
 - **Delegation rate**: What % of tasks go to heads? Target: 60–70%.
+- **Preflight rate**: Are you running `/hydra:preflight` on new projects? Target: 100% of new project sessions.
 - **Rejection rate**: How often does a draft need Opus intervention? Target: <15%.
 - **User complaints**: Zero. If the user notices quality issues, tune the classification.
 

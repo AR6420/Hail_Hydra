@@ -9,7 +9,7 @@
 npx hail-hydra-cc
 ```
 
-Runs an interactive installer that deploys 9 Hydra agents into your Claude Code setup.
+Runs an interactive installer that deploys 10 Hydra agents into your Claude Code setup.
 
 ## What is Hydra?
 
@@ -26,6 +26,7 @@ Hydra makes Claude Code's Opus model an intelligent **orchestrator** instead of 
 | `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, analysis |
 | `hydra-sentinel-scan` | 🟢 Haiku 4.5 | Fast integration sweep |
 | `hydra-sentinel` | 🔵 Sonnet 4.6 | Deep integration analysis |
+| `hydra-preflight` | 🟢 Haiku 4.5 | Environment detection, version probing, dep inventory |
 
 **Expected gains:** 2–3× faster tasks, ~50% lower API costs, zero quality loss.
 (Savings calculated against Opus 4.6 at $5/$25 per MTok — February 2026 pricing)
@@ -46,17 +47,18 @@ npx hail-hydra-cc --help         # Show help
 
 ```
 ~/.claude/                       (or ./.claude/ for local)
-├── agents/                      # 9 agent definitions
+├── agents/                      # 10 agent definitions
 │   ├── hydra-scout.md
 │   ├── hydra-runner.md
 │   ├── hydra-scribe.md
 │   ├── hydra-guard.md
 │   ├── hydra-git.md
 │   ├── hydra-sentinel-scan.md
+│   ├── hydra-preflight.md
 │   ├── hydra-coder.md
 │   ├── hydra-analyst.md
 │   └── hydra-sentinel.md
-├── commands/hydra/              # 8 slash commands
+├── commands/hydra/              # 10 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status
 │   ├── update.md                # /hydra:update
@@ -64,7 +66,9 @@ npx hail-hydra-cc --help         # Show help
 │   ├── guard.md                 # /hydra:guard
 │   ├── quiet.md                 # /hydra:quiet
 │   ├── verbose.md               # /hydra:verbose
-│   └── report.md                # /hydra:report
+│   ├── report.md                # /hydra:report
+│   ├── map.md                   # /hydra:map
+│   └── preflight.md             # /hydra:preflight
 ├── hooks/                       # 4 lifecycle hooks
 │   ├── hydra-check-update.js    # SessionStart — version check
 │   ├── hydra-statusline.js      # StatusLine — status bar

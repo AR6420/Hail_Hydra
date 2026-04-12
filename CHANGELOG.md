@@ -5,6 +5,37 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-04-11
+
+### Added
+- **`/hydra:preflight`** — Two-phase environment and compatibility validation
+  command for new projects. Solves the "15-hour debugging session caused by a
+  2-minute pre-flight check that never happened" problem.
+  - **Phase 1 — `hydra-preflight` (Haiku 4.5):** Detects runtime versions, runs
+    GPU/CUDA probe scripts (`torch.cuda.is_available()`, etc.), inventories
+    installed packages, diffs `.env.example` against `.env`, verifies build
+    tools, and checks service connectivity. Returns a structured
+    `PREFLIGHT_INVENTORY` JSON.
+  - **Phase 2 — `hydra-analyst` (Sonnet 4.6):** Cross-references the inventory
+    against known compatibility matrices (PyTorch/CUDA, React/Next, Python/TF,
+    Node/native addons). Produces three-state verdicts: ✅ COMPATIBLE,
+    ⚠️ KNOWN RISK, ❌ CONFIRMED BREAK. Probe output is treated as ground truth
+    over matrix knowledge.
+  - Auto-suggests pinned-version fixes for ❌ verdicts. Flags unknown
+    combinations as UNVERIFIED rather than silently passing.
+- **`hydra-preflight`** agent (10th head) — Haiku 4.5; tools: Read, Bash, Glob.
+- **Preflight rate** metric added to the Measuring Impact section in SKILL.md
+  (target: 100% of new project sessions).
+
+### Changed
+- Agent count increased from 9 to 10. "The Nine Heads" → "The Ten Heads"
+  throughout SKILL.md and README.md.
+- Slash command count increased from 9 to 10.
+- `npm-package/files/SKILL.md` resynced with top-level `SKILL.md` — this closes
+  a pre-existing v2.1.1 drift where the "Blocking vs Non-Blocking Dispatch"
+  → "Sequential vs Parallel Dispatch" rename had not been propagated to the
+  npm-published copy.
+
 ## [2.1.1] — Bug Fix
 
 ### Fixed
@@ -139,6 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wave execution, verification reports, handoff protocol
 - 4 orchestrator-level speed optimizations
 
+[2.2.0]: https://github.com/AR6420/Hail_Hydra/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/AR6420/Hail_Hydra/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.3...v2.1.0
 [2.0.3]: https://github.com/AR6420/Hail_Hydra/compare/v2.0.0...v2.0.3

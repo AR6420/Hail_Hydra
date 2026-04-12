@@ -63,6 +63,11 @@ const agents = {
     model: 'Sonnet',
     display: 'hydra-sentinel (Sonnet) — Deep integration analysis',
   },
+  'hydra-preflight': {
+    content: readBundled('agents/hydra-preflight.md'),
+    model: 'Haiku',
+    display: 'hydra-preflight (Haiku) — Environment preflight check',
+  },
 };
 
 const skill = readBundled('SKILL.md');
@@ -82,6 +87,7 @@ const commands = {
   'verbose':  readBundled('commands/hydra/verbose.md'),
   'report':   readBundled('commands/hydra/report.md'),
   'map':      readBundled('commands/hydra/map.md'),
+  'preflight': readBundled('commands/hydra/preflight.md'),
 };
 
 const hooks = {

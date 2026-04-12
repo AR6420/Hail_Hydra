@@ -19,6 +19,7 @@ COMMANDS
   /hydra:map       View, rebuild, or query the codebase map
   /hydra:verbose   Enable verbose dispatch logs with timing
   /hydra:report    Report a bug, request a feature, or share feedback
+  /hydra:preflight Two-phase environment & compatibility check before new projects
 
 AGENTS
   🟢 hydra-scout    (Haiku 4.5)   — Explore codebase, find files, map structure
@@ -26,6 +27,7 @@ AGENTS
   🟢 hydra-scribe   (Haiku 4.5)   — Write docs, comments, READMEs
   🟢 hydra-guard    (Haiku 4.5)   — Security scan, quality gate
   🟢 hydra-git      (Haiku 4.5)   — Git operations, commits, branches
+  🟢 hydra-preflight (Haiku 4.5)  — Environment detection, version probing, dep inventory
   🔵 hydra-coder    (Sonnet 4.6)  — Write and edit code
   🔵 hydra-analyst  (Sonnet 4.6)  — Debug, diagnose, review
 

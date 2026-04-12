@@ -23,11 +23,11 @@ HYDRA_CONFIG_TEMPLATE="$(dirname "$SCRIPT_DIR")/config/hydra.config.md"
 USER_CONFIG_DIR="$HOME/.claude/skills/hydra"
 PROJECT_CONFIG_DIR=".claude/skills/hydra"
 
-AGENTS=("hydra-scout" "hydra-runner" "hydra-scribe" "hydra-guard" "hydra-git" "hydra-sentinel-scan" "hydra-coder" "hydra-analyst" "hydra-sentinel")
+AGENTS=("hydra-scout" "hydra-runner" "hydra-scribe" "hydra-guard" "hydra-git" "hydra-sentinel-scan" "hydra-preflight" "hydra-coder" "hydra-analyst" "hydra-sentinel")
 
-COMMANDS=("update" "status" "help" "config" "guard" "quiet" "verbose")
+COMMANDS=("update" "status" "help" "config" "guard" "quiet" "verbose" "preflight")
 HOOKS=("hydra-check-update.js" "hydra-statusline.js" "hydra-auto-guard.js")
-PACKAGE_VERSION="2.1.1"
+PACKAGE_VERSION="2.2.0"
 
 COMMANDS_SOURCE_DIR="$(dirname "$SCRIPT_DIR")/commands/hydra"
 HOOKS_SOURCE_DIR="$(dirname "$SCRIPT_DIR")/hooks"
@@ -65,7 +65,7 @@ install_to() {
         count=$((count + 1))
     done
 
-    ok "Deployed $count/9 heads to $label ($target_dir)"
+    ok "Deployed $count/10 heads to $label ($target_dir)"
 }
 
 uninstall_from() {
@@ -123,7 +123,7 @@ install_commands() {
         count=$((count + 1))
     done
 
-    ok "Deployed $count/7 commands to $target_dir"
+    ok "Deployed $count/8 commands to $target_dir"
 }
 
 install_hooks() {
@@ -291,11 +291,11 @@ Usage:
   ./install.sh --help       Show this message
 
 Installs:
-  9 agents     (hydra-scout, hydra-runner, hydra-scribe, hydra-coder,
-                hydra-analyst, hydra-guard, hydra-git,
+  10 agents    (hydra-scout, hydra-runner, hydra-scribe, hydra-coder,
+                hydra-analyst, hydra-guard, hydra-git, hydra-preflight,
                 hydra-sentinel-scan, hydra-sentinel)
-  7 commands   (/hydra:help, /hydra:status, /hydra:update, /hydra:config,
-                /hydra:guard, /hydra:quiet, /hydra:verbose)
+  8 commands   (/hydra:help, /hydra:status, /hydra:update, /hydra:config,
+                /hydra:guard, /hydra:quiet, /hydra:verbose, /hydra:preflight)
   3 hooks      (update checker, statusline, auto-guard tracker)
   1 skill      (SKILL.md orchestrator instructions)
   1 version    (VERSION file for update tracking)
@@ -310,8 +310,8 @@ show_status() {
     version=$(cat "$HOME/.claude/skills/hydra/VERSION" 2>/dev/null || echo "unknown")
 
     echo "  Version:  $version"
-    echo "  Agents:   $(ls -1 "$HOME/.claude/agents/hydra-"*.md 2>/dev/null | wc -l | tr -d ' ')/9  [$(ls -1 ".claude/agents/hydra-"*.md 2>/dev/null | wc -l | tr -d ' ')/9 project]"
-    echo "  Commands: $(ls -1 "$HOME/.claude/commands/hydra/"*.md 2>/dev/null | wc -l | tr -d ' ')/7  [$(ls -1 ".claude/commands/hydra/"*.md 2>/dev/null | wc -l | tr -d ' ')/7 project]"
+    echo "  Agents:   $(ls -1 "$HOME/.claude/agents/hydra-"*.md 2>/dev/null | wc -l | tr -d ' ')/10 [$(ls -1 ".claude/agents/hydra-"*.md 2>/dev/null | wc -l | tr -d ' ')/10 project]"
+    echo "  Commands: $(ls -1 "$HOME/.claude/commands/hydra/"*.md 2>/dev/null | wc -l | tr -d ' ')/8  [$(ls -1 ".claude/commands/hydra/"*.md 2>/dev/null | wc -l | tr -d ' ')/8 project]"
     echo "  Hooks:    $(ls -1 "$HOME/.claude/hooks/hydra-"*.js 2>/dev/null | wc -l | tr -d ' ')/3"
     echo ""
 }

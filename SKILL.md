@@ -226,6 +226,107 @@ If you notice the map's git_hash doesn't match HEAD and hydra-scout hasn't
 been dispatched yet, dispatch scout to update the map BEFORE running sentinel.
 A stale map is worse than no map — it could have incorrect dependency data.
 
+## Preflight Protocol — /hydra:preflight
+
+Run this before starting work on any new project or unfamiliar codebase.
+It catches environment and compatibility issues before they become multi-hour
+debugging sessions.
+
+### When to run
+
+- User types `hydra preflight` or `/hydra:preflight`
+- User says "check my environment", "validate my setup", "is this project ready to build"
+- You are about to begin a substantial build task on a project you have not seen before
+  in this session AND the Session Index has no prior context for this project
+
+### Execution — Two Phases, Always in Sequence
+
+**Phase 1 (Detection) — dispatch hydra-preflight:**
+
+Prompt:
+
+```
+Run a full preflight check on this project. Collect runtime versions, run all
+GPU/CUDA probe scripts, inventory installed packages, compare .env.example against
+.env, verify build tools exist, and check service connectivity. Return the full
+structured PREFLIGHT_INVENTORY JSON. Do not make recommendations.
+```
+
+Wait for hydra-preflight to return `PREFLIGHT_INVENTORY_COMPLETE` before proceeding.
+
+**Phase 2 (Analysis) — dispatch hydra-analyst:**
+
+Pass the full PREFLIGHT_INVENTORY from Phase 1. Prompt:
+
+```
+You are performing a compatibility analysis on the following environment inventory.
+Cross-reference all detected versions against known compatibility matrices.
+Pay special attention to GPU stack combinations (PyTorch/CUDA/cuDNN),
+framework pairs (React/Next, Python/TF), and Node/native addon combinations.
+
+For each component or pair, return one of three verdicts:
+  ✅ COMPATIBLE — versions are known-good together
+  ⚠️  KNOWN RISK — this combination has known issues or is untested
+  ❌ CONFIRMED BREAK — probe output or known matrix confirms incompatibility
+
+For ❌ verdicts, include the specific fix (e.g. "pin pytorch==2.7.0").
+For ⚠️  verdicts, include what to watch for.
+For unknowns, flag as "UNVERIFIED — test before building" rather than assuming green.
+
+INVENTORY:
+[paste full PREFLIGHT_INVENTORY here]
+```
+
+### Presenting Results to User
+
+After both phases complete, present a unified report:
+
+```
+🐉 Hydra Preflight — [project name]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RUNTIMES
+  ✅ Node 22.4.0 (matches .nvmrc)
+  ✅ Python 3.11.9 (matches .python-version)
+
+GPU STACK
+  ❌ PyTorch 2.6.0 + CUDA 13.0 — incompatible
+     Fix: pip install torch==2.7.0
+
+ENVIRONMENT
+  ⚠️  Missing: DATABASE_URL, REDIS_URL (declared in .env.example)
+
+DEPENDENCIES
+  ✅ node_modules present (1,847 packages)
+  ✅ venv present
+
+SERVICES
+  ❌ PostgreSQL: unreachable (DATABASE_URL not set)
+  ✅ Redis: reachable
+
+BUILD TOOLS
+  ✅ vite, tsc, pytest all found
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2 confirmed breaks, 1 known risk, 1 warning
+Fix the ❌ items before building.
+```
+
+Auto-apply trivial fixes (e.g. updating a pin in requirements.txt) only if the user
+says "fix it" or "apply fixes". Never auto-apply without being asked.
+
+### Three-State Verdict Reference
+
+| State | Meaning | Source |
+|-------|---------|--------|
+| ✅ COMPATIBLE | Versions are known-good together | Analyst matrix knowledge |
+| ⚠️ KNOWN RISK | Combination has known issues or limited testing | Analyst matrix knowledge |
+| ❌ CONFIRMED BREAK | Probe output OR known matrix confirms failure | Probe output (ground truth) or analyst |
+| ❓ UNVERIFIED | Combination not in training data | Analyst — flag and move on |
+
+Ground truth from probes always beats matrix knowledge. If `torch.cuda.is_available()`
+returns False, that is a ❌ regardless of what the version matrix says.
+
 ## Sequential vs Parallel Dispatch
 
 Not all agents need to be dispatched one-by-one. When agents are independent,
@@ -963,15 +1064,16 @@ If the user types any of these exact phrases, respond with the corresponding act
 
 | Command | Action |
 |---------|--------|
-| `hydra status` | List all 9 heads by name, model, and whether they appear to be installed (check `agents/` dir) |
+| `hydra status` | List all 10 heads by name, model, and whether they appear to be installed (check `agents/` dir) |
 | `hydra config` | Show current configuration settings (mode, dispatch_log, auto_guard) and their source (default/project/user) |
 | `hydra help` | Show available commands and a brief one-line description of each head |
 | `hydra quiet` | Suppress dispatch logs for the rest of the session (equivalent to stealth mode) |
 | `hydra verbose` | Enable verbose dispatch logs with per-agent detail for the rest of the session |
 | `hydra reset` | Clear session index, treat next turn as Turn 1 (rebuild from fresh scout) |
 | `hydra map` | Show codebase map summary, or query a specific file's blast radius |
+| `hydra preflight` | Run two-phase environment and compatibility check before starting a new project build |
 
-## The Nine Heads
+## The Ten Heads
 
 | Head | Model | Role | Tools |
 |------|-------|------|-------|
@@ -981,6 +1083,7 @@ If the user types any of these exact phrases, respond with the corresponding act
 | `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
 | `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
 | `hydra-sentinel-scan` | 🟢 Haiku 4.5 | Fast integration sweep after code changes | Read, Grep, Glob |
+| `hydra-preflight` | 🟢 Haiku 4.5 | Environment detection, version probing, dep inventory | Read, Bash, Glob |
 | `hydra-coder` | 🔵 Sonnet 4.6 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
 | `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
 | `hydra-sentinel` | 🔵 Sonnet 4.6 | Deep integration analysis (when scan flags issues) | Read, Grep, Glob, Write |
@@ -990,6 +1093,7 @@ If the user types any of these exact phrases, respond with the corresponding act
 Track these mentally to calibrate:
 
 - **Delegation rate**: What % of tasks go to heads? Target: 60–70%.
+- **Preflight rate**: Are you running `/hydra:preflight` on new projects? Target: 100% of new project sessions.
 - **Rejection rate**: How often does a draft need Opus intervention? Target: <15%.
 - **User complaints**: Zero. If the user notices quality issues, tune the classification.
 
