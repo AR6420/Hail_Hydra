@@ -34,7 +34,8 @@
     "ai-framework",
     "claude-subagents",
     "coding-agent",
-    "agent-orchestration"
+    "agent-orchestration",
+    "hydra"
   ],
   "license": "MIT",
   "repository": {
