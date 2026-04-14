@@ -1,7 +1,7 @@
 {
   "name": "hail-hydra-cc",
   "version": "2.2.0",
-  "description": "Multi-headed speculative execution framework for Claude Code",
+  "description": "Multi-agent orchestration framework for Claude Code. Routes tasks to specialized Haiku/Sonnet subagents while Opus orchestrates — inspired by speculative decoding. ~50% API cost reduction.",
   "bin": {
     "hail-hydra-cc": "bin/cli.js"
   },
@@ -16,12 +16,25 @@
   },
   "keywords": [
     "claude-code",
-    "claude",
-    "ai",
-    "speculative-execution",
+    "ai-agents",
     "multi-agent",
-    "hydra",
-    "anthropic"
+    "orchestration",
+    "speculative-decoding",
+    "subagents",
+    "claude",
+    "anthropic",
+    "ai-coding",
+    "developer-tools",
+    "code-review",
+    "haiku",
+    "sonnet",
+    "opus",
+    "cost-optimization",
+    "token-savings",
+    "ai-framework",
+    "claude-subagents",
+    "coding-agent",
+    "agent-orchestration"
   ],
   "license": "MIT",
   "repository": {
