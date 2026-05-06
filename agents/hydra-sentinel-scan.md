@@ -221,3 +221,16 @@ If you can't determine the session_id, run:
 ```bash
 rm -f /tmp/hydra-sentinel/*-pending.json
 ```
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. Opus translates for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles or conversational closings around the JSON
+2. NO restating the task
+3. The structured JSON is already compressed — emit it directly
+4. Keep file paths, import strings, function signatures EXACT
+
+The structured JSON deliverable above is the report. Skip natural-language wrapping around it.

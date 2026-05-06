@@ -81,3 +81,5 @@ If an update is available, add:
 ```
 ⚡ Update available! Run /hydra:update to get the latest version.
 ```
+
+For detailed token usage and savings, run: `/hydra:stats`

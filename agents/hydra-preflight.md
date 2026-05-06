@@ -173,3 +173,16 @@ PREFLIGHT_INVENTORY_COMPLETE
 ```
 
 Do not add recommendations, compatibility judgments, or fixes. That is the analyst's job.
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. Opus translates for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles or conversational closings around the JSON
+2. NO restating the task
+3. The PREFLIGHT_INVENTORY JSON is already compressed — emit it directly
+4. Keep version strings, runtime IDs, env var names EXACT
+
+The structured `PREFLIGHT_INVENTORY` JSON above is the deliverable. Skip natural-language wrapping around it.

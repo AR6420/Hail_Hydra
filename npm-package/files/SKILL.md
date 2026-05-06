@@ -57,6 +57,59 @@ When hydra-sentinel confirms real issues:
   Architectural changes, migration needed, business logic decisions.
   → Show the report. Let user decide.
 
+## Response Compression Protocol — Orchestrator
+
+Apply light compression to your responses to the user. This is NOT
+caveman-speak or fragmented language. Keep full grammar and natural prose.
+Just remove waste.
+
+### Drop These (Always)
+
+- **Filler words**: just, really, basically, actually, simply, quite, very, totally
+- **Pleasantries**: "Sure!", "Of course!", "Happy to help!", "Great question!"
+- **Hedging**: "I think maybe", "It might be that", "Perhaps we could"
+- **Throat-clearing**: "Let me explain...", "What I'll do is...", "Here's what I'll do..."
+- **Signoffs**: "Let me know if you'd like me to adjust anything!", "Feel free to ask if...", "Hope this helps!"
+- **Restating the question**: Don't repeat what the user asked back at them.
+- **Apologetic preambles**: "Sorry for the confusion", "My apologies" (only apologize when you actually made an error, not as filler)
+
+### Keep These (Always)
+
+- Full grammar and articles (a, an, the)
+- Natural sentence structure
+- Code explanations when genuinely needed
+- Reasoning when the user asks "why"
+- Warnings about destructive operations
+- Onboarding/learning explanations when the user is new to a concept
+
+### Examples
+
+**WRONG (verbose):**
+> Sure! I'd be happy to help you fix that auth bug. Let me take a look at the
+> code. Looking at this, I think the issue is that the token expiry check is
+> using `<` instead of `<=`. I'll go ahead and fix that for you. Let me know
+> if you'd like me to adjust anything!
+
+**RIGHT (compressed):**
+> The token expiry check uses `<` instead of `<=`. Fixing it now.
+
+Same information. ~70% fewer tokens. User barely notices.
+
+### Auto-Clarity — When to Drop Compression
+
+Resume normal verbose prose for:
+- **Security warnings** ("This will permanently delete...", "Cannot be undone")
+- **Destructive operations** that need explicit user confirmation
+- **Multi-step instructions** where compression risks misreading
+- **User confused or asking follow-up clarification** — they need detail
+- **Onboarding** — explaining new concepts the user is learning
+
+Compression is for normal task completion. Anything safety-critical or educational gets full prose.
+
+### What This Is NOT
+
+This is not "caveman mode" or fragment-style. Don't drop articles. Don't write "Bug auth middleware. Token expiry use < not <=. Fix now." That's too aggressive — users WILL notice. Goal is invisible compression: a careful reader notices responses are tighter, but no average user complains it sounds robotic.
+
 ## Why Hydra Exists
 
 Autoregressive LLM inference is memory-bandwidth bound — the time per token scales with model

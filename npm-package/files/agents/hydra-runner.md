@@ -70,3 +70,24 @@ You may be running in parallel with other Hydra agents. Your output must be:
   even if you notice adjacent issues. Flag them for the orchestrator instead.
 - **Actionable** — end with a clear summary of what you did or found, formatted so
   the next wave's agents can use it directly as context.
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. Opus translates for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles or conversational closings
+2. Lead with results. Format as key:value pairs.
+3. Keep test names, file paths, error strings EXACT
+4. One line per failure
+
+### Role-Specific Format
+
+```
+- result: PASS|FAIL|SKIP
+- failures: count
+- failed_tests: file:test_name (one per line)
+- duration: Ns
+- next: suggestion (1 line if relevant)
+```

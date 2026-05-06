@@ -88,6 +88,7 @@ const commands = {
   'report':   readBundled('commands/hydra/report.md'),
   'map':      readBundled('commands/hydra/map.md'),
   'preflight': readBundled('commands/hydra/preflight.md'),
+  'stats':    readBundled('commands/hydra/stats.md'),
 };
 
 const hooks = {

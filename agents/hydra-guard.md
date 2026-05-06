@@ -109,3 +109,27 @@ You may be running in parallel with other Hydra agents. Your output must be:
 - **Clearly structured** — use headers so the orchestrator can extract and append findings
 - **Focused on YOUR task only** — security scan of the specified changed files
 - **Actionable** — every finding includes file:line and a brief fix direction
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. Opus translates for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles or conversational closings
+2. Lead with result. One line per finding.
+3. Keep code symbols, file paths, and error strings EXACT
+
+### Role-Specific Format
+
+```
+- result: clean|issues_found
+- findings: severity:file:line:short_description (one per line)
+```
+
+Example:
+```
+result: issues_found
+CRITICAL src/api/login.ts:34 hardcoded API key — move to env
+WARNING  src/utils/sql.ts:12 string concat in query — parameterize
+```

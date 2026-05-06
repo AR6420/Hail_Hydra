@@ -38,7 +38,7 @@
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 10 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Preflight checks &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 11 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
@@ -189,6 +189,7 @@ cd hydra
 | `/hydra:report` | Report a bug, request a feature, or share feedback |
 | `/hydra:map` | View codebase dependency map, query blast radius, rebuild |
 | `/hydra:preflight` | Two-phase environment and compatibility check before starting a new project build |
+| `/hydra:stats` | Show real token usage, delegation rate, and actual savings (parses Claude Code session JSONL — no AI estimation) |
 
 ### `/hydra:preflight` — Environment Validation
 
@@ -296,6 +297,8 @@ After updating, restart Claude Code to load the new files.
 - **Codebase Map** — Persistent dependency graph built by hydra-scout. Maps every file's imports, dependents, risk score, env vars, and test coverage. Enables instant blast-radius lookups for sentinel — no more grepping the entire codebase.
 - **Risk-Based Verification** — Files with more dependents get more thorough verification. Critical files always trigger deep sentinel analysis. Low-risk files get fast-tracked.
 - **`/hydra:map`** — Inspect the dependency map, query blast radius for any file, or force a rebuild
+- **🆕 Real Token Tracking** — `/hydra:stats` parses Claude Code session logs directly to show actual usage and savings. No AI estimation, no marketing fluff — just real numbers from Anthropic's API responses.
+- **🆕 Internal Compression** — Subagent output and orchestrator responses are now compressed for efficiency. Sub-agent output is heavily compressed (only Opus reads it). Orchestrator responses drop filler and pleasantries while keeping natural prose.
 
 ---
 
@@ -455,6 +458,42 @@ This means Hydra spends more verification effort where it matters most
 - Falls back gracefully — if the map doesn't exist, all agents use their
   original grep-based behavior. The map is an optimization, not a requirement.
 - Stored at `.claude/hydra/codebase-map.json` — add to `.gitignore` (machine-generated).
+
+---
+
+## 📊 Real Token Tracking
+
+**New in v2.3.0** — `/hydra:stats` shows actual token usage and savings for
+your session. No AI estimation. The numbers are pulled directly from Claude
+Code's session log.
+
+```
+🐉 Hydra Stats
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Session: 7c3a9e21.jsonl
+Turns:   38
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🟢 Haiku  (24 turns):  142.3k in / 8.1k out  → $0.183
+🔵 Sonnet (9 turns):   67.4k in / 3.2k out   → $0.250
+🟣 Opus   (5 turns):   45.1k in / 2.8k out   → $0.296
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Delegation rate:    87.0% (33/38 turns)
+Actual cost:        $0.729
+All-Opus baseline:  $1.502
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 Saved:           $0.773 (51.5%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reads Claude Code session JSONL directly.
+No AI estimation. Numbers are real.
+```
+
+The "All-Opus baseline" is the hypothetical cost if every Hydra agent had
+been Opus instead. The savings show what Hydra's model routing actually
+saves you in this session. Implementation is pure Node.js — works on
+Windows, macOS, and Linux. Respects `CLAUDE_CONFIG_DIR` env override.
 
 ---
 

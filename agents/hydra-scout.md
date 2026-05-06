@@ -195,3 +195,33 @@ You may be running in parallel with other Hydra agents. Your output must be:
   even if you notice adjacent issues. Flag them for the orchestrator instead.
 - **Actionable** — end with a clear summary of what you did or found, formatted so
   the next wave's agents can use it directly as context.
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. Opus translates for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles ("I explored...", "After scanning...")
+2. NO conversational closings
+3. Lead with findings. Format as tables, lists, or key:value pairs.
+4. Keep file paths, function names EXACT
+5. Use arrows (→) for relationships
+6. One-line findings preferred
+
+### Role-Specific Format
+
+```
+- File map: path:purpose (one per line)
+- Relationships: file → file
+- Risk: file (1-line reason)
+- Conventions: pattern_name: short_description
+```
+
+Example:
+```
+auth.ts: src/services
+middleware.ts: src/middleware
+auth.ts → middleware.ts → users.ts
+auth.ts: risk=critical (12 deps)
+```

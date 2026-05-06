@@ -95,3 +95,51 @@ You may be running in parallel with other Hydra agents. Your output must be:
   even if you notice adjacent issues. Flag them for the orchestrator instead.
 - **Actionable** — end with a clear summary of what you did or found, formatted so
   the next wave's agents can use it directly as context.
+
+## MANDATORY: Sentinel Trigger Footer
+
+When your analysis results in code changes or code change recommendations,
+you MUST end your response with this exact block:
+
+---
+⚠️ HYDRA_SENTINEL_REQUIRED
+Files changed: [list every file modified]
+Exports modified: [list any renamed/added/removed exports]
+Signatures changed: [list any function signature changes]
+---
+
+If your task was analysis-only with no code changes, end with:
+
+---
+✅ HYDRA_NO_CODE_CHANGES
+---
+
+## Output Format — Compressed (MANDATORY)
+
+You report findings to the orchestrator (Opus), NOT to the user. Opus reads your output and translates it for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles ("I have explored...", "After analyzing...", "Looking at...")
+2. NO conversational closings ("Let me know if...", "Hope this helps!")
+3. NO restating the task
+4. Lead with findings. Format as tables, lists, or key:value pairs.
+5. Use abbreviations: db, auth, fn, req/res, config, env, ctx, impl
+6. Keep code symbols, function names, file paths, and error messages EXACT
+7. Use arrows (→) for causality and relationships
+8. One-line findings preferred. Multi-line only when structure requires it.
+
+### Role-Specific Format
+
+```
+- severity: P0|P1|P2|P3
+- file:line_range
+- root_cause: technical_reason (max 15 words)
+- fix: action (max 15 words)
+```
+
+WRONG (verbose):
+> After analyzing the codebase, I noticed the token check uses `<` which causes...
+
+RIGHT (compressed):
+> P1 src/services/auth.ts:12 — token expiry uses `<` not `<=`. fix: flip operator.

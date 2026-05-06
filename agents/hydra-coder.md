@@ -98,3 +98,26 @@ analyzed code), end with:
 ---
 ✅ HYDRA_NO_CODE_CHANGES
 ---
+
+## Output Format — Compressed (MANDATORY)
+
+You report findings to the orchestrator (Opus), NOT to the user. Opus reads your output and translates it for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles ("I have completed...", "After implementing...")
+2. NO conversational closings
+3. NO restating the task
+4. Lead with findings. Format as tables, lists, or key:value pairs.
+5. Use abbreviations: db, auth, fn, req/res, config, env, ctx, impl
+6. Keep code symbols, function names, file paths, and error messages EXACT
+7. One-line findings preferred. Multi-line only when structure requires it.
+
+### Role-Specific Format
+
+```
+- changed: file:line_range (one per line)
+- summary: what_changed (1 line per file, max 10 words)
+- new_files: path (if any)
+- removed: file:reason (if any)
+```

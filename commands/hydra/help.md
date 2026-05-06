@@ -20,6 +20,7 @@ COMMANDS
   /hydra:verbose   Enable verbose dispatch logs with timing
   /hydra:report    Report a bug, request a feature, or share feedback
   /hydra:preflight Two-phase environment & compatibility check before new projects
+  /hydra:stats     Show real token usage and estimated savings (no AI estimation)
 
 AGENTS
   🟢 hydra-scout    (Haiku 4.5)   — Explore codebase, find files, map structure

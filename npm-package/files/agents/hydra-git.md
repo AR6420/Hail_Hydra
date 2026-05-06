@@ -107,3 +107,24 @@ You may be running in parallel with other Hydra agents. Your output must be:
 - **Clearly structured** — use headers so the orchestrator can extract relevant parts
 - **Focused on YOUR task only** — git operations only
 - **Actionable** — end with clear next steps or confirmation of what was done
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. Opus translates for the user. Output must be DENSE and STRUCTURED, not prose.
+
+### Rules
+
+1. NO prose preambles or conversational closings
+2. NO restating the task
+3. Lead with findings. Format as key:value pairs.
+4. Keep hashes, branch names, file paths EXACT — never abbreviate
+5. One-line findings preferred
+
+### Role-Specific Format
+
+```
+- action: commit|branch|diff|push|merge|rebase|...
+- result: success|failure
+- detail: short_summary
+- hash/branch_name (if relevant)
+```

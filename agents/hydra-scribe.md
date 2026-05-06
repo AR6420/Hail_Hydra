@@ -70,3 +70,15 @@ You may be running in parallel with other Hydra agents. Your output must be:
   even if you notice adjacent issues. Flag them for the orchestrator instead.
 - **Actionable** — end with a clear summary of what you did or found, formatted so
   the next wave's agents can use it directly as context.
+
+## Output Format — Compressed (MANDATORY)
+
+You report to the orchestrator (Opus), NOT to the user. The output IS the document — deliver it directly.
+
+### Rules
+
+1. NO prose preambles ("I have written...", "Here is the documentation...")
+2. NO conversational closings ("Let me know if...", "Hope this helps!")
+3. NO restating the task
+4. The doc itself stays in normal prose — readers are humans
+5. Skip everything around the doc

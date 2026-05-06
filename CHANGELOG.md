@@ -5,6 +5,40 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-05-06
+
+### Added
+- **`/hydra:stats`** — Real token tracking command. Reads Claude Code session
+  JSONL directly to show actual token usage by model, delegation rate,
+  actual cost, hypothetical all-Opus cost, and real savings in USD.
+  No AI estimation. Cross-platform Node.js implementation works on Windows,
+  macOS, and Linux. Respects `CLAUDE_CONFIG_DIR` env override.
+- **Internal Compression Protocol** — two-tier compression strategy:
+  - **Tier 1 (Orchestrator)**: Light compression of Opus responses. Drops
+    filler, pleasantries, and hedging while keeping natural prose. Average
+    user won't notice the difference.
+  - **Tier 2 (Sub-Agents)**: Aggressive compression of subagent output.
+    Structured terse output (tables, key:value, JSON). Sub-agent output
+    goes to Opus, not the user, so this can be aggressive without UX impact.
+- **Auto-Clarity rule** — orchestrator drops compression for security
+  warnings, destructive operations, multi-step instructions, and
+  onboarding/learning contexts. Safety-critical output stays full prose.
+
+### Changed
+- Slash commands increased from 10 to 11.
+- Every subagent now has an "Output Format — Compressed (MANDATORY)" section
+  in its system prompt with role-specific format hints.
+- SKILL.md includes a new Response Compression Protocol — Orchestrator
+  section near the top of the framework spec.
+
+### Improved
+- Subagent output ~60-70% smaller, allowing Opus's context to last longer
+  in extended sessions.
+- Orchestrator responses ~30-40% shorter without losing readability.
+- Real token tracking lets users verify Hydra's savings claims with their
+  own session data — no marketing fluff, just the numbers from Anthropic's
+  API responses.
+
 ## [2.2.0] - 2026-04-11
 
 ### Added
