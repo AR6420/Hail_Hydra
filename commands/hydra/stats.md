@@ -8,18 +8,9 @@ allowed-tools: Bash, Read
 Read the active Claude Code session log and compute actual token usage and
 savings. NO AI estimation — pure JSONL parsing.
 
-## How It Works
-
-Claude Code writes every conversation turn to a JSONL file at
-`~/.claude/projects/{project-slug}/{session-id}.jsonl` (or
-`$CLAUDE_CONFIG_DIR/projects/...` if overridden). The slug is the absolute
-project path with path separators (`/`, `\`, `:`) replaced by `-` and any
-leading `-` stripped.
-
-Each assistant turn line includes a `message.usage` object with
-`input_tokens`, `output_tokens`, `cache_read_input_tokens`,
-`cache_creation_input_tokens`, and the `model` ID. We aggregate by model
-tier and price it.
+Math + JSONL parsing live in the shared helper at
+`~/.claude/hooks/hydra-token-math.js`. Statusline and `/hydra:stats` both
+call it so numbers stay consistent.
 
 ## Pricing (per 1M tokens, verified 2026-05 for Claude 4.x)
 
@@ -29,112 +20,54 @@ tier and price it.
 | Sonnet | $3    | $15    | 10% of input |
 | Opus   | $5    | $25    | 10% of input |
 
-Edit the `pricing` map below if Anthropic publishes new prices.
+Edit the `PRICING` map in `hydra-token-math.js` if Anthropic publishes new prices.
 
 ## Run
 
-Execute this single Node command (works on Windows, macOS, Linux):
-
 ```bash
-node -e "
-const fs = require('fs');
+# Strikethrough capability detection — env-heuristic only.
+USE_STRIKETHROUGH=0
+[ "$TERM_PROGRAM" = "Apple_Terminal" ] && USE_STRIKETHROUGH=1
+[ "$TERM_PROGRAM" = "iTerm.app" ]      && USE_STRIKETHROUGH=1
+[ "$TERM_PROGRAM" = "vscode" ]         && USE_STRIKETHROUGH=1
+[ -n "$KITTY_WINDOW_ID" ]              && USE_STRIKETHROUGH=1
+[ "$TERM" = "alacritty" ]              && USE_STRIKETHROUGH=1
+[ -n "$WEZTERM_PANE" ]                 && USE_STRIKETHROUGH=1
+[ -n "$WT_SESSION" ]                   && USE_STRIKETHROUGH=1
+# Known-incompatible terminals (force fallback, overrides green-list)
+[ -n "$MSYSTEM" ]                      && USE_STRIKETHROUGH=0
+[ -n "$CYGWIN" ]                       && USE_STRIKETHROUGH=0
+echo "$TERM" | grep -q "cygwin"        && USE_STRIKETHROUGH=0
+# User override
+[ "$HYDRA_STRIKETHROUGH" = "0" ] && USE_STRIKETHROUGH=0
+[ "$HYDRA_STRIKETHROUGH" = "1" ] && USE_STRIKETHROUGH=1
+
+HYDRA_USE_STRIKETHROUGH="$USE_STRIKETHROUGH" node -e "
 const path = require('path');
 const os = require('os');
-
-const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-const projectsDir = path.join(configDir, 'projects');
-
-if (!fs.existsSync(projectsDir)) {
-  console.log('No Claude Code projects directory found at ' + projectsDir);
+const helperPath = path.join(os.homedir(), '.claude', 'hooks', 'hydra-token-math.js');
+let tokenMath;
+try {
+  tokenMath = require(helperPath);
+} catch (e) {
+  console.log('hydra-token-math.js not installed at ' + helperPath);
+  console.log('Run: hail-hydra-cc  to (re)install Hydra hooks.');
   process.exit(0);
 }
 
-// Slug = absolute cwd with /, \\, : replaced by -, leading - stripped
-const cwd = process.cwd();
-const slug = cwd.replace(/[\\\\/:]/g, '-').replace(/^-+/, '');
-
-// Try exact match first, then case-insensitive substring fallback
-let sessionDir = path.join(projectsDir, slug);
-if (!fs.existsSync(sessionDir)) {
-  const all = fs.readdirSync(projectsDir);
-  const match = all.find(d => d.toLowerCase() === slug.toLowerCase())
-             || all.find(d => d.toLowerCase().endsWith(path.basename(cwd).toLowerCase()));
-  if (match) sessionDir = path.join(projectsDir, match);
-}
-
-if (!fs.existsSync(sessionDir)) {
+const summary = tokenMath.computeSummary();
+if (!summary.available) {
   console.log('No session data for this project yet.');
-  console.log('Looked in: ' + sessionDir);
   process.exit(0);
 }
 
-const files = fs.readdirSync(sessionDir)
-  .filter(f => f.endsWith('.jsonl'))
-  .map(f => ({ f, mtime: fs.statSync(path.join(sessionDir, f)).mtimeMs }))
-  .sort((a, b) => b.mtime - a.mtime);
-
-if (files.length === 0) {
-  console.log('No session JSONL files found in ' + sessionDir);
-  process.exit(0);
-}
-
-const sessionFile = path.join(sessionDir, files[0].f);
-const lines = fs.readFileSync(sessionFile, 'utf8').split('\n').filter(Boolean);
-
-const pricing = {
-  'claude-haiku-4':  { input: 1, output: 5 },
-  'claude-sonnet-4': { input: 3, output: 15 },
-  'claude-opus-4':   { input: 5, output: 25 }
-};
-
-const stats = {
-  haiku:  { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 },
-  sonnet: { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 },
-  opus:   { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 }
-};
-const unknownModels = new Set();
-let totalAssistantTurns = 0;
-
-for (const line of lines) {
-  try {
-    const obj = JSON.parse(line);
-    if (obj.type !== 'assistant' || !obj.message || !obj.message.usage) continue;
-    const model = obj.message.model || '';
-    const usage = obj.message.usage;
-    let tier = null;
-    if (model.startsWith('claude-haiku'))  tier = 'haiku';
-    else if (model.startsWith('claude-sonnet')) tier = 'sonnet';
-    else if (model.startsWith('claude-opus'))   tier = 'opus';
-    if (!tier) { if (model) unknownModels.add(model); continue; }
-    stats[tier].input        += usage.input_tokens || 0;
-    stats[tier].output       += usage.output_tokens || 0;
-    stats[tier].cache_read   += usage.cache_read_input_tokens || 0;
-    stats[tier].cache_create += usage.cache_creation_input_tokens || 0;
-    stats[tier].turns        += 1;
-    totalAssistantTurns      += 1;
-  } catch (e) { /* skip malformed */ }
-}
-
-function cost(s, p) {
-  const inputCost  = ((s.input + s.cache_create) * p.input + s.cache_read * p.input * 0.1) / 1_000_000;
-  const outputCost = (s.output * p.output) / 1_000_000;
-  return inputCost + outputCost;
-}
-const haikuCost  = cost(stats.haiku,  pricing['claude-haiku-4']);
-const sonnetCost = cost(stats.sonnet, pricing['claude-sonnet-4']);
-const opusCost   = cost(stats.opus,   pricing['claude-opus-4']);
-const actualCost = haikuCost + sonnetCost + opusCost;
-
-function asOpus(s) {
-  const p = pricing['claude-opus-4'];
-  return ((s.input + s.cache_create) * p.input + s.cache_read * p.input * 0.1 + s.output * p.output) / 1_000_000;
-}
-const hypotheticalCost = asOpus(stats.haiku) + asOpus(stats.sonnet) + asOpus(stats.opus);
-const savedUSD = hypotheticalCost - actualCost;
-const savedPct = hypotheticalCost > 0 ? (savedUSD / hypotheticalCost * 100) : 0;
-
-const totalDelegations = stats.haiku.turns + stats.sonnet.turns;
-const delegationRate   = totalAssistantTurns > 0 ? (totalDelegations / totalAssistantTurns * 100) : 0;
+const useStrike = process.env.HYDRA_USE_STRIKETHROUGH === '1';
+const STRIKE     = useStrike ? '\x1b[9m'  : '';
+const STRIKE_OFF = useStrike ? '\x1b[29m' : '';
+const GREEN = '\x1b[32m';
+const BOLD  = '\x1b[1m';
+const DIM   = '\x1b[2m';
+const RESET = '\x1b[0m';
 
 function fmt(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
@@ -142,31 +75,41 @@ function fmt(n) {
   return n.toString();
 }
 
+const { stats, totalTurns, haikuCost, sonnetCost, opusCost,
+        actualCost, hypotheticalCost, savedUSD, savedPct,
+        delegatedTurns, delegationRate, sessionFile, unknownModels } = summary;
+
 const bar = '━'.repeat(40);
 console.log('');
 console.log('🐉 Hydra Stats');
 console.log(bar);
 console.log('Session: ' + path.basename(sessionFile));
-console.log('Turns:   ' + totalAssistantTurns);
+console.log('Turns:   ' + totalTurns);
 console.log(bar);
 console.log('');
-console.log('🟢 Haiku  (' + stats.haiku.turns  + ' turns):  ' + fmt(stats.haiku.input  + stats.haiku.cache_create)  + ' in / ' + fmt(stats.haiku.output)  + ' out  → $' + haikuCost.toFixed(3));
-console.log('🔵 Sonnet (' + stats.sonnet.turns + ' turns):  ' + fmt(stats.sonnet.input + stats.sonnet.cache_create) + ' in / ' + fmt(stats.sonnet.output) + ' out  → $' + sonnetCost.toFixed(3));
-console.log('🟣 Opus   (' + stats.opus.turns   + ' turns):  ' + fmt(stats.opus.input   + stats.opus.cache_create)   + ' in / ' + fmt(stats.opus.output)   + ' out  → $' + opusCost.toFixed(3));
+console.log('🟢 Haiku  (' + stats.haiku.turns  + ' turns):  ' + fmt(stats.haiku.input  + stats.haiku.cache_create)  + ' in / ' + fmt(stats.haiku.output)  + ' out  → \$' + haikuCost.toFixed(3));
+console.log('🔵 Sonnet (' + stats.sonnet.turns + ' turns):  ' + fmt(stats.sonnet.input + stats.sonnet.cache_create) + ' in / ' + fmt(stats.sonnet.output) + ' out  → \$' + sonnetCost.toFixed(3));
+console.log('🟣 Opus   (' + stats.opus.turns   + ' turns):  ' + fmt(stats.opus.input   + stats.opus.cache_create)   + ' in / ' + fmt(stats.opus.output)   + ' out  → \$' + opusCost.toFixed(3));
 console.log(bar);
 console.log('');
-console.log('Delegation rate:    ' + delegationRate.toFixed(1) + '% (' + totalDelegations + '/' + totalAssistantTurns + ' turns)');
-console.log('Actual cost:        $' + actualCost.toFixed(3));
-console.log('All-Opus baseline:  $' + hypotheticalCost.toFixed(3));
+console.log('Delegation rate:    ' + delegationRate.toFixed(1) + '% (' + delegatedTurns + '/' + totalTurns + ' turns)');
+
+if (useStrike) {
+  console.log('Was:                ' + DIM + STRIKE + '\$' + hypotheticalCost.toFixed(3) + STRIKE_OFF + RESET);
+  console.log('Now:                ' + BOLD + GREEN + '\$' + actualCost.toFixed(3) + RESET);
+} else {
+  console.log('Actual cost:        \$' + actualCost.toFixed(3));
+  console.log('All-Opus baseline:  \$' + hypotheticalCost.toFixed(3));
+}
 console.log(bar);
-console.log('💰 Saved:           $' + savedUSD.toFixed(3) + ' (' + savedPct.toFixed(1) + '%)');
+console.log('💰 ' + GREEN + 'Saved:           \$' + savedUSD.toFixed(3) + ' (' + savedPct.toFixed(1) + '%)' + RESET);
 console.log(bar);
 console.log('');
 console.log('Reads Claude Code session JSONL directly. No AI estimation.');
-if (unknownModels.size > 0) {
+if (unknownModels && unknownModels.size > 0) {
   console.log('');
   console.log('⚠️  Unknown models (not counted): ' + Array.from(unknownModels).join(', '));
-  console.log('    Update pricing map in ~/.claude/commands/hydra/stats.md');
+  console.log('    Update PRICING map in ~/.claude/hooks/hydra-token-math.js');
 }
 "
 ```
@@ -177,9 +120,7 @@ Print the output exactly as the script emits. Do not summarize or reformat.
 
 ## Notes
 
-- `All-Opus baseline` is the hypothetical cost if every turn (including
-  Haiku and Sonnet ones) had been Opus. The savings show what Hydra's model
-  routing actually saved this session.
-- Stats are session-scoped. Future versions may add `--all` and `--since`.
-- Cache-read pricing is 10% of input price (Anthropic prompt-caching rate
-  for Claude 4.x as of 2026-05).
+- `All-Opus baseline` (or `Was:`) is hypothetical cost if every turn had been Opus.
+- Stats are session-scoped.
+- Cache-read pricing is 10% of input price (Anthropic prompt-caching rate, Claude 4.x, 2026-05).
+- Strikethrough auto-detected from terminal env. Override: `HYDRA_STRIKETHROUGH=0` or `=1`.

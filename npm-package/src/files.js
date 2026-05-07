@@ -94,6 +94,7 @@ const commands = {
 const hooks = {
   'hydra-check-update': readBundled('hooks/hydra-check-update.js'),
   'hydra-statusline':   readBundled('hooks/hydra-statusline.js'),
+  'hydra-token-math':   readBundled('hooks/hydra-token-math.js'),
   'hydra-auto-guard':   readBundled('hooks/hydra-auto-guard.js'),
   'hydra-notify':       readBundled('hooks/hydra-notify.js'),
 };

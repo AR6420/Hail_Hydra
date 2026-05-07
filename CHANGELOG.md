@@ -5,6 +5,33 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-05-09
+
+### Added
+- **Statusline savings indicator** — green `↓$X.XX` after the cost field,
+  showing real USD saved vs an all-Opus baseline. Hidden when savings
+  `<$0.01` or session has no delegations yet.
+- **`/hydra:stats` retail-price effect** — strikethrough on hypothetical
+  all-Opus cost, bold green on actual cost. Visually reinforces savings.
+- **Shared `hooks/hydra-token-math.js` helper** — single source of truth
+  for token parsing and savings math. Statusline and `/hydra:stats` both
+  call it so numbers never disagree.
+- **Terminal capability detection** — strikethrough auto-enabled on
+  iTerm2, kitty, Alacritty, WezTerm, Windows Terminal, VS Code,
+  Apple_Terminal. Auto-disabled on Git Bash (`MSYSTEM`) and Cygwin where
+  rendering is inconsistent. User override: `HYDRA_STRIKETHROUGH=0|1`.
+- 15-second in-memory cache on token math so statusline refreshes don't
+  re-parse the full session JSONL on every tick.
+
+### Fixed
+- Statusline hides the savings field at session start when no delegations
+  have happened yet (avoids `$0.00 ↓$0.00`).
+
+### Notes
+- Strikethrough is purely additive — terminals without support get a
+  clean `Baseline / Actual cost` labeled fallback.
+- Statusline savings match `/hydra:stats` exactly (shared codepath).
+
 ## [2.3.0] - 2026-05-06
 
 ### Added

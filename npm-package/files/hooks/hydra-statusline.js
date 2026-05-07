@@ -50,6 +50,16 @@ process.stdin.on('end', () => {
     // === Session Cost ===
     const cost = (data.cost?.total_cost_usd || 0).toFixed(2);
 
+    // === Savings vs all-Opus baseline (cached, silent on failure) ===
+    let savingsStr = '';
+    try {
+      const tokenMath = require('./hydra-token-math');
+      const summary = tokenMath.computeSummaryCached();
+      if (summary.available && summary.savedUSD >= 0.01) {
+        savingsStr = ` \x1b[32m↓$${summary.savedUSD.toFixed(2)}\x1b[0m`;
+      }
+    } catch (e) { /* silent fallback */ }
+
     // === Working Directory ===
     const dirName = path.basename(data.workspace?.current_dir || data.cwd || '');
 
@@ -69,7 +79,7 @@ process.stdin.on('end', () => {
       '\x1b[32m\uD83D\uDC32\x1b[0m',         // Green dragon emoji (🐉)
       `${dim}${model}${reset}`,                 // Dim model name
       ctxDisplay,                               // Color-coded context bar
-      `${dim}$${cost}${reset}`,                // Dim cost
+      `${dim}$${cost}${reset}${savingsStr}`,   // Dim cost + green ↓savings
       `${dim}${dirName}${reset}`,              // Dim directory
     ];
 
@@ -83,6 +93,30 @@ process.stdin.on('end', () => {
       parts.push(`\x1b[31m\u26A0 Compacting soon!\x1b[0m`);
     } else if (ctxPct >= 70) {
       parts.push(`\x1b[31m\u26A0 Auto-compact at 85%\x1b[0m`);
+    }
+
+    // === Sentinel Pending Warning ===
+    // Check if code changes were made but sentinel hasn't run yet
+    let sentinelWarning = '';
+    try {
+      const sentinelDir = path.join(os.tmpdir(), 'hydra-sentinel');
+      const sessionId = data.session_id || 'unknown';
+      const sentinelFlag = path.join(sentinelDir, `${sessionId}-pending.json`);
+      const pendingData = JSON.parse(fs.readFileSync(sentinelFlag, 'utf8'));
+
+      // Only show if flag is recent (within last 10 minutes)
+      // and has files pending
+      const age = Date.now() - (pendingData.updated_at || 0);
+      if (pendingData.files?.length > 0 && age < 600000) {
+        const count = pendingData.files.length;
+        sentinelWarning = ` \x1b[31m\u26A0 Sentinel pending (${count} files)\x1b[0m`;
+      }
+    } catch (e) {
+      // No flag file — sentinel is clean or hasn't been needed
+    }
+
+    if (sentinelWarning) {
+      parts.push(sentinelWarning);
     }
 
     process.stdout.write(parts.join(' \u2502 '));

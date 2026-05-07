@@ -50,6 +50,16 @@ process.stdin.on('end', () => {
     // === Session Cost ===
     const cost = (data.cost?.total_cost_usd || 0).toFixed(2);
 
+    // === Savings vs all-Opus baseline (cached, silent on failure) ===
+    let savingsStr = '';
+    try {
+      const tokenMath = require('./hydra-token-math');
+      const summary = tokenMath.computeSummaryCached();
+      if (summary.available && summary.savedUSD >= 0.01) {
+        savingsStr = ` \x1b[32m↓$${summary.savedUSD.toFixed(2)}\x1b[0m`;
+      }
+    } catch (e) { /* silent fallback */ }
+
     // === Working Directory ===
     const dirName = path.basename(data.workspace?.current_dir || data.cwd || '');
 
@@ -69,7 +79,7 @@ process.stdin.on('end', () => {
       '\x1b[32m\uD83D\uDC32\x1b[0m',         // Green dragon emoji (🐉)
       `${dim}${model}${reset}`,                 // Dim model name
       ctxDisplay,                               // Color-coded context bar
-      `${dim}$${cost}${reset}`,                // Dim cost
+      `${dim}$${cost}${reset}${savingsStr}`,   // Dim cost + green ↓savings
       `${dim}${dirName}${reset}`,              // Dim directory
     ];
 
