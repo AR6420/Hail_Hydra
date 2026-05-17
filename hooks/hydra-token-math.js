@@ -38,7 +38,7 @@ function findActiveSessionFile() {
     if (!fs.existsSync(projectsDir)) return null;
 
     const cwd = process.cwd();
-    const slug = cwd.replace(/[\/\\:]/g, '-').replace(/^-+/, '');
+    const slug = cwd.replace(/[^a-zA-Z0-9-]/g, '-').replace(/^-+/, '');
 
     let sessionDir = path.join(projectsDir, slug);
     if (!fs.existsSync(sessionDir)) {

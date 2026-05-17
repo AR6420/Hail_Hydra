@@ -38,7 +38,7 @@
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 11 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 12 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
@@ -62,6 +62,15 @@ to you until verification completes.
 file dependencies, blast radius, risk scores, and test coverage — replacing
 slow grep-based scanning with instant JSON lookups. Sentinel is now 3-5×
 faster and 3-5× cheaper per scan.
+
+**New in v2.3.2 — Even Quieter Agents:** Subagents now run with compressed
+**INTERNAL thinking**, not just compressed final output. The intermediate prose
+("Let me check…", "I'll examine…", "Now I'll trace…") that no one ever reads
+is drastically reduced — ~40–60% fewer billed tokens per subagent dispatch,
+with no change to the final output Opus receives. The new `/hydra:stfu` skill
+extends this compression to ALL subagents in a session — Hydra's own,
+third-party, and Claude Code's built-in agents. Session-scoped, runtime-only,
+no file modifications. Activate via `/hydra:stfu`; deactivate via `/skills`.
 
 > **Four built-in speed optimizations** reduce overhead at every stage: speculative pre-dispatch
 > (scout launches in parallel with task classification), session indexing (codebase context

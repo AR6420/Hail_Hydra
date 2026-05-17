@@ -110,6 +110,49 @@ Compression is for normal task completion. Anything safety-critical or education
 
 This is not "caveman mode" or fragment-style. Don't drop articles. Don't write "Bug auth middleware. Token expiry use < not <=. Fix now." That's too aggressive — users WILL notice. Goal is invisible compression: a careful reader notices responses are tighter, but no average user complains it sounds robotic.
 
+## Internal Thinking Compression — Subagents (v2.3.2+)
+
+All Hydra subagents have an "Internal Thinking — Compressed" block in their system prompts. They run with terse internal reasoning by default. No setup required. Subagent context is now ~40–60% smaller per dispatch than v2.3.0, with no change to the final summary Opus receives.
+
+The block tells each subagent: act first, skip preambles, no step announcements, no transition prose between tool calls, no restatement of tool outputs already in context. One-line decision notes at genuine branch points are still allowed.
+
+### Calibration by Agent Type
+
+**Simple agents** (hydra-scout, hydra-runner, hydra-git, hydra-scribe, hydra-guard, hydra-preflight): tools only, no internal prose at all. Tool call → next tool call → final summary.
+
+**Reasoning agents** (hydra-analyst, hydra-sentinel, hydra-sentinel-scan, hydra-coder): compressed by default. Allowed to expand internal reasoning ONLY at genuine decision points (e.g., "3 fix approaches: A=simple, B=robust, C=invasive. Choosing B."). Never expand for "let me explain my thinking" — your thinking isn't read.
+
+## STFU-Agents Mode — Universal Compression
+
+For sessions with mixed subagent sources, the `stfu-agents` skill extends internal-thinking compression to ALL dispatched subagents — Hydra's, third-party, and Claude Code's built-in agents.
+
+Activate via `/hydra:stfu`, `/skills stfu-agents`, or natural language ("STFU agents", "compress all agents"). Deactivate via `/skills` or "verbose agents". Opt-in only; never auto-activated.
+
+When the skill is active, prepend the directive defined in `skills/stfu-agents/SKILL.md` to the `prompt` argument of every Task tool call. The directive is purely additive at runtime — no agent file modifications, no hooks. If a subagent ignores it, falls back to baseline behavior.
+
+## Collaboration — Subagents (canonical)
+
+Subagents may run in parallel with peers. Their output must be:
+
+- **Self-contained** — no assumption that another agent's output is available; all needed context arrives in the prompt
+- **Structured** — headers and sections so the orchestrator can merge results from multiple parallel agents
+- **Focused** — work on the dispatched task only; flag adjacent issues to the orchestrator rather than acting on them
+- **Actionable** — end with a clear summary the next wave's agents can use directly as context
+
+Each agent file references this canonical block; the per-agent restatements were removed in v2.3.2 to reduce prompt bloat.
+
+## Sentinel — Orchestrator-Side Cleanup
+
+After hydra-sentinel-scan reports back (clean or issues found), the orchestrator (not the subagent) clears the sentinel-pending flag file used by the statusline indicator:
+
+```bash
+rm -f /tmp/hydra-sentinel/${session_id}-pending.json
+# Fallback when session_id is unavailable:
+rm -f /tmp/hydra-sentinel/*-pending.json
+```
+
+This clears the "⚠ Sentinel pending" warning from the status bar. Moved from `agents/hydra-sentinel-scan.md` in v2.3.2 — subagent's job is the scan, orchestrator's job is the state cleanup.
+
 ## Why Hydra Exists
 
 Autoregressive LLM inference is memory-bandwidth bound — the time per token scales with model

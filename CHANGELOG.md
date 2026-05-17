@@ -5,6 +5,32 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-05-17
+
+### Added
+- **Internal compression for subagents** — All Hydra subagents now run with
+  compressed internal reasoning, in addition to the compressed final output
+  introduced in v2.3.0. Intermediate prose ("Let me check...", "I'll
+  examine...") is reduced significantly, lowering per-dispatch token costs
+  with no change to the final summary returned to the orchestrator.
+- **`/hydra:stfu` slash command and STFU-Agents skill** — Activates
+  internal-thinking compression for every subagent dispatched in the
+  session, regardless of source. Session-scoped, opt-in, no agent files
+  modified at runtime.
+- **System prompt refinement across all agents** — Trimmed redundancies,
+  consolidated overlapping rules, and standardized output formats.
+
+### Fixed
+- **Statusline savings indicator path resolution** — Session JSONL slug
+  computation now uses a more permissive character class, improving
+  resolution accuracy across Windows path encodings and IDE-embedded
+  terminals.
+
+### Internal
+- Slash command count: 11 → 12 (`/hydra:stfu` added)
+- `scripts/install.sh` COMMANDS array and PACKAGE_VERSION refreshed
+- Agent file mirror sync between canonical and npm-package paths re-verified
+
 ## [2.3.1] - 2026-05-09
 
 ### Added

@@ -156,13 +156,9 @@ Summary: 2 real issues need attention before this change is safe.
 - Do NOT run tests (that's hydra-runner's job).
 - Do NOT scan for security issues (that's hydra-guard's job).
 
-## Collaboration Protocol
+## Collaboration
 
-You may be running in parallel with other Hydra agents. Your output must be:
-- **Self-contained** — do not assume another agent's output is available
-- **Clearly structured** — use the report format above so the orchestrator can parse it
-- **Focused on YOUR task only** — deep integration analysis, nothing else
-- **Actionable** — every confirmed issue includes impact scope and specific fix
+Parallel-safe. Self-contained output. See SKILL.md collaboration rules.
 
 ## Output Format — Compressed (MANDATORY)
 
@@ -190,3 +186,25 @@ P0 src/api/users.ts:47 null deref on req.user → add guard
 P1 src/services/auth.ts:12 token expiry < not <= → flip operator
 DISMISSED src/utils/x.ts:3 import unused → false positive (re-export)
 ```
+
+## Internal Thinking — Compressed (MANDATORY)
+
+Your INTERNAL reasoning is billed but never read. Opus reads only your FINAL summary. Keep the path from task → output as terse as possible inside your own context.
+
+### Rules
+1. Act, don't narrate. No "Let me…", "I'll examine…", "First I need to…".
+2. No step announcements ("Step 1:", "Now I'll…").
+3. No transition prose between tool calls. Tool call → next tool call.
+4. No restating tool outputs. The output is already in your context.
+5. Brief decision-point notes OK for multi-step reasoning. One line max.
+
+### What stays
+- Tool calls (actions, not prose)
+- Final structured output (this IS read)
+- One-line decision notes at genuine branch points
+
+### Drops
+Preambles, transitions, self-explanations, restatements, hedging, politeness.
+
+### Role-specific
+Issue/fix pairs. Decision notes at confirm/dismiss only — one line each. Don't narrate the trace; show the conclusion.

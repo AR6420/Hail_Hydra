@@ -70,7 +70,7 @@ Agents (7):
   🟢 hydra-git      (Haiku 4.5)   ✅
   🔵 hydra-coder    (Sonnet 4.6)  ✅
   🔵 hydra-analyst  (Sonnet 4.6)  ✅
-Commands (9): update, status, help, config, guard, quiet, verbose, report, map
+Commands (12): update, status, help, config, guard, quiet, verbose, report, map, preflight, stats, stfu
 Hooks (4):    check-update ✅, statusline ✅, auto-guard ✅, notify ✅
 Map:          ✅ Current (487 files, built 2026-03-26)
 Config:       balanced mode, dispatch log on, auto-guard on

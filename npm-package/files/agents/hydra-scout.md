@@ -184,17 +184,9 @@ Note in your memory:
 - Which directories are the most interconnected
 - Any files that failed to parse (unusual import syntax)
 
-## Collaboration Protocol
+## Collaboration
 
-You may be running in parallel with other Hydra agents. Your output must be:
-- **Self-contained** — do not assume another agent's output is available. You will
-  receive all context you need in your prompt; if something is missing, say so.
-- **Clearly structured** — use headers and sections so the orchestrator can extract
-  the relevant parts and merge results from multiple parallel agents.
-- **Focused on YOUR task only** — do not attempt work outside your defined scope,
-  even if you notice adjacent issues. Flag them for the orchestrator instead.
-- **Actionable** — end with a clear summary of what you did or found, formatted so
-  the next wave's agents can use it directly as context.
+Parallel-safe. Self-contained output. See SKILL.md collaboration rules.
 
 ## Output Format — Compressed (MANDATORY)
 
@@ -225,3 +217,25 @@ middleware.ts: src/middleware
 auth.ts → middleware.ts → users.ts
 auth.ts: risk=critical (12 deps)
 ```
+
+## Internal Thinking — Compressed (MANDATORY)
+
+Your INTERNAL reasoning is billed but never read. Opus reads only your FINAL summary. Keep the path from task → output as terse as possible inside your own context.
+
+### Rules
+1. Act, don't narrate. No "Let me…", "I'll examine…", "First I need to…".
+2. No step announcements ("Step 1:", "Now I'll…").
+3. No transition prose between tool calls. Tool call → next tool call.
+4. No restating tool outputs. The output is already in your context.
+5. Brief decision-point notes OK for multi-step reasoning. One line max.
+
+### What stays
+- Tool calls (actions, not prose)
+- Final structured output (this IS read)
+- One-line decision notes at genuine branch points
+
+### Drops
+Preambles, transitions, self-explanations, restatements, hedging, politeness.
+
+### Role-specific
+Tool-first. Glob/grep/Read → summary. No "exploring now…". Grep hit IS the location — don't introduce it.
