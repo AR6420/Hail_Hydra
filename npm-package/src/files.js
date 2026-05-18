@@ -89,7 +89,11 @@ const commands = {
   'map':      readBundled('commands/hydra/map.md'),
   'preflight': readBundled('commands/hydra/preflight.md'),
   'stats':    readBundled('commands/hydra/stats.md'),
+  'stfu':     readBundled('commands/hydra/stfu.md'),
 };
+
+// Standalone skills (beyond the canonical hydra/SKILL.md). v2.4.0+ — STFU-Agents.
+const stfuAgentsSkill = readBundled('skills/stfu-agents/SKILL.md');
 
 const hooks = {
   'hydra-check-update': readBundled('hooks/hydra-check-update.js'),
@@ -103,4 +107,4 @@ const binaryHooks = {
   'hydra-task-complete.wav': path.join(FILES_DIR, 'hooks', 'hydra-task-complete.wav'),
 };
 
-module.exports = { agents, skill, references, commands, hooks, binaryHooks };
+module.exports = { agents, skill, stfuAgentsSkill, references, commands, hooks, binaryHooks };

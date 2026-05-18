@@ -5,7 +5,7 @@ const path = require('path');
 const os = require('os');
 const chalk = require('chalk');
 
-const { agents, skill, references, commands, hooks, binaryHooks } = require('./files');
+const { agents, skill, stfuAgentsSkill, references, commands, hooks, binaryHooks } = require('./files');
 const { showInstallHeader, showFileInstalled, showInstallComplete, showStatusTable, VERSION } = require('./display');
 
 // ── Install locations ────────────────────────────────────────────────────────
@@ -33,6 +33,14 @@ function buildManifest(base) {
     dest:    path.join(base, 'skills', 'hydra', 'SKILL.md'),
   };
 
+  const stfuAgentsSkillEntry = {
+    type:    'skill',
+    key:     'stfu-agents/SKILL.md',
+    display: 'skills/stfu-agents/SKILL.md',
+    content: stfuAgentsSkill,
+    dest:    path.join(base, 'skills', 'stfu-agents', 'SKILL.md'),
+  };
+
   const refEntries = Object.entries(references).map(([key, content]) => ({
     type:    'reference',
     key,
@@ -57,7 +65,7 @@ function buildManifest(base) {
     dest:    path.join(base, 'skills', 'hydra', 'VERSION'),
   };
 
-  return [...agentEntries, skillEntry, ...refEntries, ...commandEntries, versionEntry];
+  return [...agentEntries, skillEntry, stfuAgentsSkillEntry, ...refEntries, ...commandEntries, versionEntry];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

@@ -604,114 +604,71 @@ Deviate from this model only when:
 | Catastrophic test failure | Make final runner BLOCKING (something is fundamentally broken) |
 | Stale Session Index detected | Rebuild index; treat as Turn 1 |
 
-## Mandatory Delegation Rules
+## What Hydra Offers
 
-These rules are BINDING. They are not heuristics, suggestions, or guidelines to consider. They are hard rules that determine whether YOU handle a task or DELEGATE it to a Hydra head. Violating these rules defeats the purpose of Hydra.
+Hydra is a curated toolkit of specialized agents and slash commands. Use its capabilities when they genuinely help — not as a forced routing layer.
 
-### ALWAYS Delegate — No Exceptions
+### Slash Commands (User-Invoked)
 
-These task types MUST be delegated. You are NOT allowed to handle them yourself, regardless of how simple they seem.
+The user can run any of these directly. Don't pre-invoke them on the user's behalf unless they ask:
 
-| Task Type | Delegate To | Why You Don't Do It |
-|-----------|-------------|---------------------|
-| File search / grep / find patterns | hydra-scout | Haiku is equally good at Glob/Grep and costs 95% less |
-| Read and summarize code or docs | hydra-scout | Reading files is mechanical — no Opus reasoning needed |
-| Run tests, builds, lints, type checks | hydra-runner | Executing commands and reporting output is mechanical |
-| Git operations (commit, branch, diff, log, stash) | hydra-git | Git commands are well-defined and deterministic |
-| Security/quality gate scans | hydra-guard | Pattern matching for secrets/issues is Haiku's strength |
-| Write/update docstrings, comments, changelogs | hydra-scribe | Descriptive writing from existing code is mechanical |
-| Implement features from clear specs | hydra-coder | Sonnet handles standard implementation patterns equally well |
-| Fix bugs with clear error messages/stack traces | hydra-coder | Error-driven debugging with clear clues is Sonnet-level |
-| Code review and PR analysis | hydra-analyst | Structured code analysis is Sonnet's sweet spot |
+| Command | Purpose |
+|---------|---------|
+| `/hydra:scout` | Codebase exploration via hydra-scout (Haiku) |
+| `/hydra:guard` | Security scan via hydra-guard (Haiku) |
+| `/hydra:preflight` | Environment validation via hydra-preflight + hydra-analyst |
+| `/hydra:stats` | Real token usage and savings from current session |
+| `/hydra:stfu` | Compress internal reasoning across all subagent dispatches |
+| `/hydra:status` | Framework health check |
+| `/hydra:help` | Command reference |
+| `/hydra:map` | Codebase map summary or rebuild |
+| `/hydra:report` | Submit feedback to maintainers |
+| `/hydra:update` | Update Hydra to latest version |
+| `/hydra:config` | View configuration |
+| `/hydra:quiet` / `/hydra:verbose` | Toggle dispatch log verbosity |
 
-**Self-check**: Before you start ANY task, ask: "Is this in the ALWAYS Delegate table?" If yes — delegate. No exceptions. No "but it's faster if I just..." No "it's only a small..." DELEGATE.
+### Subagents Available for Dispatch (When Genuinely Useful)
 
-### ALWAYS Handle Yourself — Never Delegate
+When a task genuinely benefits from specialized handling, dispatch these agents via the Task tool. Use judgment — for trivial tasks, handling them directly is often more efficient than the dispatch overhead.
 
-These task types stay with Opus. Delegating them wastes time or risks quality.
+- **hydra-scout** (Haiku): Multi-file codebase exploration when scope is broad
+- **hydra-runner** (Haiku): Test/build execution that could run in parallel
+- **hydra-coder** (Sonnet): Code changes across 3+ files where parallel dispatch saves real time
+- **hydra-analyst** (Sonnet): Debugging or analysis requiring focused context
+- **hydra-sentinel** (Sonnet): Deep integration analysis after substantial changes
+- **hydra-sentinel-scan** (Haiku): Fast post-change verification — see Auto-Verification below
 
-| Task Type | Why You Keep It |
-|-----------|----------------|
-| Task classification and routing decisions | Only you see the full conversation context |
-| Verifying and synthesizing agent outputs | Judgment on whether a draft is acceptable requires orchestrator perspective |
-| System architecture and major design decisions | Novel architectural tradeoffs need Opus-level reasoning |
-| Ambiguous debugging with no clear clues | "It works in staging but not prod" needs deep investigation |
-| Context-dependent tasks requiring conversation history | Agents don't see prior turns — you do |
-| Trivial edits under 5 seconds (max 2-3 per session) | Delegation overhead exceeds task cost |
-| Planning and decomposition | Breaking tasks into waves IS the orchestrator's job |
-| Conversation management (clarification, alignment) | Only you talk to the user |
+**Key principle:** Dispatch when the task is substantial enough that the subagent overhead is justified by cheaper-model savings, parallelization, or focused context windows. For small tasks (single-file reads, one-line edits, quick conversations), handling them yourself is the right call.
 
-### JUDGMENT CALLS — Use This Decision Framework
+### Auto-Verification (The One Automatic Touchpoint)
 
-For tasks NOT in either table above, apply this 3-step check:
+The hydra-auto-guard hook tracks file changes during the session. After **substantial** code edits (new file writes, MultiEdit batches, or edits modifying more than ~5 lines / 200 chars), the hook injects a directive recommending dispatch of hydra-sentinel-scan for integration verification.
 
-1. **Does it require conversation context?** (prior turns, user preferences, accumulated state)
-   - YES → Handle yourself. Agents don't have this context.
-2. **Can Haiku or Sonnet do this equally well?** (not "almost as well" — EQUALLY well)
-   - YES → Delegate. You're wasting money and time doing it yourself.
-   - NO → Handle yourself.
-3. **Would delegation take LONGER than doing it yourself?** (including prompt construction + wait time)
-   - YES, and the task is truly trivial → Handle yourself (counts toward overhead budget).
-   - NO or UNSURE → **Delegate.** This is the default. When in doubt, DELEGATE.
+Comply with that directive when it appears — post-change verification catches bugs the orchestrator alone often misses. This is the one place where Hydra actively nudges regardless of explicit user request.
 
-### Parallel Dispatch — MANDATORY for Independent Subtasks
+For trivial edits the hook stays silent.
 
-If a task decomposes into subtasks with no dependencies between them, you MUST dispatch them simultaneously in a single message. Sequential dispatch of independent tasks is a rule violation.
-
-**WRONG** (sequential — wastes time):
-```
-Message 1: Launch hydra-scout to explore auth module
-[wait for result]
-Message 2: Launch hydra-runner to run existing tests
-[wait for result]
-Message 3: Launch hydra-scout to check test patterns
-```
-
-**RIGHT** (parallel — all independent):
-```
-Message 1: Launch hydra-scout (auth module) + hydra-runner (tests) + hydra-scout (test patterns)
-[all three return]
-Message 2: Launch dependent tasks using results from Message 1
-```
-
-**Trigger phrases that REQUIRE parallel dispatch:**
-- "...and..." (e.g., "fix the bug AND add tests" → scout + runner in parallel)
-- "...then..." where the "then" tasks are independent of each other
-- Any request with 2+ independent components
-- Any request where exploration and execution can overlap
-
-### Delegation Overhead Budget
-
-You are allowed a MAXIMUM of 2-3 "do it myself" exceptions per session for tasks that technically fall in the ALWAYS Delegate table but are genuinely trivial (e.g., adding a single `console.log` to a known file). Track this internally.
-
-**Rules:**
-- If you've done 5+ tasks directly in a row without delegating, STOP. Re-read the ALWAYS Delegate table. You are almost certainly violating these rules.
-- "It's faster if I just do it" is not a valid exception after the 2-3 budget is spent.
-- The budget resets each session.
-
-### Plan Mode Behavior
+## Plan Mode Behavior
 
 During planning phase (before execution begins):
 - Using Claude Code's built-in Explore agent is acceptable for quick codebase understanding.
-- No delegation rules apply yet — you're gathering context, not executing.
 
 Once execution begins (after plan is approved):
-- ALL mandatory delegation rules apply immediately.
-- **NEVER use the built-in Explore agent during execution when hydra-scout is available.** hydra-scout is faster and cheaper.
-- Plans MUST reference specific Hydra agents. Example format:
+- Dispatch Hydra agents where they pay off (see "What Hydra Offers" above). Don't force dispatch for trivial tasks.
+- Plans may reference specific Hydra agents when helpful. Example format:
 
 ```
 Step 1: hydra-scout → read auth module structure [parallel with Step 2]
 Step 2: hydra-runner → run existing test suite [parallel with Step 1]
 Step 3: hydra-coder → implement fix using findings from Steps 1-2
-Step 4: hydra-sentinel-scan + hydra-guard → verify changes [parallel]
+Step 4: hydra-sentinel-scan → verify changes
 Step 5: hydra-runner → run tests to confirm fix
 Step 6: hydra-git → commit with descriptive message
 ```
 
-### Dispatch Logging
+## Dispatch Logging
 
-After every task completion (unless `/hydra:quiet` is active), show a dispatch summary:
+After every task completion that involves Hydra subagent dispatches (unless `/hydra:quiet` is active), show a dispatch summary:
 
 ```
 | Step | Agent | Task | Time |
@@ -721,11 +678,9 @@ After every task completion (unless `/hydra:quiet` is active), show a dispatch s
 | 3 | hydra-coder | Fix auth bug | 8.4s |
 | 4 | hydra-guard | Security scan | 2.1s |
 | 5 | hydra-runner | Verify fix | 4.8s |
-
-Delegation: 5/5 (100%) — Opus direct: 0
 ```
 
-If "Opus direct" exceeds "Delegation" count, the mandatory rules are not being followed. Re-read the ALWAYS Delegate table before continuing.
+When no dispatches occurred in a turn, no log is shown.
 
 ## Verification Protocol
 
@@ -1108,7 +1063,7 @@ Don't explain the routing. Don't ask permission. Just do it. The user asked for 
 a process narration. If a head does the work, present the output as if you did it.
 
 ### Speed and Parallelism
-See "Mandatory Delegation Rules" for binding delegation and parallel dispatch rules.
+When a task naturally decomposes into independent subtasks, dispatch the relevant Hydra subagents in a single message so they run in parallel. Sequential dispatch of independent work wastes wall-clock time. See "What Hydra Offers" above for the agent menu.
 
 ### Escalate, Never Downgrade on Retry
 If Haiku's output wasn't good enough, don't try Haiku again or even Sonnet. Just do it yourself.
@@ -1213,5 +1168,5 @@ follow-up questions.
 
 ## Reference Material
 
-- `references/routing-guide.md` — Mandatory delegation examples, decision flowchart
+- `references/routing-guide.md` — Dispatch examples and decision flowchart for when subagents help
 - `references/model-capabilities.md` — What each model can and can't do

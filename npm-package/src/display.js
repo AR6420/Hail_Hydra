@@ -42,7 +42,7 @@ function showInstallComplete(statusLineConfigured = true) {
   console.log(chalk.cyan.bold('  \uD83D\uDC09 Hail Hydra! Framework deployed and ready.'));
   console.log(chalk.gray('  ' + '\u2500'.repeat(45)));
   console.log(chalk.green(`    \u2714 10 agents installed`));
-  console.log(chalk.green(`    \u2714 10 slash commands installed`));
+  console.log(chalk.green(`    \u2714 12 slash commands installed`));
   console.log(chalk.green(`    \u2714 4 hooks registered`));
   if (statusLineConfigured) {
     console.log(chalk.green(`    \u2714 StatusLine configured`));

@@ -32,55 +32,47 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Speed-2--3×_Faster-22C55E?style=flat-square&logo=zap&logoColor=white" alt="Speed" />
-  <img src="https://img.shields.io/badge/Cost-~50%25_Cheaper-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
+  <img src="https://img.shields.io/badge/Cost-40--60%25_Per_Dispatch-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
   <img src="https://img.shields.io/badge/Quality-Zero_Loss-7C3AED?style=flat-square&logo=shield-check&logoColor=white" alt="Quality" />
-  <img src="https://img.shields.io/badge/Mode-Always_On-darkred?style=flat-square&logo=power&logoColor=white" alt="Always On" />
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 12 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; ~50% cost savings &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 12 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-You know how in the movies, Hydra had agents embedded *everywhere*, silently getting things done in the background? That's exactly what this framework does for your Claude Code sessions.
+**Hydra** is a curated multi-agent toolkit for Claude Code. It ships 10 specialized agents pinned to cost-effective models (Haiku 4.5 and Sonnet 4.6), 12 slash commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
 
-**Hydra** is a task-level speculative execution framework inspired by [Speculative Decoding](https://arxiv.org/abs/2302.01318) in LLM inference. Instead of making one expensive model (Opus 4.6) do *everything* — from searching files to writing entire modules — Hydra deploys a team of specialized **"heads"** running on faster, cheaper models that handle the grunt work.
-
-The result? **Opus becomes a manager, not a laborer.** It classifies tasks, dispatches them to the right head, glances at the output, and moves on. The user never notices. It's invisible. It's always on.
-
-**New in v2.0.0:** Every agent now has **persistent memory** — they learn
-your codebase patterns, conventions, and architectural decisions across
-sessions. The orchestrator (Opus) also maintains its own memory of fragile
-zones and routing decisions. Plus, the new **hydra-sentinel** automatically
-catches integration breakage after code changes — and code isn't presented
-to you until verification completes.
-
-**New in v2.1.0:** The **Codebase Map** gives every agent instant access to
-file dependencies, blast radius, risk scores, and test coverage — replacing
-slow grep-based scanning with instant JSON lookups. Sentinel is now 3-5×
-faster and 3-5× cheaper per scan.
-
-**New in v2.3.2 — Even Quieter Agents:** Subagents now run with compressed
-**INTERNAL thinking**, not just compressed final output. The intermediate prose
-("Let me check…", "I'll examine…", "Now I'll trace…") that no one ever reads
-is drastically reduced — ~40–60% fewer billed tokens per subagent dispatch,
-with no change to the final output Opus receives. The new `/hydra:stfu` skill
-extends this compression to ALL subagents in a session — Hydra's own,
-third-party, and Claude Code's built-in agents. Session-scoped, runtime-only,
-no file modifications. Activate via `/hydra:stfu`; deactivate via `/skills`.
-
-> **Four built-in speed optimizations** reduce overhead at every stage: speculative pre-dispatch
-> (scout launches in parallel with task classification), session indexing (codebase context
-> persists across turns — no re-exploration), parallel dispatch (independent agents run
-> simultaneously — Opus waits for all before responding), and confidence-based auto-accept (raw
-> factual outputs skip Opus review entirely).
+Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
 > **Think of it this way:**
 >
-> Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's Hydra.
+> Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
+
+**New in v2.0.0:** Every agent has **persistent memory** — they learn your codebase patterns, conventions, and architectural decisions across sessions. The orchestrator (Opus) also maintains its own memory of fragile zones and routing decisions. The **hydra-sentinel** workflow catches integration breakage after substantial code changes — and code isn't presented to you until verification completes.
+
+**New in v2.1.0:** The **Codebase Map** gives every agent instant access to file dependencies, blast radius, risk scores, and test coverage — replacing slow grep-based scanning with instant JSON lookups. Sentinel is now 3–5× faster and 3–5× cheaper per scan.
+
+**New in v2.3.2 — Internal Compression:** Subagents now run with compressed **INTERNAL thinking**, not just compressed final output. The intermediate prose ("Let me check…", "I'll examine…", "Now I'll trace…") that no one ever reads is drastically reduced — ~40–60% fewer billed tokens per subagent dispatch, with no change to the final output Opus receives. The new `/hydra:stfu` skill extends this compression to ALL subagents in a session — Hydra's own, third-party, and Claude Code's built-in agents. Session-scoped, runtime-only, no file modifications. Activate via `/hydra:stfu`; deactivate via `/skills`.
+
+**New in v2.4.0 — Toolkit Repositioning:** SKILL.md refocused to the toolkit-with-touchpoints model. The hydra-auto-guard hook now injects a sentinel verification directive after substantial code changes (new files, MultiEdit batches, or edits affecting more than ~5 lines). Trivial edits stay silent. `/hydra:stats` shows actionable guidance when no Hydra dispatches occurred in the session instead of empty zeros.
+
+## When to Use Hydra Explicitly
+
+Hydra's biggest cost savings come from explicit invocation in scenarios where specialized handling genuinely helps:
+
+| Scenario | How to Invoke | Why It Saves |
+|----------|---------------|-------------|
+| Broad codebase exploration | `/hydra:scout <topic>` or "use hydra-scout to find X" | Haiku reads files faster and cheaper than Opus |
+| Multi-file changes | "use hydra-coder to update X across these files" | Parallel Sonnet dispatch beats sequential Opus |
+| Security review | `/hydra:guard` | Pattern matching is Haiku-cheap |
+| Environment validation | `/hydra:preflight` | Cross-references compatibility matrices on Sonnet |
+| Codebase architecture review | `/hydra:map` | Dependency graph stored locally |
+
+For one-off questions, simple edits, or conversational work, Claude Code handles it directly. Hydra's only automatic intervention is the post-substantial-edit sentinel verification directive — see [Sentinel](#-sentinel--integration-integrity) below.
 
 ---
 
@@ -98,7 +90,7 @@ npx hail-hydra-cc@latest
 npm i hail-hydra-cc@latest
 ```
 
-Runs the interactive installer — deploys 10 agents, 10 slash commands, 4 hooks, and registers
+Runs the interactive installer — deploys 10 agents, 12 slash commands, 4 hooks, and registers
 the statusline and update checker. Done in seconds.
 
 ### Manual Install
@@ -108,11 +100,11 @@ the statusline and update checker. Done in seconds.
 git clone https://github.com/AR6420/Hail_Hydra.git
 cd hydra
 
-# Deploy heads globally (recommended — always on, every project)
+# Deploy heads globally (recommended — available in every project)
 ./scripts/install.sh --user
 
 # 🐉 Hail Hydra! Framework active in all Claude Code sessions.
-# ✅ 10 agents  ✅ 10 commands  ✅ 4 hooks  ✅ StatusLine  ✅ VERSION
+# ✅ 10 agents  ✅ 12 commands  ✅ 4 hooks  ✅ StatusLine  ✅ VERSION
 ```
 
 ### Installation Options
@@ -779,10 +771,10 @@ hydra/
 
 | Metric | Without Hydra | With Hydra | Improvement |
 |:-------|:-------------|:-----------|:------------|
-| **Task Speed** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku 4.5 heads respond ~10× faster |
-| **API Cost** | 1× (Opus 4.6 for everything) | ~0.5× | ~50% cheaper |
+| **Task Speed (per dispatch)** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku 4.5 heads respond ~10× faster |
+| **API Cost (per dispatch)** | 1× (Opus 4.6 for everything) | ~0.5× per dispatch | 40–60% cheaper when invoked |
 | **Quality** | Opus-level | Opus-level | Zero degradation |
-| **User Experience** | Normal | Normal | Invisible — zero friction |
+| **User Experience** | Normal | Normal | Explicit invocation; one automatic touchpoint (post-substantial-edit verification) |
 | **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
 | **Scout/runner verification** | Opus reviews every output | Auto-accepted for factual data | 🟢 ~50-60% of outputs skip review |
 | **Integration bugs caught** | 0% (no verification) | ~72% caught before runtime | 🟢 Sentinel auto-verification |
@@ -801,8 +793,8 @@ hydra/
 | Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet 4.6 | 60% | 60% |
 | **Blended effective cost** | | | **~48% of all-Opus** | **~48% of all-Opus** |
 
-Note: Blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48%.
-Rounded to **~50% blended cost reduction** overall.
+Note: When Hydra is invoked across a representative mix of task types, blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48% of all-Opus.
+Per-dispatch savings of **40–60%** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
 Savings calculated against Opus 4.6 ($5/$25 per MTok) as of February 2026.
 
 ### Measure Your Savings
@@ -819,11 +811,13 @@ The most accurate way to measure Hydra's impact — no estimation, real numbers:
 That's it. Real data beats theoretical calculations every time.
 
 #### What to expect (based on February 2026 API pricing)
-With a typical task distribution (50% Haiku 4.5, 30% Sonnet 4.6, 20% Opus 4.6):
-- **Input tokens**: ~52% cheaper ($2.40 vs $5.00 per MTok)
-- **Output tokens**: ~52% cheaper ($12.00 vs $25.00 per MTok)
-- **Blended**: ~50% cost reduction
+When Hydra is actively invoked across a typical mix (50% Haiku 4.5, 30% Sonnet 4.6, 20% Opus 4.6):
+- **Input tokens**: ~52% cheaper per dispatch ($2.40 vs $5.00 per MTok)
+- **Output tokens**: ~52% cheaper per dispatch ($12.00 vs $25.00 per MTok)
+- **Per-dispatch blended**: 40–60% cost reduction on Hydra-invoked work
 - **Speed**: 2–3× faster on delegated tasks
+
+Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your Claude Code session JSONL — no estimation.
 
 > Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
 > Savings would be significantly higher compared to Opus 4.1/4.0 ($15/$75 per MTok).

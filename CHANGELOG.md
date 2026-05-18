@@ -5,6 +5,34 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-05-22
+
+### Added
+- **Auto-verification on substantial code changes** — The hydra-auto-guard
+  hook now injects a sentinel verification directive when changes are
+  substantial (new files, MultiEdit batches, or edits affecting more than
+  ~5 lines / 200 characters). Trivial edits don't trigger the hook.
+- **`/hydra:stats` no-delegation guidance** — When a session has no
+  subagent dispatches, `/hydra:stats` now shows actionable guidance on
+  how to invoke Hydra explicitly instead of displaying empty savings.
+
+### Changed
+- **SKILL.md refocused** — Documentation of Hydra's capabilities updated
+  to reflect the toolkit-with-touchpoints model. Slash commands and
+  subagent dispatch guidance consolidated into clearer reference sections.
+- **README repositioned** — Updated framing to highlight Hydra's role as
+  a specialized toolkit with explicit invocation paths and one
+  auto-verification touchpoint.
+- **Installer deploys `commands/hydra/stfu.md` and `skills/stfu-agents/SKILL.md`**
+  — `npm-package/src/files.js` and `installer.js` updated so fresh installs
+  include the STFU slash command and skill file alongside the rest of the
+  toolkit.
+
+### Internal
+- Mirror sync verified between canonical and npm-package paths
+- No breaking changes
+- Existing slash commands, agents, hooks, and skills all preserved
+
 ## [2.3.2] - 2026-05-17
 
 ### Added

@@ -73,6 +73,50 @@ process.stdin.on('end', () => {
 
     fs.writeFileSync(sentinelFlag, JSON.stringify(pending));
 
+    // === Substantial-Edit Detection + Directive Injection (v2.4.0+) ===
+    // For Write, MultiEdit, or large Edits, inject a directive recommending
+    // hydra-sentinel-scan dispatch. Trivial edits stay silent.
+    const toolName = data.tool_name || '';
+    const isWrite = toolName === 'Write';
+    const isMultiEdit = toolName === 'MultiEdit';
+    const oldString = data.tool_input?.old_string || '';
+    const newString = data.tool_input?.new_string || '';
+
+    let isSubstantial = isWrite || isMultiEdit;
+    if (!isSubstantial) {
+      const oldLines = (oldString.match(/\n/g) || []).length;
+      const newLines = (newString.match(/\n/g) || []).length;
+      isSubstantial = oldLines > 5 || newLines > 5 ||
+                      oldString.length > 200 || newString.length > 200;
+    }
+
+    if (isSubstantial) {
+      // Best-effort codebase map risk lookup
+      let riskNote = '';
+      try {
+        const mapPath = path.join(process.cwd(), '.claude', 'hydra', 'codebase-map.json');
+        if (fs.existsSync(mapPath)) {
+          const map = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+          const relPath = path.relative(process.cwd(), filePath).split(path.sep).join('/');
+          const fileEntry = map.files && map.files[relPath];
+          if (fileEntry && fileEntry.risk) {
+            riskNote = ` Risk: ${fileEntry.risk} (${fileEntry.dependents_count || 0} dependents).`;
+          }
+        }
+      } catch (e) {
+        // Map missing or malformed — no risk note appended
+      }
+
+      const directive = {
+        hookSpecificOutput: {
+          hookEventName: 'PostToolUse',
+          additionalContext: `🐉 Hydra Auto-Guard: Substantial change to ${path.basename(filePath)}.${riskNote} Dispatch hydra-sentinel-scan to verify integration before presenting results to the user.`
+        }
+      };
+
+      process.stdout.write(JSON.stringify(directive));
+    }
+
   } catch (e) {
     // Silently fail — NEVER block Claude Code
   }

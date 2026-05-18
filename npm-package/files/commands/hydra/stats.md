@@ -80,6 +80,37 @@ const { stats, totalTurns, haikuCost, sonnetCost, opusCost,
         delegatedTurns, delegationRate, sessionFile, unknownModels } = summary;
 
 const bar = '━'.repeat(40);
+
+// No-delegation guidance branch — when no Hydra subagents dispatched OR savings below indicator threshold
+if (delegatedTurns === 0 || savedUSD < 0.01) {
+  console.log('');
+  console.log('🐉 Hydra Stats');
+  console.log(bar);
+  console.log('Session: ' + path.basename(sessionFile));
+  console.log('Turns:   ' + totalTurns);
+  console.log(bar);
+  console.log('');
+  console.log('🟣 Opus  (' + stats.opus.turns + ' turns):  ' + fmt(stats.opus.input + stats.opus.cache_create) + ' in / ' + fmt(stats.opus.output) + ' out  → \$' + opusCost.toFixed(3));
+  console.log(bar);
+  console.log('');
+  console.log('No Hydra subagent dispatches recorded in this session.');
+  console.log('');
+  console.log('Hydra works best when invoked explicitly. Try:');
+  console.log('  /hydra:scout       — codebase exploration on Haiku');
+  console.log('  /hydra:guard       — security scan on Haiku');
+  console.log('  /hydra:preflight   — environment validation');
+  console.log('  /hydra:map         — codebase dependency map');
+  console.log('');
+  console.log('Or include \"use hydra\" in prompts that involve multi-file');
+  console.log('exploration, codebase analysis, or routine verification.');
+  console.log(bar);
+  if (unknownModels && unknownModels.size > 0) {
+    console.log('');
+    console.log('⚠️  Unknown models (not counted): ' + Array.from(unknownModels).join(', '));
+  }
+  process.exit(0);
+}
+
 console.log('');
 console.log('🐉 Hydra Stats');
 console.log(bar);
