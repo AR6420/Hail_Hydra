@@ -95,28 +95,31 @@ process.stdin.on('end', () => {
       parts.push(`\x1b[31m\u26A0 Auto-compact at 85%\x1b[0m`);
     }
 
-    // === Sentinel Pending Warning ===
-    // Check if code changes were made but sentinel hasn't run yet
-    let sentinelWarning = '';
+    // === Sentinel Indicator: 3 states (pending / clean / quiet) ===
     try {
-      const sentinelDir = path.join(os.tmpdir(), 'hydra-sentinel');
       const sessionId = data.session_id || 'unknown';
-      const sentinelFlag = path.join(sentinelDir, `${sessionId}-pending.json`);
-      const pendingData = JSON.parse(fs.readFileSync(sentinelFlag, 'utf8'));
+      const sentinelDir = path.join(os.tmpdir(), 'hydra-sentinel');
+      const pendingFile = path.join(sentinelDir, `${sessionId}-pending.json`);
+      const scanMarker  = path.join(sentinelDir, `${sessionId}-last-scan`);
 
-      // Only show if flag is recent (within last 10 minutes)
-      // and has files pending
-      const age = Date.now() - (pendingData.updated_at || 0);
-      if (pendingData.files?.length > 0 && age < 600000) {
-        const count = pendingData.files.length;
-        sentinelWarning = ` \x1b[31m\u26A0 Sentinel pending (${count} files)\x1b[0m`;
+      const pendingExists = fs.existsSync(pendingFile);
+      const markerExists  = fs.existsSync(scanMarker);
+
+      if (pendingExists) {
+        const pendingData = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+        const count = pendingData.files?.length || 0;
+        const age = Date.now() - (pendingData.updated_at || 0);
+        if (count > 0 && age < 600000) {
+          parts.push(`\x1b[33m\u26A0 Sentinel pending (${count} file${count === 1 ? '' : 's'})\x1b[0m`);
+        }
+      } else if (markerExists) {
+        const markerMs = parseInt(fs.readFileSync(scanMarker, 'utf8').trim(), 10) * 1000;
+        if (Date.now() - markerMs < 60000) {
+          parts.push(`\x1b[32m\u2705 Sentinel clean\x1b[0m`);
+        }
       }
     } catch (e) {
-      // No flag file — sentinel is clean or hasn't been needed
-    }
-
-    if (sentinelWarning) {
-      parts.push(sentinelWarning);
+      // No flag — silent quiet state
     }
 
     process.stdout.write(parts.join(' \u2502 '));

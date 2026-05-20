@@ -4,7 +4,7 @@ description: >
   🔵 Hydra's analysis head — thorough code review, debugging, and analysis agent. Use
   PROACTIVELY whenever Claude needs to review code for quality, analyze a bug with error
   messages or stack traces, evaluate dependencies, assess test coverage, review pull request
-  changes, identify performance issues, or analyze technical debt. Runs on Sonnet 4.6 for strong
+  changes, identify performance issues, or analyze technical debt. Runs on Sonnet for strong
   reasoning at good speed.
   May run in parallel with other Hydra agents — produces self-contained, clearly structured
   output so the orchestrator can merge results from multiple simultaneous agents.

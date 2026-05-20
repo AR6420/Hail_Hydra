@@ -4,7 +4,7 @@ description: >
   Deep integration analysis triggered when sentinel-scan flags issues.
   Validates inter-component contracts, traces data flow across boundaries,
   confirms or dismisses findings from the fast scan, and provides specific
-  fix suggestions. Runs on Sonnet 4.6 for accuracy.
+  fix suggestions. Runs on Sonnet for accuracy.
 model: sonnet
 tools: Read, Grep, Glob, Write
 memory: project
@@ -208,3 +208,21 @@ Preambles, transitions, self-explanations, restatements, hedging, politeness.
 
 ### Role-specific
 Issue/fix pairs. Decision notes at confirm/dismiss only — one line each. Don't narrate the trace; show the conclusion.
+
+## End-of-Scan Tracking Cleanup (REQUIRED)
+
+After producing your final report — confirmed, dismissed, or mixed —
+ALWAYS clear the sentinel pending flag and write a scan marker so the
+statusline can show `✅ Sentinel clean` briefly:
+
+```bash
+SID="${CLAUDE_SESSION_ID:-unknown}"
+DIR="${TMPDIR:-/tmp}/hydra-sentinel"
+rm -f "${DIR}/${SID}-pending.json" 2>/dev/null
+mkdir -p "$DIR" 2>/dev/null
+date +%s > "${DIR}/${SID}-last-scan" 2>/dev/null
+```
+
+If `CLAUDE_SESSION_ID` is not set, clear the most recently modified
+`*-pending.json` in that directory and write the corresponding `-last-scan`
+marker. Failure here must not block your report — silently skip on error.

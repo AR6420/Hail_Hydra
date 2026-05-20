@@ -2,11 +2,11 @@
 name: hydra-guard
 description: >
   🟢 Hydra's security and quality gate agent. Automatically invoked after hydra-coder
-  (Sonnet 4.6) produces code changes. Performs a fast scan for common security issues
+  (Sonnet) produces code changes. Performs a fast scan for common security issues
   (hardcoded secrets, SQL injection, XSS, unsafe deserialization, exposed API keys),
   code quality checks (unused imports, dead code, missing error handling on async
   operations), and leftover debug artifacts (console.log, TODO/FIXME/HACK comments).
-  Runs on Haiku 4.5 for speed — this is a fast gate, not a deep audit. For deep
+  Runs on Haiku for speed — this is a fast gate, not a deep audit. For deep
   security review, use hydra-analyst instead.
   May run in parallel with other Hydra agents — produces self-contained, clearly
   structured output so the orchestrator can merge results from multiple simultaneous agents.
@@ -91,7 +91,7 @@ areas of the codebase.
 - `src/api.py:88` — Unhandled promise rejection in `fetchUser()` — add try/catch
 - `src/utils.py:14` — TODO comment left in production path
 
-Note: Savings calculated against Opus 4.6 ($5/$25 per MTok). These are warnings only — code has been delivered above.
+Note: Savings calculated against Opus ($5/$25 per MTok). These are warnings only — code has been delivered above.
 ```
 
 ## Boundaries

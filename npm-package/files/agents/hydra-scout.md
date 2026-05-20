@@ -6,7 +6,7 @@ description: >
   files, read code, find patterns, grep for strings, list directories, understand project
   structure, answer "where is X?" questions, or build/update the codebase dependency map.
   This is the first head to reach for when gathering information before making changes.
-  Runs on Haiku 4.5 for near-instant responses.
+  Runs on Haiku for near-instant responses.
   May run in parallel with other Hydra agents — produces self-contained, clearly structured
   output so the orchestrator can merge results from multiple simultaneous agents.
 tools: Read, Grep, Glob, Bash, Write

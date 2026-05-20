@@ -3,7 +3,7 @@ name: hydra-sentinel-scan
 description: >
   Fast integration sweep after code changes. Checks for broken imports,
   missing exports, changed function signatures, missing env vars, circular
-  dependencies, and changed API routes. Runs on Haiku 4.5 for speed.
+  dependencies, and changed API routes. Runs on Haiku for speed.
   If issues are found, the orchestrator escalates to hydra-sentinel for
   deep analysis. If clean — done, zero additional cost.
 model: haiku
@@ -205,6 +205,24 @@ Parallel-safe. Self-contained output. See SKILL.md collaboration rules.
 ## Cleanup
 
 After scan completes, orchestrator handles sentinel-pending flag cleanup per SKILL.md sentinel protocol.
+
+### End-of-Scan Tracking Cleanup (REQUIRED)
+
+After producing your final report — clean OR issues_found OR error —
+ALWAYS clear the sentinel pending flag and write a scan marker so the
+statusline can show `✅ Sentinel clean` briefly:
+
+```bash
+SID="${CLAUDE_SESSION_ID:-unknown}"
+DIR="${TMPDIR:-/tmp}/hydra-sentinel"
+rm -f "${DIR}/${SID}-pending.json" 2>/dev/null
+mkdir -p "$DIR" 2>/dev/null
+date +%s > "${DIR}/${SID}-last-scan" 2>/dev/null
+```
+
+If `CLAUDE_SESSION_ID` is not set, clear the most recently modified
+`*-pending.json` in that directory and write the corresponding `-last-scan`
+marker. Failure here must not block your report — silently skip on error.
 
 ## Output Format — Compressed (MANDATORY)
 

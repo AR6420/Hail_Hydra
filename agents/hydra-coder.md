@@ -4,8 +4,8 @@ description: >
   🔵 Hydra's implementation head — capable code writing and engineering agent. Use PROACTIVELY
   whenever Claude needs to write new code, implement features, refactor existing code, create
   or modify tests, fix bugs with clear error messages, make API integrations, or perform any
-  code writing task that follows well-understood patterns. Runs on Sonnet 4.6 for a strong balance
-  of speed and capability. Use this for all standard implementation work — reserve Opus 4.6 only
+  code writing task that follows well-understood patterns. Runs on Sonnet for a strong balance
+  of speed and capability. Use this for all standard implementation work — reserve Opus only
   for novel architecture or extremely subtle debugging.
   May run in parallel with other Hydra agents — produces self-contained, clearly structured
   output so the orchestrator can merge results from multiple simultaneous agents.

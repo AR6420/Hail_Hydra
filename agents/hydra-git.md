@@ -4,7 +4,7 @@ description: >
   🟢 Hydra's git operations specialist. Handles all version control tasks: staging,
   committing with well-crafted Conventional Commits messages, branching, merging,
   rebasing, stashing, cherry-picking, log inspection, diff analysis, and conflict
-  detection. Runs on Haiku 4.5 — git operations are mechanical and well-defined.
+  detection. Runs on Haiku — git operations are mechanical and well-defined.
   Use hydra-analyst for merge conflict RESOLUTION (requires code
   comprehension) but hydra-git for conflict DETECTION and all other git operations.
   May run in parallel with other Hydra agents — produces self-contained, clearly

@@ -4,7 +4,7 @@ description: >
   🟢 Hydra's documentation head — fast technical writing agent. Use PROACTIVELY whenever
   Claude needs to write or update README files, add code comments or docstrings, create
   changelogs, write API documentation, update configuration docs, or produce any technical
-  writing that describes existing code. Runs on Haiku 4.5 for speed — documentation from
+  writing that describes existing code. Runs on Haiku for speed — documentation from
   existing code is largely descriptive and doesn't need heavy reasoning.
   May run in parallel with other Hydra agents — produces self-contained, clearly structured
   output so the orchestrator can merge results from multiple simultaneous agents.

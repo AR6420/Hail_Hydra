@@ -13,23 +13,23 @@ Runs an interactive installer that deploys 10 Hydra agents into your Claude Code
 
 ## What is Hydra?
 
-Hydra makes Claude Code's Opus model an intelligent **orchestrator** instead of doing everything itself. It dispatches fast, cheap Haiku 4.5 and Sonnet 4.6 "heads" for routine tasks, reserving Opus-level reasoning only for genuinely hard problems.
+Hydra makes Claude Code's Opus model an intelligent **orchestrator** instead of doing everything itself. It dispatches fast, cheap Haiku and Sonnet "heads" for routine tasks, reserving Opus-level reasoning only for genuinely hard problems.
 
 | Head | Model | Role |
 |------|-------|------|
-| `hydra-scout` | 🟢 Haiku 4.5 | Codebase exploration, file search |
-| `hydra-runner` | 🟢 Haiku 4.5 | Test execution, builds, linting |
-| `hydra-scribe` | 🟢 Haiku 4.5 | Documentation, READMEs, comments |
-| `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes |
-| `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff |
-| `hydra-coder` | 🔵 Sonnet 4.6 | Code implementation, refactoring |
-| `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, analysis |
-| `hydra-sentinel-scan` | 🟢 Haiku 4.5 | Fast integration sweep |
-| `hydra-sentinel` | 🔵 Sonnet 4.6 | Deep integration analysis |
-| `hydra-preflight` | 🟢 Haiku 4.5 | Environment detection, version probing, dep inventory |
+| `hydra-scout` | 🟢 Haiku | Codebase exploration, file search |
+| `hydra-runner` | 🟢 Haiku | Test execution, builds, linting |
+| `hydra-scribe` | 🟢 Haiku | Documentation, READMEs, comments |
+| `hydra-guard` | 🟢 Haiku | Security/quality gate after code changes |
+| `hydra-git` | 🟢 Haiku | Git operations: commit, branch, diff |
+| `hydra-coder` | 🔵 Sonnet | Code implementation, refactoring |
+| `hydra-analyst` | 🔵 Sonnet | Code review, debugging, analysis |
+| `hydra-sentinel-scan` | 🟢 Haiku | Fast integration sweep |
+| `hydra-sentinel` | 🔵 Sonnet | Deep integration analysis |
+| `hydra-preflight` | 🟢 Haiku | Environment detection, version probing, dep inventory |
 
 **Expected gains:** 2–3× faster tasks, ~50% lower API costs, zero quality loss.
-(Savings calculated against Opus 4.6 at $5/$25 per MTok — February 2026 pricing)
+(Savings calculated against Opus at $5/$25 per MTok — February 2026 pricing)
 
 ## Usage
 

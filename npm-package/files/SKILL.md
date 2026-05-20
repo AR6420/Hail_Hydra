@@ -2,7 +2,7 @@
 name: hydra
 description: >
   Multi-agent orchestration framework for Claude Code. Automatically delegates
-  tasks to cheaper, faster sub-agents (Haiku 4.5, Sonnet 4.6) while maintaining
+  tasks to cheaper, faster sub-agents (Haiku, Sonnet) while maintaining
   Opus-level quality through verification. Use when working on any coding task —
   Hydra activates automatically to route file exploration, test running,
   documentation, code writing, debugging, security scanning, and git operations
@@ -165,7 +165,7 @@ these are "easy tokens" that a faster model handles just as well. By routing the
 heads and reserving Opus for genuinely hard problems, we get:
 
 - **2–3× faster task completion** (Haiku responds ~10× faster than Opus)
-- **~50% reduction in API costs** (Haiku 4.5 is 5× cheaper per token than Opus 4.6)
+- **~50% reduction in API costs** (Haiku is 5× cheaper per token than Opus)
 - **Zero quality loss** on tasks within each model's capability band
 
 ## How Hydra Works — The Multi-Head Loop
@@ -769,12 +769,12 @@ that includes: the code change, the security scan result, and the integration
 scan result — not three separate messages.
 
 ### Step 1: Fast Scan (ALWAYS after code changes)
-Dispatch hydra-sentinel-scan (Haiku 4.5) with:
+Dispatch hydra-sentinel-scan (Haiku) with:
 - The list of files modified
 - The functions/exports that changed
 - The git diff if available
 
-Dispatch hydra-guard (Haiku 4.5) IN PARALLEL — they check different things
+Dispatch hydra-guard (Haiku) IN PARALLEL — they check different things
 and don't depend on each other.
 
 ### Step 2: Evaluate Scan Results
@@ -785,7 +785,7 @@ and don't depend on each other.
   → Proceed to Step 3 BEFORE presenting to the user.
 
 ### Step 3: Deep Analysis (conditional)
-Dispatch hydra-sentinel (Sonnet 4.6) with:
+Dispatch hydra-sentinel (Sonnet) with:
 - The original code diff
 - The sentinel-scan report (the JSON with flagged issues)
 - Context about what task was being performed
@@ -840,13 +840,13 @@ scanned and verified — no integration issues."
 For these, present results to the user immediately (old flow). No sentinel needed.
 
 ### Cost of the Pipeline
-- Fast scan (sentinel-scan): ~$0.001 per scan (Haiku 4.5)
-- Guard scan: ~$0.001 per scan (Haiku 4.5)
-- Deep analysis (sentinel): ~$0.01 per analysis (Sonnet 4.6, only when needed)
+- Fast scan (sentinel-scan): ~$0.001 per scan (Haiku)
+- Guard scan: ~$0.001 per scan (Haiku)
+- Deep analysis (sentinel): ~$0.01 per analysis (Sonnet, only when needed)
 - ~80%+ of code changes pass the fast scan clean — total cost: ~$0.002
 - Only the ~20% with flagged issues incur the deep analysis cost
 
-Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
+Note: Savings calculated against Opus pricing ($5/$25 per MTok) as of February 2026.
 
 ## Orchestrator Memory — CLAUDE.md Integration
 
@@ -915,19 +915,19 @@ it's a structured footer in plain markdown.
 **🐉 Hydra Dispatch Log**
 | Step | Agent | Model | Task | Verdict |
 |------|-------|-------|------|---------|
-| 1 | hydra-scout | Haiku 4.5 | Explored auth module | ✅ Accepted |
-| 1 | hydra-runner | Haiku 4.5 | Ran existing tests | ✅ Accepted |
-| 2 | hydra-coder | Sonnet 4.6 | Fixed null check bug in auth.py:142 | 🔧 Adjusted |
-| 2 | hydra-guard | Haiku 4.5 | Security scan on changes | ✅ Accepted |
-| 3 | hydra-runner | Haiku 4.5 | Ran tests post-fix | ✅ Accepted |
+| 1 | hydra-scout | Haiku | Explored auth module | ✅ Accepted |
+| 1 | hydra-runner | Haiku | Ran existing tests | ✅ Accepted |
+| 2 | hydra-coder | Sonnet | Fixed null check bug in auth.py:142 | 🔧 Adjusted |
+| 2 | hydra-guard | Haiku | Security scan on changes | ✅ Accepted |
+| 3 | hydra-runner | Haiku | Ran tests post-fix | ✅ Accepted |
 
 > **Format note:** Agent column uses the agent name only; Model column shows the versioned model.
-> e.g., "hydra-scout" / "Haiku 4.5", "hydra-coder" / "Sonnet 4.6"
+> e.g., "hydra-scout" / "Haiku", "hydra-coder" / "Sonnet"
 
 **Waves**: 3 | **Agents used**: 5 dispatches | **Rejections**: 0
 **Estimated savings**: ~50% cost reduction vs all-Opus execution
 
-Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
+Note: Savings calculated against Opus pricing ($5/$25 per MTok) as of February 2026.
 ---
 
 ### Status Key
@@ -955,9 +955,9 @@ The dispatch log MUST show sentinel status for every task involving code changes
 
 | Step | Agent | Task | Verdict |
 |------|-------|------|---------|
-| 1 | hydra-coder (Sonnet 4.6) | Fixed auth bug | ✅ Accepted |
+| 1 | hydra-coder (Sonnet) | Fixed auth bug | ✅ Accepted |
 | 2 | hydra-sentinel-scan (Haiku) | Integration sweep | ✅ Clean |
-| 3 | hydra-guard (Haiku 4.5) | Security scan | ✅ Clean |
+| 3 | hydra-guard (Haiku) | Security scan | ✅ Clean |
 
 If sentinel-scan is missing from the dispatch log after a code change,
 something went wrong. This is your self-check.
@@ -1128,16 +1128,16 @@ If the user types any of these exact phrases, respond with the corresponding act
 
 | Head | Model | Role | Tools |
 |------|-------|------|-------|
-| `hydra-scout` | 🟢 Haiku 4.5 | Codebase exploration, file search, reading, map building | Read, Grep, Glob, Bash, Write |
-| `hydra-runner` | 🟢 Haiku 4.5 | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
-| `hydra-scribe` | 🟢 Haiku 4.5 | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
-| `hydra-guard` | 🟢 Haiku 4.5 | Security/quality gate after code changes | Read, Grep, Glob, Bash |
-| `hydra-git` | 🟢 Haiku 4.5 | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
-| `hydra-sentinel-scan` | 🟢 Haiku 4.5 | Fast integration sweep after code changes | Read, Grep, Glob |
-| `hydra-preflight` | 🟢 Haiku 4.5 | Environment detection, version probing, dep inventory | Read, Bash, Glob |
-| `hydra-coder` | 🔵 Sonnet 4.6 | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
-| `hydra-analyst` | 🔵 Sonnet 4.6 | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
-| `hydra-sentinel` | 🔵 Sonnet 4.6 | Deep integration analysis (when scan flags issues) | Read, Grep, Glob, Write |
+| `hydra-scout` | 🟢 Haiku | Codebase exploration, file search, reading, map building | Read, Grep, Glob, Bash, Write |
+| `hydra-runner` | 🟢 Haiku | Test execution, builds, linting, validation | Read, Bash, Glob, Grep |
+| `hydra-scribe` | 🟢 Haiku | Documentation, READMEs, comments, changelogs | Read, Write, Edit, Glob, Grep |
+| `hydra-guard` | 🟢 Haiku | Security/quality gate after code changes | Read, Grep, Glob, Bash |
+| `hydra-git` | 🟢 Haiku | Git operations: commit, branch, diff, log | Read, Bash, Glob, Grep |
+| `hydra-sentinel-scan` | 🟢 Haiku | Fast integration sweep after code changes | Read, Grep, Glob |
+| `hydra-preflight` | 🟢 Haiku | Environment detection, version probing, dep inventory | Read, Bash, Glob |
+| `hydra-coder` | 🔵 Sonnet | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
+| `hydra-analyst` | 🔵 Sonnet | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
+| `hydra-sentinel` | 🔵 Sonnet | Deep integration analysis (when scan flags issues) | Read, Grep, Glob, Write |
 
 ## Measuring Impact
 

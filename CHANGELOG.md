@@ -5,6 +5,23 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-05-26
+
+### Fixed
+- **Sentinel pending indicator now clears after scan completes** — The
+  statusline previously showed a persistent `⚠ Sentinel pending (N files)`
+  counter even after `hydra-sentinel-scan` had successfully verified the
+  changes. Pending flag is cleared at scan completion and the counter no
+  longer accumulates across the session.
+
+### Added
+- **`✅ Sentinel clean` confirmation in statusline** — After a successful
+  sentinel scan, the statusline displays `✅ Sentinel clean` (green) for
+  ~60 seconds before fading to quiet state. Provides positive feedback
+  that verification ran and the session is clear.
+- Auto-guard hook now invalidates the clean marker when new edits occur,
+  so subsequent edits immediately revert the indicator to pending.
+
 ## [2.4.0] - 2026-05-22
 
 ### Added

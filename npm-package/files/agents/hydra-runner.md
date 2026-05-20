@@ -4,7 +4,7 @@ description: >
   🟢 Hydra's execution head — fast test runner, build executor, and validation agent.
   Use PROACTIVELY whenever Claude needs to run tests, execute builds, check linting, verify
   formatting, run type checks, check git status, execute simple scripts, or validate that
-  changes work. Runs on Haiku 4.5 for speed — ideal for quick feedback loops during development.
+  changes work. Runs on Haiku for speed — ideal for quick feedback loops during development.
   May run in parallel with other Hydra agents — produces self-contained, clearly structured
   output so the orchestrator can merge results from multiple simultaneous agents.
 tools: Read, Bash, Glob, Grep

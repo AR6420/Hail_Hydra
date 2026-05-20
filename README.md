@@ -44,7 +44,7 @@
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for Claude Code. It ships 10 specialized agents pinned to cost-effective models (Haiku 4.5 and Sonnet 4.6), 12 slash commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
+**Hydra** is a curated multi-agent toolkit for Claude Code. It ships 10 specialized agents pinned to cost-effective models (Haiku and Sonnet), 12 slash commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -131,16 +131,16 @@ cd hydra
 ```
 ~/.claude/
 ├── agents/                      # 10 agent definitions (all with memory: project)
-│   ├── hydra-scout.md           # 🟢 Haiku 4.5 — explore codebase
-│   ├── hydra-runner.md          # 🟢 Haiku 4.5 — run tests/builds
-│   ├── hydra-scribe.md          # 🟢 Haiku 4.5 — write documentation
-│   ├── hydra-guard.md           # 🟢 Haiku 4.5 — security/quality gate
-│   ├── hydra-git.md             # 🟢 Haiku 4.5 — git operations
-│   ├── hydra-sentinel-scan.md   # 🟢 Haiku 4.5 — fast integration sweep
-│   ├── hydra-preflight.md       # 🟢 Haiku 4.5 — environment preflight check
-│   ├── hydra-coder.md           # 🔵 Sonnet 4.6 — write/edit code
-│   ├── hydra-analyst.md         # 🔵 Sonnet 4.6 — debug/diagnose
-│   └── hydra-sentinel.md        # 🔵 Sonnet 4.6 — deep integration analysis
+│   ├── hydra-scout.md           # 🟢 Haiku — explore codebase
+│   ├── hydra-runner.md          # 🟢 Haiku — run tests/builds
+│   ├── hydra-scribe.md          # 🟢 Haiku — write documentation
+│   ├── hydra-guard.md           # 🟢 Haiku — security/quality gate
+│   ├── hydra-git.md             # 🟢 Haiku — git operations
+│   ├── hydra-sentinel-scan.md   # 🟢 Haiku — fast integration sweep
+│   ├── hydra-preflight.md       # 🟢 Haiku — environment preflight check
+│   ├── hydra-coder.md           # 🔵 Sonnet — write/edit code
+│   ├── hydra-analyst.md         # 🔵 Sonnet — debug/diagnose
+│   └── hydra-sentinel.md        # 🔵 Sonnet — deep integration analysis
 ├── commands/hydra/              # 10 slash commands
 │   ├── help.md                  # /hydra:help
 │   ├── status.md                # /hydra:status
@@ -202,8 +202,8 @@ vars, and incompatible dependency pairs before they cost you hours of debugging.
 ```
 
 Hydra runs a two-phase check:
-1. **Detection** (Haiku 4.5): probes runtimes, CUDA stack, deps, env vars, services
-2. **Analysis** (Sonnet 4.6): cross-references against compatibility matrices, flags
+1. **Detection** (Haiku): probes runtimes, CUDA stack, deps, env vars, services
+2. **Analysis** (Sonnet): cross-references against compatibility matrices, flags
    ✅ COMPATIBLE / ⚠️ KNOWN RISK / ❌ CONFIRMED BREAK
 
 ---
@@ -281,12 +281,12 @@ After updating, restart Claude Code to load the new files.
 
 ## ✨ Features
 
-- **Ten specialized heads** — Haiku 4.5 (fast) and Sonnet 4.6 (capable) heads for every task type, including preflight detection for new projects
+- **Ten specialized heads** — Haiku (fast) and Sonnet (capable) heads for every task type, including preflight detection for new projects
 - **Sentinel integration integrity** — Two-tier verification (fast scan + deep analysis) catches ~72% of integration bugs before runtime
 - **Persistent agent memory** — Every agent remembers your codebase patterns, conventions, and past decisions across sessions
 - **Orchestrator memory** — Opus maintains its own notes on fragile zones, routing patterns, and known issues via CLAUDE.md
 - **Quality-first pipeline** — Code changes block until sentinel + guard verification completes; nothing reaches you unchecked
-- **Auto-Guard** — hydra-guard (Haiku 4.5) automatically scans code changes for security issues after every hydra-coder run
+- **Auto-Guard** — hydra-guard (Haiku) automatically scans code changes for security issues after every hydra-coder run
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
 - **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose`, `/hydra:report` for full session control
 - **Task completion sound** — plays a notification when Claude finishes substantial tasks
@@ -316,7 +316,7 @@ Code change lands (hydra-coder finishes)
     │
     ▼
 ┌──────────────────────────────────────┐
-│  🟢 hydra-sentinel-scan (Haiku 4.5)  │  ← Runs on EVERY code change (~1-2s)
+│  🟢 hydra-sentinel-scan (Haiku)  │  ← Runs on EVERY code change (~1-2s)
 │  Fast sweep: imports, exports,       │
 │  signatures, dependencies            │
 └──────────────┬───────────────────────┘
@@ -328,7 +328,7 @@ Code change lands (hydra-coder finishes)
                │
                ▼
 ┌──────────────────────────────────────┐
-│  🔵 hydra-sentinel (Sonnet 4.6)      │  ← Only when scan flags issues (~20-30%)
+│  🔵 hydra-sentinel (Sonnet)      │  ← Only when scan flags issues (~20-30%)
 │  Deep analysis: confirms real issues, │
 │  dismisses false positives,          │
 │  proposes fixes                      │
@@ -546,15 +546,15 @@ the models improve, but because context quality improves.
 
 ## 🤔 Why I Built This
 
-After Opus 4.6 dropped, I noticed something frustrating — code execution felt slowww. Reallyyy Slow. Not because the model was worse, but because I was feeding everything through one massive model. Every file read, every grep, every test run, every docstring — all burning through Opus-tier tokens. The result? Frequent context compaction, more hallucinations, and an API bill that made me wince.
+After Opus 4 dropped, I noticed something frustrating — code execution felt slowww. Reallyyy Slow. Not because the model was worse, but because I was feeding everything through one massive model. Every file read, every grep, every test run, every docstring — all burning through Opus-tier tokens. The result? Frequent context compaction, more hallucinations, and an API bill that made me wince.
 
 So I started experimenting. I switched to Haiku for the simple stuff — running commands, tool calls, file exploration. Sonnet for code generation, refactoring, reviews. And kept Opus only for what it's actually good at: planning, architecture, and the hard decisions. The result surprised me. Same code quality. Sometimes better — because each model was operating within a focused context window instead of one overloaded one.
 
 Five agents. Five separate context windows. Each with a clearly defined job. They do the work, and only pass results back to the brain — Opus. The outcome:
 
 - Longer coding sessions (less compaction, less context blowup)
-- Drastically reduced API costs (Haiku 4.5 is 5× cheaper than Opus 4.6)
-- Faster execution (Haiku 4.5 responds ~10× faster)
+- Drastically reduced API costs (Haiku is 5× cheaper than Opus)
+- Faster execution (Haiku responds ~10× faster)
 - Same or better code quality (focused context > bloated context)
 - Zero manual model switching (this is the big one)
 
@@ -596,7 +596,7 @@ Hydra applies this at the **task level**:
                           └─────────────────────────────────┘
 ```
 
-The math is simple: if 70% of tasks can be handled by Haiku 4.5 (10× faster, 5× cheaper) and 20% by Sonnet 4.6 (3× faster, ~1.7× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
+The math is simple: if 70% of tasks can be handled by Haiku (10× faster, 5× cheaper) and 20% by Sonnet (3× faster, ~1.7× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
 
 ---
 
@@ -609,7 +609,7 @@ User Request
     │                                                      │
     ▼                                                      ▼
 ┌─────────────────────────────┐            ┌──────────────────────────────┐
-│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku 4.5)  │
+│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku)  │
 │  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
 │  Plans waves                │            │  "Find files relevant to      │
 │  Decides blocking / not     │            │   [user's request]"           │
@@ -653,41 +653,41 @@ User Request
 
 | Head | Model | Speed | Role | Personality |
 |:-----|:------|:------|:-----|:------------|
-| **hydra-scout (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
-| **hydra-runner (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
-| **hydra-scribe (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
-| **hydra-guard (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Security/quality gate after code changes | *"No secrets. No injection. You're clean."* |
-| **hydra-git (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
-| **hydra-sentinel-scan (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Fast integration sweep after code changes | *"Imports check out. Signatures match. Clean."* |
-| **hydra-preflight (Haiku 4.5)** | 🟢 Haiku 4.5 | ⚡⚡⚡ | Environment detection, version probing, dep inventory | *"Your PyTorch/CUDA pair is broken. Pin torch==2.7.0."* |
-| **hydra-coder (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
-| **hydra-analyst (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
-| **hydra-sentinel (Sonnet 4.6)** | 🔵 Sonnet 4.6 | ⚡⚡ | Deep integration analysis (when scan flags issues) | *"2 real issues confirmed. 1 false positive dismissed."* |
+| **hydra-scout (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
+| **hydra-runner (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
+| **hydra-scribe (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
+| **hydra-guard (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Security/quality gate after code changes | *"No secrets. No injection. You're clean."* |
+| **hydra-git (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
+| **hydra-sentinel-scan (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Fast integration sweep after code changes | *"Imports check out. Signatures match. Clean."* |
+| **hydra-preflight (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Environment detection, version probing, dep inventory | *"Your PyTorch/CUDA pair is broken. Pin torch==2.7.0."* |
+| **hydra-coder (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
+| **hydra-analyst (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
+| **hydra-sentinel (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Deep integration analysis (when scan flags issues) | *"2 real issues confirmed. 1 false positive dismissed."* |
 
 ### Task Routing Cheat Sheet
 
 ```
 Is it read-only? ─── Yes ──→ Finding files?
-    │                           ├── Yes: hydra-scout (Haiku 4.5) 🟢
-    │                           └── No:  hydra-analyst (Sonnet 4.6) 🔵
+    │                           ├── Yes: hydra-scout (Haiku) 🟢
+    │                           └── No:  hydra-analyst (Sonnet) 🔵
     │
-    No ──→ Is it a git operation? ─── Yes ──→ hydra-git (Haiku 4.5) 🟢
+    No ──→ Is it a git operation? ─── Yes ──→ hydra-git (Haiku) 🟢
     │
-    No ──→ Is it a security scan? ─── Yes ──→ hydra-guard (Haiku 4.5) 🟢
+    No ──→ Is it a security scan? ─── Yes ──→ hydra-guard (Haiku) 🟢
     │
-    No ──→ Just running a command? ─── Yes ──→ hydra-runner (Haiku 4.5) 🟢
+    No ──→ Just running a command? ─── Yes ──→ hydra-runner (Haiku) 🟢
     │
-    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe (Haiku 4.5) 🟢
+    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe (Haiku) 🟢
     │
-    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet 4.6) 🔵
+    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet) 🔵
     │
-    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus 4.6 (handle it yourself)
+    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus (handle it yourself)
 
-    Code was just changed? ─── Yes ──→ hydra-sentinel-scan (Haiku 4.5) 🟢
+    Code was just changed? ─── Yes ──→ hydra-sentinel-scan (Haiku) 🟢
         │                                   │
         │                              Issues found?
         │                              ├── No:  Done ✅
-        │                              └── Yes: hydra-sentinel (Sonnet 4.6) 🔵
+        │                              └── Yes: hydra-sentinel (Sonnet) 🔵
 ```
 
 ---
@@ -771,8 +771,8 @@ hydra/
 
 | Metric | Without Hydra | With Hydra | Improvement |
 |:-------|:-------------|:-----------|:------------|
-| **Task Speed (per dispatch)** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku 4.5 heads respond ~10× faster |
-| **API Cost (per dispatch)** | 1× (Opus 4.6 for everything) | ~0.5× per dispatch | 40–60% cheaper when invoked |
+| **Task Speed (per dispatch)** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku heads respond ~10× faster |
+| **API Cost (per dispatch)** | 1× (Opus for everything) | ~0.5× per dispatch | 40–60% cheaper when invoked |
 | **Quality** | Opus-level | Opus-level | Zero degradation |
 | **User Experience** | Normal | Normal | Explicit invocation; one automatic touchpoint (post-substantial-edit verification) |
 | **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
@@ -784,18 +784,18 @@ hydra/
 
 ### How the Savings Work
 
-| Task Type | % of Work | Model Used | Input Cost vs Opus 4.6 | Output Cost vs Opus 4.6 |
+| Task Type | % of Work | Model Used | Input Cost vs Opus | Output Cost vs Opus |
 |:----------|:----------|:-----------|:----------------------|:-----------------------|
-| Exploration, search, tests, docs | ~50% | 🟢 Haiku 4.5 | 20% ($1 vs $5/MTok) | 20% ($5 vs $25/MTok) |
-| Implementation, review, debugging | ~30% | 🔵 Sonnet 4.6 | 60% ($3 vs $5/MTok) | 60% ($15 vs $25/MTok) |
-| Architecture, hard problems | ~20% | 🧠 Opus 4.6 | 100% (no change) | 100% (no change) |
-| Sentinel scan (fast) | Auto (every code change) | 🟢 Haiku 4.5 | 20% | 20% |
-| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet 4.6 | 60% | 60% |
+| Exploration, search, tests, docs | ~50% | 🟢 Haiku | 20% ($1 vs $5/MTok) | 20% ($5 vs $25/MTok) |
+| Implementation, review, debugging | ~30% | 🔵 Sonnet | 60% ($3 vs $5/MTok) | 60% ($15 vs $25/MTok) |
+| Architecture, hard problems | ~20% | 🧠 Opus | 100% (no change) | 100% (no change) |
+| Sentinel scan (fast) | Auto (every code change) | 🟢 Haiku | 20% | 20% |
+| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet | 60% | 60% |
 | **Blended effective cost** | | | **~48% of all-Opus** | **~48% of all-Opus** |
 
 Note: When Hydra is invoked across a representative mix of task types, blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48% of all-Opus.
 Per-dispatch savings of **40–60%** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
-Savings calculated against Opus 4.6 ($5/$25 per MTok) as of February 2026.
+Savings calculated against Opus ($5/$25 per MTok) as of February 2026.
 
 ### Measure Your Savings
 
@@ -811,7 +811,7 @@ The most accurate way to measure Hydra's impact — no estimation, real numbers:
 That's it. Real data beats theoretical calculations every time.
 
 #### What to expect (based on February 2026 API pricing)
-When Hydra is actively invoked across a typical mix (50% Haiku 4.5, 30% Sonnet 4.6, 20% Opus 4.6):
+When Hydra is actively invoked across a typical mix (50% Haiku, 30% Sonnet, 20% Opus):
 - **Input tokens**: ~52% cheaper per dispatch ($2.40 vs $5.00 per MTok)
 - **Output tokens**: ~52% cheaper per dispatch ($12.00 vs $25.00 per MTok)
 - **Per-dispatch blended**: 40–60% cost reduction on Hydra-invoked work
@@ -819,8 +819,8 @@ When Hydra is actively invoked across a typical mix (50% Haiku 4.5, 30% Sonnet 4
 
 Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your Claude Code session JSONL — no estimation.
 
-> Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
-> Savings would be significantly higher compared to Opus 4.1/4.0 ($15/$75 per MTok).
+> Note: Savings calculated against Opus pricing ($5/$25 per MTok) as of February 2026.
+> Savings would be significantly higher compared to older Opus versions ($15/$75 per MTok).
 
 ### Additional Savings from Codebase Map (v2.1.0+)
 
@@ -860,7 +860,7 @@ For those who want to go deeper, here's how Hydra maps to the original speculati
 
 | Speculative Decoding Concept | Hydra Equivalent |
 |:-----------------------------|:-----------------|
-| Target model (large) | 🧠 Opus 4.6 — the orchestrator |
+| Target model (large) | 🧠 Opus — the orchestrator |
 | Draft model (small) | 🟢 Haiku / 🔵 Sonnet heads |
 | Draft K tokens | Heads draft the full task output |
 | Parallel verification | Opus glances at the output |
@@ -924,7 +924,7 @@ Removes all agents, commands, hooks, and cache files. Deregisters hooks from
 <details>
 <summary><strong>What is Sentinel and how does it work?</strong></summary>
 <br/>
-Sentinel is a two-tier integration verification system. After every code change, <strong>hydra-sentinel-scan</strong> (Haiku 4.5) runs a fast sweep (~1-2s) checking imports, exports, function signatures, and dependencies. If it finds potential issues, <strong>hydra-sentinel</strong> (Sonnet 4.6) performs deep analysis to confirm real problems and dismiss false positives. The result is ~72% of integration bugs caught before they reach you.
+Sentinel is a two-tier integration verification system. After every code change, <strong>hydra-sentinel-scan</strong> (Haiku) runs a fast sweep (~1-2s) checking imports, exports, function signatures, and dependencies. If it finds potential issues, <strong>hydra-sentinel</strong> (Sonnet) performs deep analysis to confirm real problems and dismiss false positives. The result is ~72% of integration bugs caught before they reach you.
 </details>
 
 <details>
@@ -1040,7 +1040,7 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/>
   <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
   <br/><br/>
-  <em>Built with 🧠 by Claude Opus 4.6 — ironically, the model this framework is designed to use less of.</em>
+  <em>Built with 🧠 by Claude Opus — ironically, the model this framework is designed to use less of.</em>
   <br/>
   <em>v2.0.4 — Now with memory, integration integrity, and task notifications.</em>
 </p>

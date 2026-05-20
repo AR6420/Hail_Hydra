@@ -73,6 +73,12 @@ process.stdin.on('end', () => {
 
     fs.writeFileSync(sentinelFlag, JSON.stringify(pending));
 
+    // New edit invalidates any prior "clean" marker
+    try {
+      const scanMarker = path.join(sentinelDir, `${sessionId}-last-scan`);
+      if (fs.existsSync(scanMarker)) fs.unlinkSync(scanMarker);
+    } catch (_) { /* silent — never block */ }
+
     // === Substantial-Edit Detection + Directive Injection (v2.4.0+) ===
     // For Write, MultiEdit, or large Edits, inject a directive recommending
     // hydra-sentinel-scan dispatch. Trivial edits stay silent.
