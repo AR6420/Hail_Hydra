@@ -16,9 +16,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Opus_4.6-🧠_The_Body-7C3AED?style=flat-square" alt="Opus" />
-  <img src="https://img.shields.io/badge/Sonnet_4.6-🔵_Smart_Heads-3B82F6?style=flat-square" alt="Sonnet" />
-  <img src="https://img.shields.io/badge/Haiku_4.5-🟢_Fast_Heads-22C55E?style=flat-square" alt="Haiku" />
+  <img src="https://img.shields.io/badge/Opus-🧠_The_Body-7C3AED?style=flat-square" alt="Opus" />
+  <img src="https://img.shields.io/badge/Sonnet-🔵_Smart_Heads-3B82F6?style=flat-square" alt="Sonnet" />
+  <img src="https://img.shields.io/badge/Haiku-🟢_Fast_Heads-22C55E?style=flat-square" alt="Haiku" />
 </p>
 
 <p align="center">
