@@ -27,7 +27,7 @@ AGENTS=("hydra-scout" "hydra-runner" "hydra-scribe" "hydra-guard" "hydra-git" "h
 
 COMMANDS=("update" "status" "help" "config" "guard" "quiet" "verbose" "preflight" "stats" "report" "map" "stfu")
 HOOKS=("hydra-check-update.js" "hydra-statusline.js" "hydra-auto-guard.js")
-PACKAGE_VERSION="2.4.1"
+PACKAGE_VERSION="2.4.2"
 
 COMMANDS_SOURCE_DIR="$(dirname "$SCRIPT_DIR")/commands/hydra"
 HOOKS_SOURCE_DIR="$(dirname "$SCRIPT_DIR")/hooks"

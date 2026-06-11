@@ -38,14 +38,30 @@ function findActiveSessionFile() {
     if (!fs.existsSync(projectsDir)) return null;
 
     const cwd = process.cwd();
-    const slug = cwd.replace(/[^a-zA-Z0-9-]/g, '-').replace(/^-+/, '');
+    // Claude Code names project dirs by replacing every non-alphanumeric char
+    // (including the leading separator) with '-'. Match that exactly — do NOT
+    // strip the leading dash, or exact matches fail for underscore/special paths.
+    const slug = cwd.replace(/[^a-zA-Z0-9-]/g, '-');
 
     let sessionDir = path.join(projectsDir, slug);
     if (!fs.existsSync(sessionDir)) {
       const all = fs.readdirSync(projectsDir);
-      const match = all.find(d => d.toLowerCase() === slug.toLowerCase())
-                 || all.find(d => d.toLowerCase().endsWith(path.basename(cwd).toLowerCase()));
-      if (!match) return null;
+      // Normalize basename the same way (underscores/specials → dashes) so the
+      // endsWith fallback compares like-for-like.
+      const baseSlug = path.basename(cwd).replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+      const match = all.find(d => d === slug)
+                 || all.find(d => d.toLowerCase() === slug.toLowerCase())
+                 || all.find(d => d.toLowerCase().endsWith(baseSlug));
+      if (!match) {
+        if (process.env.HYDRA_DEBUG === '1') {
+          console.error('[hydra-token-math] No session dir matched.');
+          console.error('  cwd:', cwd);
+          console.error('  computed slug:', slug);
+          console.error('  projects dir contents:',
+            fs.existsSync(projectsDir) ? fs.readdirSync(projectsDir).slice(0, 10) : '(none)');
+        }
+        return null;
+      }
       sessionDir = path.join(projectsDir, match);
     }
 
