@@ -14,7 +14,7 @@ const os = require('os');
 const PRICING = {
   'claude-haiku-4':  { input: 1, output: 5 },
   'claude-sonnet-4': { input: 3, output: 15 },
-  'claude-opus-4':   { input: 5, output: 25 }
+  'claude-opus-4':   { input: 15, output: 75 }
 };
 
 function getPrice(model) {
