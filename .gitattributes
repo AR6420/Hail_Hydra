@@ -1,0 +1,7 @@
+# Normalize line endings to LF in the repository.
+# Prevents CRLF-only diffs from Windows contributors.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary

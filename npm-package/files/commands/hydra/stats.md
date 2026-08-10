@@ -12,15 +12,21 @@ Math + JSONL parsing live in the shared helper at
 `~/.claude/hooks/hydra-token-math.js`. Statusline and `/hydra:stats` both
 call it so numbers stay consistent.
 
-## Pricing (per 1M tokens, verified 2026-05 for Claude 4.x)
+## Pricing (per 1M tokens, verified 2026-08 for Claude 4.x / 5.x)
 
 | Tier   | Input | Output | Cache read |
 |--------|-------|--------|------------|
 | Haiku  | $1    | $5     | 10% of input |
 | Sonnet | $3    | $15    | 10% of input |
 | Opus   | $5    | $25    | 10% of input |
+| Fable  | $10   | $50    | 10% of input |
 
-Edit the `PRICING` map in `hydra-token-math.js` if Anthropic publishes new prices.
+Prices are keyed by tier, not by model ID — Opus 4.6 through Opus 5 all bill at
+$5/$25, so point releases need no change. Edit the `PRICING` map in
+`hydra-token-math.js` only if Anthropic publishes new prices or ships a new tier.
+
+Fable sits *above* the Opus baseline, so Fable turns are not counted as
+delegations and they reduce (never increase) reported savings.
 
 ## Run
 
@@ -75,7 +81,7 @@ function fmt(n) {
   return n.toString();
 }
 
-const { stats, totalTurns, haikuCost, sonnetCost, opusCost,
+const { stats, totalTurns, haikuCost, sonnetCost, opusCost, fableCost,
         actualCost, hypotheticalCost, savedUSD, savedPct,
         delegatedTurns, delegationRate, sessionFile, unknownModels } = summary;
 
@@ -91,6 +97,9 @@ if (delegatedTurns === 0 || savedUSD < 0.01) {
   console.log(bar);
   console.log('');
   console.log('🟣 Opus  (' + stats.opus.turns + ' turns):  ' + fmt(stats.opus.input + stats.opus.cache_create) + ' in / ' + fmt(stats.opus.output) + ' out  → \$' + opusCost.toFixed(3));
+  if (stats.fable.turns > 0) {
+    console.log('🔴 Fable (' + stats.fable.turns + ' turns):  ' + fmt(stats.fable.input + stats.fable.cache_create) + ' in / ' + fmt(stats.fable.output) + ' out  → \$' + fableCost.toFixed(3));
+  }
   console.log(bar);
   console.log('');
   console.log('No Hydra subagent dispatches recorded in this session.');
@@ -121,6 +130,9 @@ console.log('');
 console.log('🟢 Haiku  (' + stats.haiku.turns  + ' turns):  ' + fmt(stats.haiku.input  + stats.haiku.cache_create)  + ' in / ' + fmt(stats.haiku.output)  + ' out  → \$' + haikuCost.toFixed(3));
 console.log('🔵 Sonnet (' + stats.sonnet.turns + ' turns):  ' + fmt(stats.sonnet.input + stats.sonnet.cache_create) + ' in / ' + fmt(stats.sonnet.output) + ' out  → \$' + sonnetCost.toFixed(3));
 console.log('🟣 Opus   (' + stats.opus.turns   + ' turns):  ' + fmt(stats.opus.input   + stats.opus.cache_create)   + ' in / ' + fmt(stats.opus.output)   + ' out  → \$' + opusCost.toFixed(3));
+if (stats.fable.turns > 0) {
+  console.log('🔴 Fable  (' + stats.fable.turns + ' turns):  ' + fmt(stats.fable.input + stats.fable.cache_create) + ' in / ' + fmt(stats.fable.output) + ' out  → \$' + fableCost.toFixed(3));
+}
 console.log(bar);
 console.log('');
 console.log('Delegation rate:    ' + delegationRate.toFixed(1) + '% (' + delegatedTurns + '/' + totalTurns + ' turns)');

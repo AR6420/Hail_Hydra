@@ -11,23 +11,31 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Keyed by tier, not model prefix — getTier() owns the model→tier mapping, so
+// new point releases (opus-5, sonnet-5, ...) need no change here. Only add an
+// entry when Anthropic ships a genuinely new tier.
 const PRICING = {
-  'claude-haiku-4':  { input: 1, output: 5 },
-  'claude-sonnet-4': { input: 3, output: 15 },
-  'claude-opus-4':   { input: 5, output: 25 }
+  haiku:  { input: 1,  output: 5  },
+  sonnet: { input: 3,  output: 15 },
+  opus:   { input: 5,  output: 25 },
+  fable:  { input: 10, output: 50 }
 };
 
+// Tiers cheaper than the Opus baseline. Fable is deliberately excluded — it
+// costs more than Opus, so routing to it is an escalation, not a delegation.
+const DELEGATED_TIERS = ['haiku', 'sonnet'];
+const TIERS = Object.keys(PRICING);
+
 function getPrice(model) {
-  for (const prefix in PRICING) {
-    if (model.startsWith(prefix)) return PRICING[prefix];
-  }
-  return null;
+  return PRICING[getTier(model)] || null;
 }
 
 function getTier(model) {
   if (model.startsWith('claude-haiku'))  return 'haiku';
   if (model.startsWith('claude-sonnet')) return 'sonnet';
   if (model.startsWith('claude-opus'))   return 'opus';
+  if (model.startsWith('claude-fable'))  return 'fable';
+  if (model.startsWith('claude-mythos')) return 'fable';  // same pricing as Fable
   return null;
 }
 
@@ -77,11 +85,10 @@ function findActiveSessionFile() {
 }
 
 function parseSession(sessionFile) {
-  const stats = {
-    haiku:  { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 },
-    sonnet: { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 },
-    opus:   { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 }
-  };
+  const stats = {};
+  for (const tier of TIERS) {
+    stats[tier] = { input: 0, output: 0, cache_read: 0, cache_create: 0, turns: 0 };
+  }
   const unknownModels = new Set();
   let totalTurns = 0;
 
@@ -117,7 +124,7 @@ function tierCost(s, p) {
 }
 
 function asOpusCost(s) {
-  return tierCost(s, PRICING['claude-opus-4']);
+  return tierCost(s, PRICING.opus);
 }
 
 function computeSummary() {
@@ -127,18 +134,19 @@ function computeSummary() {
   const { stats, totalTurns, unknownModels } = parseSession(sessionFile);
   if (totalTurns === 0) return { available: false };
 
-  const haikuCost  = tierCost(stats.haiku,  PRICING['claude-haiku-4']);
-  const sonnetCost = tierCost(stats.sonnet, PRICING['claude-sonnet-4']);
-  const opusCost   = tierCost(stats.opus,   PRICING['claude-opus-4']);
-  const actualCost = haikuCost + sonnetCost + opusCost;
-
-  const hypotheticalCost =
-    asOpusCost(stats.haiku) + asOpusCost(stats.sonnet) + asOpusCost(stats.opus);
+  const costs = {};
+  let actualCost = 0;
+  let hypotheticalCost = 0;
+  for (const tier of TIERS) {
+    costs[tier] = tierCost(stats[tier], PRICING[tier]);
+    actualCost += costs[tier];
+    hypotheticalCost += asOpusCost(stats[tier]);
+  }
 
   const savedUSD = Math.max(0, hypotheticalCost - actualCost);
   const savedPct = hypotheticalCost > 0 ? (savedUSD / hypotheticalCost) * 100 : 0;
 
-  const delegatedTurns = stats.haiku.turns + stats.sonnet.turns;
+  const delegatedTurns = DELEGATED_TIERS.reduce((n, t) => n + stats[t].turns, 0);
   const delegationRate = totalTurns > 0 ? (delegatedTurns / totalTurns) * 100 : 0;
 
   return {
@@ -146,7 +154,10 @@ function computeSummary() {
     sessionFile,
     totalTurns,
     stats,
-    haikuCost, sonnetCost, opusCost,
+    costs,
+    // Named aliases kept for existing consumers (/hydra:stats reads these).
+    haikuCost: costs.haiku, sonnetCost: costs.sonnet,
+    opusCost: costs.opus,   fableCost: costs.fable,
     actualCost, hypotheticalCost,
     savedUSD, savedPct,
     delegatedTurns, delegationRate,
@@ -175,5 +186,7 @@ module.exports = {
   asOpusCost,
   getTier,
   getPrice,
-  PRICING
+  PRICING,
+  TIERS,
+  DELEGATED_TIERS
 };
