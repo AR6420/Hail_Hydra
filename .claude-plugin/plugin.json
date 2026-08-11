@@ -1,6 +1,6 @@
 {
   "name": "hail-hydra",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Multi-agent orchestration framework for Claude Code. Routes tasks to specialized Haiku/Sonnet subagents while Opus orchestrates — inspired by speculative decoding. Includes 10 specialized heads, environment preflight checks, and ~50% API cost reduction.",
   "author": {
     "name": "Adarsh Balanolla",
@@ -39,15 +39,35 @@
       "hydra-sentinel-scan",
       "hydra-preflight"
     ],
-    "skills": ["SKILL.md"],
+    "skills": [
+      "SKILL.md",
+      "stfu-agents/SKILL.md"
+    ],
     "hooks": [
       "hydra-check-update.js",
       "hydra-auto-guard.js",
-      "hydra-notify.js"
+      "hydra-notify.js",
+      "hydra-statusline.js",
+      "hydra-token-math.js",
+      "hydra-sentinel-done.js"
+    ],
+    "commands": [
+      "config",
+      "guard",
+      "help",
+      "map",
+      "preflight",
+      "quiet",
+      "report",
+      "stats",
+      "status",
+      "stfu",
+      "update",
+      "verbose"
     ]
   },
   "requirements": {
     "claude_code": ">=1.0.0",
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   }
 }

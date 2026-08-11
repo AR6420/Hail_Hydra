@@ -24,11 +24,11 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        working-directory: npm-package
         run: npm install --ignore-scripts
 
+      # prepack runs `npm run build && npm test` — dist/ is generated fresh
+      # and gated by the test suite before anything is published.
       - name: Publish to npm
-        working-directory: npm-package
         run: npm publish || echo "Version already published to npm — skipping."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -51,11 +51,9 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       - name: Install dependencies
-        working-directory: npm-package
         run: npm install --ignore-scripts
 
       - name: Scope package for GitHub Packages
-        working-directory: npm-package
         run: |
           node -e "
             const fs = require('fs');
@@ -66,7 +64,6 @@ jobs:
           "
 
       - name: Publish to GitHub Packages
-        working-directory: npm-package
         run: npm publish || echo "Version already published to GitHub Packages — skipping."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
