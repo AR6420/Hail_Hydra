@@ -50,6 +50,17 @@ async function runInstall({ hostIds = ['claude'], scope = 'global', configDirOve
     throw new Error('--config-dir can only be used with a single --agent');
   }
 
+  // dist/ is generated (npm run build / prepack) and absent in a fresh dev
+  // checkout — fail fast with a clear message instead of a raw ENOENT.
+  for (const host of hosts) {
+    if (!fs.existsSync(path.join(host.distDir, 'agents'))) {
+      throw new Error(
+        `${host.label} payload missing (${host.distDir}). ` +
+        `Run 'npm run build' first — dist/ is generated, not committed (dev checkout).`
+      );
+    }
+  }
+
   if (dryRun) {
     console.log(chalk.bold('\n  Dry run — planned writes:\n'));
     for (const host of hosts) {
@@ -92,9 +103,12 @@ async function runInstall({ hostIds = ['claude'], scope = 'global', configDirOve
   }
 
   if (!anyFailed) {
-    showInstallComplete(statusLineConfigured, hosts.length > 1 ? notes : null);
+    showInstallComplete(statusLineConfigured, notes.length ? notes : null);
   } else {
     console.log(chalk.yellow('  ⚠ Some files failed to install. Check errors above.\n'));
+    // Partial installs still need the per-host follow-ups (e.g. Codex /hooks trust).
+    for (const note of notes) console.log(chalk.gray(`  ${note}`));
+    if (notes.length) console.log();
   }
 }
 
@@ -108,8 +122,11 @@ async function runUninstall({ hostIds = null, configDirOverride = null, interact
   }
 
   const toRemove = [];
+  const hostTargetCounts = new Map();
   for (const host of hosts) {
-    for (const t of host.uninstallTargets(configDirOverride, VERSION)) {
+    const targets = host.uninstallTargets(configDirOverride, VERSION);
+    hostTargetCounts.set(host.id, targets.length);
+    for (const t of targets) {
       toRemove.push({ ...t, host });
     }
   }
@@ -157,15 +174,29 @@ async function runUninstall({ hostIds = null, configDirOverride = null, interact
 
   // Best-effort cleanup of now-empty directories (deepest first; rmdir
   // fails harmlessly on non-empty dirs, so user files are never at risk).
+  // The climb is bounded to STRICT descendants of each selected host's
+  // config dir and cwd-local base (every host's local base is ./.<id>) so
+  // it can never delete the config dir itself or ancestors above it.
+  const norm = (p) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p));
+  const roots = [];
+  for (const host of hosts) {
+    roots.push(norm(host.configDir(configDirOverride)));
+    roots.push(norm(path.join(process.cwd(), '.' + host.id)));
+  }
+  const inBounds = (d) => roots.some((r) => norm(d).startsWith(r + path.sep));
   for (const dir of [...parentDirs].sort((a, b) => b.length - a.length)) {
     let d = dir;
     for (let i = 0; i < 4; i++) {
+      if (!inBounds(d)) break;
       try { fs.rmdirSync(d); } catch { break; }
       d = path.dirname(d);
     }
   }
 
   for (const host of hosts) {
+    // A host that contributed zero targets has no Hydra install — leave its
+    // user files (settings, context files, config.toml) completely alone.
+    if (!hostTargetCounts.get(host.id)) continue;
     host.uninstallExtras({ configDirOverride, log });
   }
 

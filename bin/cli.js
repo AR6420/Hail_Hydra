@@ -30,7 +30,7 @@ program
   .option('--global', 'Skip prompts, install for all projects')
   .option('--local', 'Skip prompts, install for this project only')
   .option('--both', 'Skip prompts, install to both locations')
-  .option('--yes', 'Non-interactive: accept defaults (requires an agent selection on fresh installs)')
+  .option('--yes', 'Non-interactive: accept defaults (requires an agent selection)')
   .option('--dry-run', 'Print planned writes without writing anything')
   .option('--config-dir <path>', 'Override the config directory (single agent only)')
   .option('--uninstall', 'Remove all Hydra files')

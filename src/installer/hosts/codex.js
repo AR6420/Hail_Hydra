@@ -49,6 +49,7 @@ const path = require('path');
 const os = require('os');
 
 const { sha256 } = require('../manifest');
+const { writeFileAtomic, readUserJson, isPlainObject } = require('../fsutil');
 
 const DIST = path.resolve(__dirname, '..', '..', '..', 'dist', 'codex');
 
@@ -106,7 +107,11 @@ function distSkillNames() {
 // user-level and handled separately.
 function buildManifest(base, version) {
   const entries = [];
-  for (const f of fs.readdirSync(path.join(DIST, 'agents')).sort()) {
+  // Tolerant listing — status/uninstall must degrade gracefully when dist/
+  // is missing; install fails fast on that upfront in installer/index.js.
+  let agentFiles = [];
+  try { agentFiles = fs.readdirSync(path.join(DIST, 'agents')).sort(); } catch {}
+  for (const f of agentFiles) {
     entries.push({
       absPath: path.join(DIST, 'agents', f),
       dest: path.join(base, 'agents', f),
@@ -191,23 +196,40 @@ function installHooks({ configDirOverride, log }) {
 // ── hooks.json merge (C6) ───────────────────────────────────────────────────
 
 const isHydraEntry = (entry) =>
-  Array.isArray(entry.hooks) && entry.hooks.some(
-    (h) => (h.command || '').includes('hydra-') || (h.commandWindows || '').includes('hydra-')
+  entry && Array.isArray(entry.hooks) && entry.hooks.some(
+    (h) => h && ((h.command || '').includes('hydra-') || (h.commandWindows || '').includes('hydra-'))
   );
 
 function hooksJsonPath(configDirOverride) {
   return path.join(configDir(configDirOverride), 'hooks.json');
 }
 
-function registerHooksJson({ configDirOverride }) {
+function registerHooksJson({ configDirOverride, log }) {
   const file = hooksJsonPath(configDirOverride);
   const dir = hooksDir(configDirOverride);
 
-  let json = {};
-  try { json = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
-  if (!json.hooks) json.hooks = {};
+  // Never clobber a file we can't faithfully round-trip: on parse failure or
+  // an unexpected shape, warn and skip registration (file left untouched).
+  const { exists, data, error } = readUserJson(file);
+  if (error) {
+    log.warn(`hooks.json could not be parsed (${error}) — hook registration skipped, file left untouched`);
+    return { failed: true };
+  }
+  const json = exists ? data : {};
+  if (!isPlainObject(json) || (json.hooks !== undefined && !isPlainObject(json.hooks))) {
+    log.warn('hooks.json has an unexpected shape — hook registration skipped, file left untouched');
+    return { failed: true };
+  }
 
   const frag = JSON.parse(fs.readFileSync(path.join(DIST, 'hooks-fragment.json'), 'utf8'));
+  for (const event of Object.keys(frag.hooks)) {
+    if (json.hooks && json.hooks[event] !== undefined && !Array.isArray(json.hooks[event])) {
+      log.warn(`hooks.json hooks.${event} is not an array — hook registration skipped, file left untouched`);
+      return { failed: true };
+    }
+  }
+  if (!json.hooks) json.hooks = {};
+
   // Fully-native path (no mixed separators — the command string should be
   // byte-stable and shell-friendly on this machine).
   const resolve = (s) => (s || '').split(FRAGMENT_HOOKS_PREFIX + '/').join(dir + path.sep);
@@ -227,14 +249,17 @@ function registerHooksJson({ configDirOverride }) {
   }
 
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
+  writeFileAtomic(file, JSON.stringify(json, null, 2) + '\n');
+  return { failed: false };
 }
 
 function deregisterHooksJson({ configDirOverride, log }) {
   const file = hooksJsonPath(configDirOverride);
   try {
     if (!fs.existsSync(file)) return;
-    const json = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const { data: json, error } = readUserJson(file);
+    if (error) { log.warn(`Could not update hooks.json: ${error}`); return; }
+    if (!isPlainObject(json)) return; // nothing of ours in it
     if (json.hooks) {
       for (const event of Object.keys(json.hooks)) {
         json.hooks[event] = json.hooks[event].filter((e) => !isHydraEntry(e));
@@ -246,7 +271,7 @@ function deregisterHooksJson({ configDirOverride, log }) {
       fs.unlinkSync(file); // nothing left but our scaffolding — remove the file
       log.ok('hooks.json removed (contained only Hydra entries)');
     } else {
-      fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
+      writeFileAtomic(file, JSON.stringify(json, null, 2) + '\n');
       log.ok('Hydra entries removed from hooks.json');
     }
   } catch (err) {
@@ -260,7 +285,16 @@ function escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const BLOCK_RE = () => new RegExp(`${escapeRe(MARKER_BEGIN)}[\\s\\S]*?${escapeRe(MARKER_END)}\\n?`, 'g');
+// The block body must never cross another BEGIN marker — with a stray BEGIN
+// in the file, a greedy-ish span would swallow user text up to the real END.
+const NOT_BEGIN = () => `(?:(?!${escapeRe(MARKER_BEGIN)})[\\s\\S])*?`;
+const BLOCK_RE = () => new RegExp(`${escapeRe(MARKER_BEGIN)}${NOT_BEGIN()}${escapeRe(MARKER_END)}\\n?`, 'g');
+
+// Corrupted (unbalanced) markers mean we can't tell where our block ends —
+// refuse to touch the file rather than risk eating user content.
+function markersBalanced(text) {
+  return text.split(MARKER_BEGIN).length === text.split(MARKER_END).length;
+}
 
 function writeContextBlock({ configDirOverride, log }) {
   const file = path.join(configDir(configDirOverride), 'AGENTS.md');
@@ -269,12 +303,18 @@ function writeContextBlock({ configDirOverride, log }) {
   let text = '';
   try { text = fs.readFileSync(file, 'utf8'); } catch {}
 
+  if (!markersBalanced(text)) {
+    log.warn('AGENTS.md hydra markers are unbalanced — file left untouched (fix the markers and re-run)');
+    return false;
+  }
+
   text = text.replace(BLOCK_RE(), '').trimEnd();
   text = text ? `${text}\n\n${block}` : block;
 
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, text, 'utf8');
+  writeFileAtomic(file, text);
   log.ok('AGENTS.md hydra block written');
+  return true;
 }
 
 function removeContextBlock({ configDirOverride, log }) {
@@ -282,12 +322,17 @@ function removeContextBlock({ configDirOverride, log }) {
   try {
     if (!fs.existsSync(file)) return;
     const text = fs.readFileSync(file, 'utf8');
+    if (!markersBalanced(text)) {
+      log.warn('AGENTS.md hydra markers are unbalanced — file left untouched');
+      return;
+    }
     const cleaned = text.replace(BLOCK_RE(), '').trimEnd();
+    if (cleaned === text.trimEnd()) return; // no hydra block — leave the file alone
     if (cleaned === '') {
       // The file held only our block (install created it) — remove it.
       fs.unlinkSync(file);
     } else {
-      fs.writeFileSync(file, cleaned + '\n', 'utf8');
+      writeFileAtomic(file, cleaned + '\n');
     }
     log.ok('AGENTS.md hydra block removed');
   } catch (err) {
@@ -306,8 +351,8 @@ function removeContextBlock({ configDirOverride, log }) {
 //     deleted on uninstall.
 
 const HYDRA_LINE_RE = /^[^\n]* # hydra\n/gm;
-const TOP_BLOCK_RE = () => new RegExp(`^${escapeRe(MARKER_BEGIN)}\\n[\\s\\S]*?${escapeRe(MARKER_END)}\\n\\n?`);
-const EOF_BLOCK_RE = () => new RegExp(`\\n${escapeRe(MARKER_BEGIN)}\\n[\\s\\S]*?${escapeRe(MARKER_END)}\\n?$`);
+const TOP_BLOCK_RE = () => new RegExp(`^${escapeRe(MARKER_BEGIN)}\\n${NOT_BEGIN()}${escapeRe(MARKER_END)}\\n\\n?`);
+const EOF_BLOCK_RE = () => new RegExp(`\\n${escapeRe(MARKER_BEGIN)}\\n${NOT_BEGIN()}${escapeRe(MARKER_END)}\\n?$`);
 
 function stripHydraArtifacts(text) {
   text = text.replace(TOP_BLOCK_RE(), '');
@@ -346,19 +391,25 @@ function applyConfigToml(text, { notifyChainScript }) {
   let notifySkipped = false;
 
   // ── notify chain (C11) — operate on the top-level region only ─────────────
-  const firstTable = text.search(/^\[/m);
+  // TOML allows leading whitespace before keys and table headers, so the
+  // anchors tolerate indentation; a notify-looking line the strict parse
+  // can't own falls back to notifySkipped (never a duplicate key).
+  const firstTable = text.search(/^[ \t]*\[/m);
   const topRegion = firstTable === -1 ? text : text.slice(0, firstTable);
-  const active = /^notify\s*=[^\n]*$/m.exec(topRegion);
+  const notifyLines = topRegion.match(/^[ \t]*notify[ \t]*=[^\n]*$/gm) || [];
 
-  if (active) {
-    const line = active[0];
+  if (notifyLines.length > 1) {
+    // Two top-level notify keys is already invalid TOML — we can't own it.
+    notifySkipped = true;
+  } else if (notifyLines.length === 1) {
+    const line = notifyLines[0];
     if (line.includes('hydra-notify-chain')) {
       // A stale copy of our own line outside the marker block — drop it.
       text = text.replace(line + '\n', '').replace(line, '');
     } else if (/^notify\s*=\s*\[[^\]]*\]\s*(#.*)?$/.test(line.trim())) {
       // Newest save wins: drop older saved copies, then comment this one out
       // in place. (Restoring two notify lines would be duplicate-key TOML.)
-      text = text.replace(/^# hydra-prev: notify[^\n]*\n/gm, '');
+      text = text.replace(/^# hydra-prev: [ \t]*notify[^\n]*\n/gm, '');
       savedNotify = { line, argv: parseNotifyArgv(line) };
       // Function replacement — user text may contain `$&`-style sequences.
       text = text.replace(line, () => `# hydra-prev: ${line}`);
@@ -376,14 +427,16 @@ function applyConfigToml(text, { notifyChainScript }) {
 
   // ── [features] hooks = true (C10) ─────────────────────────────────────────
   // NB: [^\S\n] = whitespace-but-not-newline — a bare \s* would swallow the
-  // line terminator in multiline mode and drag it into the match.
-  const featHeader = /^\[features\][^\S\n]*$/m.exec(text);
+  // line terminator in multiline mode and drag it into the match. The header
+  // may be indented and carry a trailing comment — both are valid TOML, and
+  // missing them would append a duplicate [features] table (invalid TOML).
+  const featHeader = /^[ \t]*\[features\][^\S\n]*(?:#[^\n]*)?$/m.exec(text);
   if (featHeader) {
     const bodyStart = Math.min(featHeader.index + featHeader[0].length + 1, text.length);
     const rest = text.slice(bodyStart);
-    const nextTable = rest.search(/^\[/m);
+    const nextTable = rest.search(/^[ \t]*\[/m);
     const body = nextTable === -1 ? rest : rest.slice(0, nextTable);
-    const hooksLine = /^hooks[^\S\n]*=[^\S\n]*(.+?)[^\S\n]*$/m.exec(body);
+    const hooksLine = /^[ \t]*hooks[^\S\n]*=[^\S\n]*(.+?)[^\S\n]*$/m.exec(body);
     if (!hooksLine) {
       text = text.slice(0, bodyStart) + 'hooks = true # hydra\n' + text.slice(bodyStart);
     } else if (hooksLine[1] !== 'true') {
@@ -436,16 +489,23 @@ function mutateConfigToml({ configDirOverride, log }) {
 
   if (savedNotify) {
     const prevFile = notifyPrevPath(configDirOverride);
+    // Newest save wins — but never silently: name the command being discarded.
+    try {
+      const prev = JSON.parse(fs.readFileSync(prevFile, 'utf8'));
+      if (prev && prev.line && prev.line !== savedNotify.line) {
+        log.warn(`Discarding previously saved notify command (${prev.line.trim()}) — newest save wins`);
+      }
+    } catch {}
     fs.mkdirSync(path.dirname(prevFile), { recursive: true });
     fs.writeFileSync(prevFile, JSON.stringify(savedNotify, null, 2));
     log.ok('Existing notify command saved (will be chained after the Hydra sound)');
   }
   if (notifySkipped) {
-    log.warn('config.toml notify spans multiple lines — left untouched; Hydra sound notifications disabled');
+    log.warn('config.toml notify could not be owned as a single-line array — left untouched; Hydra sound notifications disabled');
   }
 
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, next, 'utf8');
+  writeFileAtomic(file, next);
   log.ok('config.toml hydra blocks written ([features] hooks, notify chain)');
 }
 
@@ -454,15 +514,17 @@ function cleanConfig({ configDirOverride, log }) {
   try {
     if (!fs.existsSync(file)) return;
     const jsonGone = !fs.existsSync(hooksJsonPath(configDirOverride));
-    const cleaned = cleanConfigToml(fs.readFileSync(file, 'utf8'), {
+    const text = fs.readFileSync(file, 'utf8');
+    const cleaned = cleanConfigToml(text, {
       pruneStatePath: jsonGone ? hooksJsonPath(configDirOverride) : null,
     });
+    if (cleaned === text) return; // nothing of ours in the file — leave it alone
     if (cleaned.trim() === '') {
       // Everything in the file was ours (install created it) — remove it
       // rather than leaving an empty config.toml behind.
       fs.unlinkSync(file);
     } else {
-      fs.writeFileSync(file, cleaned, 'utf8');
+      writeFileAtomic(file, cleaned);
     }
     log.ok('config.toml restored (hydra blocks removed, previous notify reinstated)');
   } catch (err) {
@@ -477,6 +539,7 @@ module.exports = {
   label: 'Codex CLI',
   detect,
   configDir,
+  distDir: DIST,
 
   hasAnyInstalled(scope, configDirOverride, version) {
     return bases(scope, configDirOverride).some(([base]) =>
@@ -520,8 +583,8 @@ module.exports = {
 
     if (installSkills({ configDirOverride, log })) anyFailed = true;
     installHooks({ configDirOverride, log });
-    registerHooksJson({ configDirOverride });
-    writeContextBlock({ configDirOverride, log });
+    if (registerHooksJson({ configDirOverride, log }).failed) anyFailed = true;
+    if (!writeContextBlock({ configDirOverride, log })) anyFailed = true;
     mutateConfigToml({ configDirOverride, log });
 
     return { anyFailed, statusLineConfigured: false }; // Codex has no statusline
@@ -560,12 +623,18 @@ module.exports = {
     deregisterHooksJson({ configDirOverride, log });
     removeContextBlock({ configDirOverride, log });
     cleanConfig({ configDirOverride, log }); // after hooks.json removal — state pruning checks it
-    // Sweep now-empty skill dirs (ours only) and the <config>/hydra tree.
+    // Sweep now-empty skill dirs (rmdir only — a user's own files inside a
+    // skill dir survive) and the hydra-OWNED entries under <config>/hydra/;
+    // user files there (e.g. hydra/config/) must survive the uninstall.
     const root = skillsRoot(configDirOverride);
     for (const n of distSkillNames()) {
-      try { fs.rmSync(path.join(root, n), { recursive: true, force: true }); } catch {}
+      try { fs.rmdirSync(path.join(root, n)); } catch {}
     }
-    try { fs.rmSync(path.join(configDir(configDirOverride), 'hydra'), { recursive: true, force: true }); } catch {}
+    const hydraDir = path.join(configDir(configDirOverride), 'hydra');
+    for (const owned of ['hooks', 'cache', 'VERSION', 'manifest.json', 'notify-prev.json']) {
+      try { fs.rmSync(path.join(hydraDir, owned), { recursive: true, force: true }); } catch {}
+    }
+    try { fs.rmdirSync(hydraDir); } catch {}
   },
 
   postInstallNotes() {

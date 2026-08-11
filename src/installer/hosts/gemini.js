@@ -25,8 +25,15 @@ const path = require('path');
 const os = require('os');
 
 const { sha256 } = require('../manifest');
+const { writeFileAtomic, readUserJson, isPlainObject } = require('../fsutil');
 
 const DIST = path.resolve(__dirname, '..', '..', '..', 'dist', 'gemini');
+
+// Tolerant dist listing — status/uninstall must degrade gracefully when
+// dist/ is missing; install fails fast on that upfront in installer/index.js.
+function distFiles(...parts) {
+  try { return fs.readdirSync(path.join(DIST, ...parts)).sort(); } catch { return []; }
+}
 
 const HOOK_FILES = [
   'hydra-auto-guard.js',
@@ -65,10 +72,10 @@ function buildManifest(base, version) {
   const add = (relSrc, dest, display) =>
     entries.push({ absPath: path.join(DIST, relSrc), dest, display, relPath: relSrc });
 
-  for (const f of fs.readdirSync(path.join(DIST, 'agents')).sort()) {
+  for (const f of distFiles('agents')) {
     add(`agents/${f}`, path.join(base, 'agents', f), `agents/${f}`);
   }
-  for (const f of fs.readdirSync(path.join(DIST, 'commands', 'hydra')).sort()) {
+  for (const f of distFiles('commands', 'hydra')) {
     add(`commands/hydra/${f}`, path.join(base, 'commands', 'hydra', f), `commands/hydra/${f}`);
   }
   add('SKILL.md', path.join(base, 'hydra', 'SKILL.md'), 'hydra/SKILL.md');
@@ -145,15 +152,31 @@ function hookCommand(script, configDirOverride) {
 }
 
 const isHydraEntry = (entry) =>
-  Array.isArray(entry.hooks) && entry.hooks.some(
-    (h) => (h.name && String(h.name).startsWith('hydra-')) || (h.command && h.command.includes('hydra-'))
+  entry && Array.isArray(entry.hooks) && entry.hooks.some(
+    (h) => h && ((h.name && String(h.name).startsWith('hydra-')) || (h.command && h.command.includes('hydra-')))
   );
 
-function registerHooksInSettings({ configDirOverride }) {
+function registerHooksInSettings({ configDirOverride, log }) {
   const settingsFile = path.join(configDir(configDirOverride), 'settings.json');
 
-  let settings = {};
-  try { settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8')); } catch {}
+  // Never clobber a file we can't faithfully round-trip: on parse failure or
+  // an unexpected shape, warn and skip registration (file left untouched).
+  const { exists, data, error } = readUserJson(settingsFile);
+  if (error) {
+    log.warn(`settings.json could not be parsed (${error}) — hook registration skipped, file left untouched`);
+    return { failed: true };
+  }
+  const settings = exists ? data : {};
+  if (!isPlainObject(settings) || (settings.hooks !== undefined && !isPlainObject(settings.hooks))) {
+    log.warn('settings.json has an unexpected shape — hook registration skipped, file left untouched');
+    return { failed: true };
+  }
+  for (const event of HOOK_EVENTS) {
+    if (settings.hooks && settings.hooks[event] !== undefined && !Array.isArray(settings.hooks[event])) {
+      log.warn(`settings.json hooks.${event} is not an array — hook registration skipped, file left untouched`);
+      return { failed: true };
+    }
+  }
 
   if (!settings.hooks) settings.hooks = {};
   for (const event of HOOK_EVENTS) {
@@ -173,13 +196,16 @@ function registerHooksInSettings({ configDirOverride }) {
   });
 
   fs.mkdirSync(path.dirname(settingsFile), { recursive: true });
-  fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+  writeFileAtomic(settingsFile, JSON.stringify(settings, null, 2));
+  return { failed: false };
 }
 
 function deregisterHooks({ configDirOverride, log }) {
   const settingsFile = path.join(configDir(configDirOverride), 'settings.json');
   try {
-    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+    const { data: settings, error } = readUserJson(settingsFile);
+    if (error) { log.warn(`Could not update settings.json: ${error}`); return; }
+    if (!isPlainObject(settings)) return; // missing or nothing of ours in it
     for (const event of HOOK_EVENTS) {
       if (settings.hooks?.[event]) {
         settings.hooks[event] = settings.hooks[event].filter((x) => !isHydraEntry(x));
@@ -187,7 +213,7 @@ function deregisterHooks({ configDirOverride, log }) {
       }
     }
     if (settings.hooks && !Object.keys(settings.hooks).length) delete settings.hooks;
-    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+    writeFileAtomic(settingsFile, JSON.stringify(settings, null, 2));
     log.ok('Hooks deregistered from settings.json');
   } catch (err) {
     log.warn(`Could not update settings.json: ${err.message}`);
@@ -200,7 +226,16 @@ function escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const BLOCK_RE = () => new RegExp(`${escapeRe(MARKER_BEGIN)}[\\s\\S]*?${escapeRe(MARKER_END)}\\n?`, 'g');
+// The block body must never cross another BEGIN marker — with a stray BEGIN
+// in the file, a greedy-ish span would swallow user text up to the real END.
+const BLOCK_RE = () =>
+  new RegExp(`${escapeRe(MARKER_BEGIN)}(?:(?!${escapeRe(MARKER_BEGIN)})[\\s\\S])*?${escapeRe(MARKER_END)}\\n?`, 'g');
+
+// Corrupted (unbalanced) markers mean we can't tell where our block ends —
+// refuse to touch the file rather than risk eating user content.
+function markersBalanced(text) {
+  return text.split(MARKER_BEGIN).length === text.split(MARKER_END).length;
+}
 
 function writeContextBlock({ configDirOverride, log }) {
   const file = path.join(configDir(configDirOverride), 'GEMINI.md');
@@ -209,13 +244,19 @@ function writeContextBlock({ configDirOverride, log }) {
   let text = '';
   try { text = fs.readFileSync(file, 'utf8'); } catch {}
 
+  if (!markersBalanced(text)) {
+    log.warn('GEMINI.md hydra markers are unbalanced — file left untouched (fix the markers and re-run)');
+    return false;
+  }
+
   // Strip every existing hydra block, then append exactly one.
   text = text.replace(BLOCK_RE(), '').trimEnd();
   text = text ? `${text}\n\n${block}` : block;
 
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, text, 'utf8');
+  writeFileAtomic(file, text);
   log.ok('GEMINI.md hydra block written');
+  return true;
 }
 
 function removeContextBlock({ configDirOverride, log }) {
@@ -223,12 +264,17 @@ function removeContextBlock({ configDirOverride, log }) {
   try {
     if (!fs.existsSync(file)) return;
     const text = fs.readFileSync(file, 'utf8');
+    if (!markersBalanced(text)) {
+      log.warn('GEMINI.md hydra markers are unbalanced — file left untouched');
+      return;
+    }
     const cleaned = text.replace(BLOCK_RE(), '').trimEnd();
+    if (cleaned === text.trimEnd()) return; // no hydra block — leave the file alone
     if (cleaned === '') {
       // The file held only our block (install created it) — remove it.
       fs.unlinkSync(file);
     } else {
-      fs.writeFileSync(file, cleaned + '\n', 'utf8');
+      writeFileAtomic(file, cleaned + '\n');
     }
     log.ok('GEMINI.md hydra block removed');
   } catch (err) {
@@ -243,6 +289,7 @@ module.exports = {
   label: 'Gemini CLI',
   detect,
   configDir,
+  distDir: DIST,
 
   hasAnyInstalled(scope, configDirOverride, version) {
     return bases(scope, configDirOverride).some(([base]) =>
@@ -281,8 +328,8 @@ module.exports = {
     }
 
     installHooks({ configDirOverride, log });
-    registerHooksInSettings({ configDirOverride });
-    writeContextBlock({ configDirOverride, log });
+    if (registerHooksInSettings({ configDirOverride, log }).failed) anyFailed = true;
+    if (!writeContextBlock({ configDirOverride, log })) anyFailed = true;
 
     return { anyFailed, statusLineConfigured: false }; // Gemini has no statusline (G20)
   },
@@ -310,8 +357,14 @@ module.exports = {
   uninstallExtras({ configDirOverride, log }) {
     deregisterHooks({ configDirOverride, log });
     removeContextBlock({ configDirOverride, log });
-    // Sweep <user>/hydra/ leftovers (empty hooks/cache/skills dirs).
-    try { fs.rmSync(path.join(configDir(configDirOverride), 'hydra'), { recursive: true, force: true }); } catch {}
+    // Sweep hydra-OWNED entries under <user>/hydra/ only — user files there
+    // (e.g. hydra/config/hydra.config.md) must survive; the trailing rmdir
+    // removes the dir when nothing else remains.
+    const hydraDir = path.join(configDir(configDirOverride), 'hydra');
+    for (const owned of ['hooks', 'cache', 'skills', 'SKILL.md', 'VERSION', 'manifest.json']) {
+      try { fs.rmSync(path.join(hydraDir, owned), { recursive: true, force: true }); } catch {}
+    }
+    try { fs.rmdirSync(hydraDir); } catch {}
   },
 
   postInstallNotes() {

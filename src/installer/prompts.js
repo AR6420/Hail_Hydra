@@ -43,7 +43,8 @@ async function runPrompts(availableHosts) {
   // ── Prompt 3: Confirmation with agent preview ────────────────────────────
 
   console.log();
-  console.log(chalk.bold('  This will install 10 Hydra agents + SKILL.md + reference docs.'));
+  const chosen = availableHosts.filter((h) => hostIds.includes(h.id)).map((h) => h.label).join(', ');
+  console.log(chalk.bold(`  This will install the 10 Hydra agents + orchestration skill for: ${chosen}.`));
   console.log();
   console.log('  Agents:');
 

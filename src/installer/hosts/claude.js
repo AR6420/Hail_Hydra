@@ -10,8 +10,16 @@ const path = require('path');
 const os = require('os');
 
 const { writeManifest, readManifest } = require('../manifest');
+const { writeFileAtomic, readUserJson, isPlainObject } = require('../fsutil');
 
 const DIST = path.resolve(__dirname, '..', '..', '..', 'dist', 'claude');
+
+// Tolerant dist listing — status/uninstall must degrade gracefully when
+// dist/ is missing (dev checkout before `npm run build`); install fails
+// fast on that upfront in installer/index.js.
+function distFiles(...parts) {
+  try { return fs.readdirSync(path.join(DIST, ...parts)).sort(); } catch { return []; }
+}
 
 const HOOK_FILES = [
   'hydra-check-update.js',
@@ -45,15 +53,15 @@ function buildManifest(base, version) {
   const add = (relSrc, dest, display) =>
     entries.push({ absPath: path.join(DIST, relSrc), dest, display, relPath: relSrc });
 
-  for (const f of fs.readdirSync(path.join(DIST, 'agents')).sort()) {
+  for (const f of distFiles('agents')) {
     add(`agents/${f}`, path.join(base, 'agents', f), `agents/${f}`);
   }
   add('SKILL.md', path.join(base, 'skills', 'hydra', 'SKILL.md'), 'skills/hydra/SKILL.md');
   add('skills/stfu-agents/SKILL.md', path.join(base, 'skills', 'stfu-agents', 'SKILL.md'), 'skills/stfu-agents/SKILL.md');
-  for (const f of fs.readdirSync(path.join(DIST, 'references')).sort()) {
+  for (const f of distFiles('references')) {
     add(`references/${f}`, path.join(base, 'skills', 'hydra', 'references', f), `references/${f}`);
   }
-  for (const f of fs.readdirSync(path.join(DIST, 'commands', 'hydra')).sort()) {
+  for (const f of distFiles('commands', 'hydra')) {
     add(`commands/hydra/${f}`, path.join(base, 'commands', 'hydra', f), `commands/hydra/${f}`);
   }
   entries.push({
@@ -100,11 +108,29 @@ function hookCommand(script, configDirOverride) {
   return `node ~/.claude/hooks/${script}`;
 }
 
-function registerHooksInSettings({ configDirOverride }) {
+const HOOK_EVENTS = ['SessionStart', 'PostToolUse', 'Notification'];
+
+function registerHooksInSettings({ configDirOverride, log }) {
   const settingsFile = path.join(configDir(configDirOverride), 'settings.json');
 
-  let settings = {};
-  try { settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8')); } catch {}
+  // Never clobber a file we can't faithfully round-trip: on parse failure or
+  // an unexpected shape, warn and skip registration (file left untouched).
+  const { exists, data, error } = readUserJson(settingsFile);
+  if (error) {
+    log.warn(`settings.json could not be parsed (${error}) — hook registration skipped, file left untouched`);
+    return { statusLineConfigured: false, failed: true };
+  }
+  const settings = exists ? data : {};
+  if (!isPlainObject(settings) || (settings.hooks !== undefined && !isPlainObject(settings.hooks))) {
+    log.warn('settings.json has an unexpected shape — hook registration skipped, file left untouched');
+    return { statusLineConfigured: false, failed: true };
+  }
+  for (const event of HOOK_EVENTS) {
+    if (settings.hooks && settings.hooks[event] !== undefined && !Array.isArray(settings.hooks[event])) {
+      log.warn(`settings.json hooks.${event} is not an array — hook registration skipped, file left untouched`);
+      return { statusLineConfigured: false, failed: true };
+    }
+  }
 
   if (!settings.hooks) settings.hooks = {};
   if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
@@ -112,7 +138,7 @@ function registerHooksInSettings({ configDirOverride }) {
   if (!settings.hooks.Notification) settings.hooks.Notification = [];
 
   const isHydraHook = (entry) =>
-    Array.isArray(entry.hooks) && entry.hooks.some((h) => h.command && h.command.includes('hydra-'));
+    entry && Array.isArray(entry.hooks) && entry.hooks.some((h) => h && h.command && h.command.includes('hydra-'));
 
   // Remove stale Hydra entries (clean reinstall)
   settings.hooks.SessionStart = settings.hooks.SessionStart.filter((x) => !isHydraHook(x));
@@ -141,18 +167,20 @@ function registerHooksInSettings({ configDirOverride }) {
   }
 
   fs.mkdirSync(path.dirname(settingsFile), { recursive: true });
-  fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
-  return { statusLineConfigured };
+  writeFileAtomic(settingsFile, JSON.stringify(settings, null, 2));
+  return { statusLineConfigured, failed: false };
 }
 
 function deregisterHooks({ configDirOverride, log }) {
   const settingsFile = path.join(configDir(configDirOverride), 'settings.json');
   try {
-    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+    const { data: settings, error } = readUserJson(settingsFile);
+    if (error) { log.warn(`Could not update settings.json: ${error}`); return; }
+    if (!isPlainObject(settings)) return; // missing or nothing of ours in it
     const isHydraHook = (entry) =>
-      Array.isArray(entry.hooks) && entry.hooks.some((h) => h.command && h.command.includes('hydra-'));
+      entry && Array.isArray(entry.hooks) && entry.hooks.some((h) => h && h.command && h.command.includes('hydra-'));
 
-    for (const event of ['SessionStart', 'PostToolUse', 'Notification']) {
+    for (const event of HOOK_EVENTS) {
       if (settings.hooks?.[event]) {
         settings.hooks[event] = settings.hooks[event].filter((x) => !isHydraHook(x));
         if (!settings.hooks[event].length) delete settings.hooks[event];
@@ -161,7 +189,7 @@ function deregisterHooks({ configDirOverride, log }) {
     if (settings.hooks && !Object.keys(settings.hooks).length) delete settings.hooks;
     if (settings.statusLine?.command?.includes('hydra-')) delete settings.statusLine;
 
-    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+    writeFileAtomic(settingsFile, JSON.stringify(settings, null, 2));
     log.ok('Hooks deregistered from settings.json');
   } catch (err) {
     log.warn(`Could not update settings.json: ${err.message}`);
@@ -175,6 +203,7 @@ module.exports = {
   label: 'Claude Code',
   detect,
   configDir,
+  distDir: DIST,
 
   hasAnyInstalled(scope, configDirOverride, version) {
     return bases(scope, configDirOverride).some(([base]) =>
@@ -215,7 +244,8 @@ module.exports = {
     }
 
     installHooks({ configDirOverride, log });
-    const { statusLineConfigured } = registerHooksInSettings({ configDirOverride });
+    const { statusLineConfigured, failed } = registerHooksInSettings({ configDirOverride, log });
+    if (failed) anyFailed = true;
 
     return { anyFailed, statusLineConfigured };
   },
