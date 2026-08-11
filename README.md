@@ -38,14 +38,14 @@
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 11 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 3 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 10 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 3 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, and **Codex CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 11 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, and **Codex CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 10 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -53,7 +53,7 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
 >
 > Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
 
-**New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 11 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
+**New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 10 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
 
 Everything else Hydra is known for is still here: persistent agent memory, the codebase map with blast-radius lookups, the sentinel verification touchpoint after substantial edits, internal-thinking compression (`/hydra:stfu`), and real token tracking with `/hydra:stats`. Full version history lives in the [CHANGELOG](CHANGELOG.md).
 
@@ -192,7 +192,6 @@ Hooks (AfterTool, SessionStart, Notification) are registered in `~/.gemini/setti
 | `/hydra:help` | Show all commands and agents |
 | `/hydra:status` | Show installed agents, version, and update availability |
 | `/hydra:update` | Update Hydra to the latest version |
-| `/hydra:config` | Show current configuration |
 | `/hydra:guard [files]` | Run manual security & quality scan |
 | `/hydra:quiet` | Suppress dispatch logs for this session |
 | `/hydra:report` | Report a bug, request a feature, or share feedback |
@@ -257,11 +256,11 @@ After installation, your Claude Code status bar shows real-time framework info:
 
 ## 🔔 Task Completion Sound
 
-Hydra plays a short notification sound when Claude Code finishes a substantial task — so you know it's done even if you've tabbed away.
+Hydra plays a short notification sound when the CLI finishes responding — so you know it's done even if you've tabbed away.
 
 - **Cross-platform** — macOS (`afplay`), Windows (PowerShell), Linux (`paplay`/`aplay`)
 - **Non-blocking** — the sound plays detached; it never delays the response
-- **Host-native** — wired to each CLI's notification event (Claude Code and Gemini `Notification` hooks; Codex `notify` chain that preserves your existing notifier)
+- **Host-native and fully event-driven** — Claude Code `Stop` hook, Gemini `Notification` hook, Codex `notify` chain that preserves your existing notifier; no prompt-level calls, so the model can't forget it
 
 The notification hook is registered automatically during installation.
 
@@ -299,7 +298,7 @@ After updating, restart Claude Code to load the new files.
 - **Verification touchpoint** — after substantial code changes, the auto-guard hook injects a directive recommending a sentinel + guard verification wave before results are presented; trivial edits stay silent
 - **Auto-Guard** — a PostToolUse hook tracks every file edit; hydra-guard (Haiku) scans the tracked files for security issues on demand (`/hydra:guard`) or as part of the sentinel wave
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
-- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:report` for full session control
+- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:guard`, `/hydra:quiet`, `/hydra:report` for full session control
 - **Task completion sound** — plays a notification when Claude finishes substantial tasks
 - **Quick commands** — natural language shortcuts: `hydra status`, `hydra quiet`, `hydra map`
 - **Custom agent templates** — Add your own heads using `templates/custom-agent.md`
@@ -730,7 +729,7 @@ dispatch_log: on        # on (default) | off
 auto_guard: on          # on (default) | off
 ```
 
-Run `/hydra:config` (`$hydra-config` on Codex) to see what's currently loaded.
+Run `/hydra:status` (`$hydra-status` on Codex) to see what's currently loaded.
 See [`content/config/hydra.config.md`](content/config/hydra.config.md) for the full reference with all options.
 
 ---
@@ -765,7 +764,7 @@ hydra/
 │   ├── SKILL.md                         # Orchestrator instructions (full)
 │   ├── skill-core.md                    # Compressed core for size-capped hosts
 │   ├── agents/                          # 10 agent definitions
-│   ├── commands/                        # 11 command definitions
+│   ├── commands/                        # 10 command definitions
 │   ├── references/                      # Routing guide + model capabilities
 │   ├── config/hydra.config.md           # User configuration template
 │   └── skills/stfu-agents/              # STFU-Agents skill

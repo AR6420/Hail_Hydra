@@ -61,7 +61,7 @@ for (const f of agentFiles) {
 }
 
 const tomlFiles = fs.readdirSync(path.join(DIST, 'commands', 'hydra')).sort();
-assert.strictEqual(tomlFiles.length, 11, '11 command TOMLs emitted');
+assert.strictEqual(tomlFiles.length, 10, '10 command TOMLs emitted');
 for (const f of tomlFiles) {
   const text = fs.readFileSync(path.join(DIST, 'commands', 'hydra', f), 'utf8');
   const desc = /^description = (".*")$/m.exec(text);
@@ -315,7 +315,7 @@ assert.strictEqual(res1.anyFailed, false, 'install reports no failures');
 assert.strictEqual(res1.statusLineConfigured, false, 'gemini has no statusline');
 
 assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 10, '10 agents installed');
-assert.strictEqual(fs.readdirSync(path.join(cfg, 'commands', 'hydra')).length, 11, '11 command TOMLs installed');
+assert.strictEqual(fs.readdirSync(path.join(cfg, 'commands', 'hydra')).length, 10, '10 command TOMLs installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'SKILL.md')), 'SKILL installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'references', 'routing-guide.md')), 'references installed');
 assert.strictEqual(fs.readFileSync(path.join(cfg, 'hydra', 'VERSION'), 'utf8'), V, 'VERSION written');

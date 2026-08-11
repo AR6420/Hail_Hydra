@@ -13,7 +13,6 @@ COMMANDS
   /hydra:help      Show this help screen
   /hydra:status    Show installed agents, version, config
   /hydra:update    Update Hydra to the latest version
-  /hydra:config    Show current configuration
   /hydra:guard     Run security scan on files (usage: /hydra:guard src/auth.py)
   /hydra:quiet     Suppress dispatch logs for this session
   /hydra:map       View, rebuild, or query the codebase map

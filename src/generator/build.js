@@ -32,17 +32,6 @@ function loadEmitters() {
   return emitters;
 }
 
-// ── Shared stamps ────────────────────────────────────────────────────────────
-
-// Keep .claude-plugin/plugin.json's version in lockstep with package.json.
-function stampPluginManifest() {
-  const pluginFile = path.join(ROOT, '.claude-plugin', 'plugin.json');
-  if (!fs.existsSync(pluginFile)) return;
-  const plugin = JSON.parse(fs.readFileSync(pluginFile, 'utf8'));
-  plugin.version = VERSION;
-  fs.writeFileSync(pluginFile, JSON.stringify(plugin, null, 2) + '\n');
-}
-
 // ── Entry ────────────────────────────────────────────────────────────────────
 
 function buildAll(hosts = null) {
@@ -53,7 +42,6 @@ function buildAll(hosts = null) {
     if (!emitters[host]) throw new Error(`No emitter for host '${host}'`);
     emitters[host].emit();
   }
-  stampPluginManifest();
   return { hosts: targets, version: VERSION, dist: DIST };
 }
 

@@ -30,7 +30,7 @@ const DIST = path.join(ROOT, 'dist', 'codex');
 const { MARKER_BEGIN, MARKER_END, MODEL_MAP, FRAGMENT_BUDGET } = require('../src/generator/emit-codex.js');
 
 const TRIGGERS = ['⚠️ HYDRA_SENTINEL_REQUIRED', '✅ HYDRA_NO_CODE_CHANGES'];
-const COMMANDS = ['config', 'guard', 'help', 'map', 'preflight', 'quiet', 'report', 'stats', 'status', 'stfu', 'update'];
+const COMMANDS = ['guard', 'help', 'map', 'preflight', 'quiet', 'report', 'stats', 'status', 'stfu', 'update'];
 
 // ── 1. Structural invariants ────────────────────────────────────────────────
 
@@ -91,12 +91,12 @@ const scoutToml = fs.readFileSync(path.join(DIST, 'agents', 'hydra-scout.toml'),
 assert.ok(scoutToml.includes('.codex/hydra/codebase-map.json'), 'scout map path is .codex/hydra/codebase-map.json');
 assert.ok(!scoutToml.includes('.Codex'), 'no capital-C .Codex leak');
 
-// Skills: 11 commands + full protocol + stfu.
+// Skills: 10 commands + full protocol + stfu.
 const skillDirs = fs.readdirSync(path.join(DIST, 'skills')).sort();
 assert.deepStrictEqual(
   skillDirs,
   [...COMMANDS.map((c) => `hydra-${c}`), 'hydra', 'stfu-agents'].sort(),
-  '13 skill dirs emitted'
+  '12 skill dirs emitted'
 );
 for (const dir of skillDirs) {
   const text = fs.readFileSync(path.join(DIST, 'skills', dir, 'SKILL.md'), 'utf8');
@@ -115,7 +115,7 @@ assert.ok(statusSkill.includes('~/.codex/agents/hydra-*.toml'), 'status globs .t
 assert.ok(statusSkill.includes('.codex/agents/hydra-*.toml'), 'status globs .toml agents (local)');
 assert.ok(!statusSkill.includes('agents/hydra-*.md'), 'status has no dead .md agent glob');
 const reportSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-report', 'SKILL.md'), 'utf8');
-assert.ok(reportSkill.includes('~/.codex/agents/hydra-*.toml'), 'report counts .toml agents');
+assert.ok(reportSkill.includes('github.com/AR6420/Hail_Hydra/issues/new'), 'report links the pre-filled issue URLs');
 // Help screen: host-neutral tier labels, all 10 agents, no Anthropic models.
 const helpSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-help', 'SKILL.md'), 'utf8');
 assert.strictEqual((helpSkill.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');

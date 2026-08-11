@@ -491,7 +491,6 @@ the command's instructions:
 | `/hydra:status` | Run status checks and display framework health |
 | `/hydra:stats` | Real token usage, delegation rate, and savings for this session |
 | `/hydra:update` | Trigger an update via npx |
-| `/hydra:config` | Show current configuration |
 | `/hydra:guard [files]` | Manually invoke the security scan on specified files |
 | `/hydra:preflight` | Two-phase environment and compatibility check |
 | `/hydra:map [file]` | View, rebuild, or query the codebase dependency map |
@@ -500,7 +499,9 @@ the command's instructions:
 | `/hydra:report` | Submit feedback to maintainers |
 
 These slash commands are defined in `~/.claude/commands/hydra/`. Typing the
-command name without the slash (e.g. "hydra status") also works.
+command name without the slash (e.g. "hydra status") also works. If the user
+asks about configuration, `/hydra:status` shows the active settings (mode,
+dispatch_log, auto_guard) and their source.
 
 ## Auto-Guard File Tracking
 
@@ -594,21 +595,6 @@ See `config/hydra.config.md` in the repository for the full reference.
 | `hydra-coder` | 🔵 mid | Code writing, implementation, refactoring | Read, Write, Edit, Bash, Glob, Grep |
 | `hydra-analyst` | 🔵 mid | Code review, debugging, architecture analysis | Read, Grep, Glob, Bash |
 | `hydra-sentinel` | 🔵 mid | Deep integration analysis (when scan flags issues) | Read, Grep, Glob |
-
-## Task Completion Notification
-
-After completing a user's task (the final response you present to the user),
-run this command as the last action:
-```bash
-node ~/.claude/hooks/hydra-notify.js < /dev/null
-```
-
-This plays a short notification sound so the user knows you're done —
-especially useful when they've tabbed away while waiting.
-
-Play it for substantial tasks only (tasks that took more than ~10 seconds) —
-not for quick conversational responses, acknowledgments, or follow-up
-questions.
 
 ## Reference Material
 

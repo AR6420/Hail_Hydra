@@ -108,7 +108,9 @@ function hookCommand(script, configDirOverride) {
   return `node ~/.claude/hooks/${script}`;
 }
 
-const HOOK_EVENTS = ['SessionStart', 'PostToolUse', 'Notification'];
+// Notification stays in the list so uninstall/reinstall scrubs pre-2.5.1
+// installs that registered the sound there.
+const HOOK_EVENTS = ['SessionStart', 'PostToolUse', 'Stop', 'Notification'];
 
 function registerHooksInSettings({ configDirOverride, log }) {
   const settingsFile = path.join(configDir(configDirOverride), 'settings.json');
@@ -135,15 +137,19 @@ function registerHooksInSettings({ configDirOverride, log }) {
   if (!settings.hooks) settings.hooks = {};
   if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
   if (!settings.hooks.PostToolUse) settings.hooks.PostToolUse = [];
-  if (!settings.hooks.Notification) settings.hooks.Notification = [];
+  if (!settings.hooks.Stop) settings.hooks.Stop = [];
 
   const isHydraHook = (entry) =>
     entry && Array.isArray(entry.hooks) && entry.hooks.some((h) => h && h.command && h.command.includes('hydra-'));
 
-  // Remove stale Hydra entries (clean reinstall)
-  settings.hooks.SessionStart = settings.hooks.SessionStart.filter((x) => !isHydraHook(x));
-  settings.hooks.PostToolUse = settings.hooks.PostToolUse.filter((x) => !isHydraHook(x));
-  settings.hooks.Notification = settings.hooks.Notification.filter((x) => !isHydraHook(x));
+  // Remove stale Hydra entries (clean reinstall) — includes Notification,
+  // where pre-2.5.1 installs registered the completion sound.
+  for (const event of HOOK_EVENTS) {
+    if (settings.hooks[event]) {
+      settings.hooks[event] = settings.hooks[event].filter((x) => !isHydraHook(x));
+    }
+  }
+  if (settings.hooks.Notification && !settings.hooks.Notification.length) delete settings.hooks.Notification;
 
   settings.hooks.SessionStart.push({
     hooks: [{ type: 'command', command: hookCommand('hydra-check-update.js', configDirOverride) }],
@@ -152,7 +158,9 @@ function registerHooksInSettings({ configDirOverride, log }) {
     matcher: 'Write|Edit|MultiEdit',
     hooks: [{ type: 'command', command: hookCommand('hydra-auto-guard.js', configDirOverride) }],
   });
-  settings.hooks.Notification.push({
+  // Stop fires when the response completes — the completion sound no longer
+  // depends on the model remembering a prompt-level bash call.
+  settings.hooks.Stop.push({
     hooks: [{ type: 'command', command: hookCommand('hydra-notify.js', configDirOverride) }],
   });
 

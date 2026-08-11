@@ -40,7 +40,8 @@ ls -1 ~/.claude/hooks/hydra-*.js 2>/dev/null || echo "None found"
 ```bash
 cat ~/.claude/skills/hydra/config/hydra.config.md 2>/dev/null || \
 cat .claude/skills/hydra/config/hydra.config.md 2>/dev/null || \
-echo "No config file found (using defaults)"
+echo "No config file found (using defaults: mode balanced, dispatch_log on, auto_guard on).
+To customize, create ~/.claude/skills/hydra/config/hydra.config.md (or .claude/... for project-level)."
 ```
 
 ## 6. Codebase Map
@@ -73,7 +74,7 @@ Agents (10):
   🔵 hydra-coder         (mid tier)   ✅
   🔵 hydra-analyst       (mid tier)   ✅
   🔵 hydra-sentinel      (mid tier)   ✅
-Commands (11): update, status, help, config, guard, quiet, report, map, preflight, stats, stfu
+Commands (10): update, status, help, guard, quiet, report, map, preflight, stats, stfu
 Hooks (6):    check-update ✅, statusline ✅, token-math ✅, auto-guard ✅, notify ✅, sentinel-done ✅
 Map:          ✅ Current (487 files, built 2026-03-26)
 Config:       balanced mode, dispatch log on, auto-guard on

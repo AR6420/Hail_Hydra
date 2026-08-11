@@ -9,9 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - **`/hydra:verbose`** — removed entirely (command file, help/status listings,
-  SKILL.md rows, README, plugin manifest, and the `dispatch_log: verbose`
-  config value). The dispatch log itself and `/hydra:quiet` are unchanged;
-  say "show dispatch logs" to re-enable after quiet. Command count is now 11.
+  SKILL.md rows, README, and the `dispatch_log: verbose` config value). The
+  dispatch log itself and `/hydra:quiet` are unchanged; say "show dispatch
+  logs" to re-enable after quiet.
+- **`/hydra:config`** — it showed a subset of `/hydra:status`, which now also
+  prints the customize-path hint. Command count is 10 (was 12). The
+  `hydra.config.md` file and its three knobs are unchanged.
+- **`.claude-plugin/`** — unwired plugin-marketplace manifest that could not
+  install anything; restorable from git history if a marketplace launch
+  happens later.
 - **Unwired config claims** — the "Custom Agent Overrides" section of
   `hydra.config.md` promised per-agent model overrides nothing reads; deleted
   (edit the agent file's `model:` line instead). `/hydra:quiet`'s claim to
@@ -25,6 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `hydra-token-math.js` is the single source, `/hydra:stats` shows real costs.
 
 ### Changed
+- **Completion sound is now fully event-driven** — on Claude Code the sound
+  moved from a per-task prompt-level bash call (which the model could forget)
+  to the `Stop` hook; the SKILL.md "run hydra-notify.js as your last action"
+  section is gone. Gemini keeps its `Notification` hook, Codex its `notify`
+  chain. Reinstalling scrubs the old Notification-event registration.
+- **`/hydra:report` simplified** — the interactive wizard is now a short
+  command that prints pre-filled GitHub issue links (bug / feature /
+  feedback). Same destination, no guided Q&A.
 - **Prompts modernized for the 2026 model families** — all 10 agent prompts
   and SKILL.md rewritten for current Claude / Gemini / Codex models: thinking-
   compression scaffolds deleted (built into modern models), threats and

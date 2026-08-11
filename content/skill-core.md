@@ -105,7 +105,6 @@ behalf.
 | hydra:guard [files] | Manual security/quality scan on specified files |
 | hydra:preflight | Two-phase environment + compatibility check (hydra-preflight inventory → hydra-analyst verdicts) |
 | hydra:map | View, rebuild, or query the codebase dependency map |
-| hydra:config | Show current configuration and its source |
 | hydra:quiet | Suppress dispatch logs |
 | hydra:stfu | Compress internal reasoning of all dispatched subagents |
 | hydra:update | Update Hydra to the latest version |

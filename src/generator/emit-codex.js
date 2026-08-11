@@ -4,7 +4,7 @@
 //   agents/hydra-*.toml        C1/C2 TOML agents (name/description/
 //                              developer_instructions; model tier map; NEVER
 //                              sandbox_mode="inherit" — omit to inherit)
-//   skills/hydra-<cmd>/SKILL.md  11 commands as user skills, invoked
+//   skills/hydra-<cmd>/SKILL.md  10 commands as user skills, invoked
 //                              `$hydra-<cmd>` (C12 — /hydra:* namespacing is
 //                              impossible on Codex)
 //   skills/hydra/SKILL.md      full protocol the AGENTS.md core points to
@@ -285,14 +285,7 @@ function emit() {
   }
 
   // Full protocol skill + stfu skill (skill names must be slugs on Codex).
-  // The Task Completion Notification section instructs running hydra-notify.js,
-  // which is never installed on Codex (the config.toml notify chain owns the
-  // sound here) — strip it so the skill never points at a missing file.
-  write(
-    path.join(out, 'skills', 'hydra', 'SKILL.md'),
-    prepare(path.join(CONTENT, 'SKILL.md'))
-      .replace(/## Task Completion Notification\r?\n[\s\S]*?(?=## Reference Material)/, '')
-  );
+  write(path.join(out, 'skills', 'hydra', 'SKILL.md'), prepare(path.join(CONTENT, 'SKILL.md')));
   write(
     path.join(out, 'skills', 'stfu-agents', 'SKILL.md'),
     prepare(path.join(CONTENT, 'skills', 'stfu-agents', 'SKILL.md'))

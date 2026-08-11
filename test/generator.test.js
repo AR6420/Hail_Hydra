@@ -44,7 +44,7 @@ const claudeFiles = walk(claudeDist);
 
 // Structural invariants.
 assert.strictEqual(claudeFiles.filter((f) => f.startsWith('agents/')).length, 10, '10 agents emitted');
-assert.strictEqual(claudeFiles.filter((f) => f.startsWith('commands/hydra/')).length, 11, '11 commands emitted');
+assert.strictEqual(claudeFiles.filter((f) => f.startsWith('commands/hydra/')).length, 10, '10 commands emitted');
 assert.ok(claudeFiles.includes('SKILL.md'), 'SKILL.md emitted');
 assert.ok(claudeFiles.includes('skills/stfu-agents/SKILL.md'), 'stfu skill emitted');
 assert.strictEqual(claudeFiles.filter((f) => f.startsWith('references/')).length, 2, '2 references emitted');
