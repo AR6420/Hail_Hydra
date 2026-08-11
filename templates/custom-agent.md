@@ -1,7 +1,7 @@
 # Custom Hydra Agent Template
 
-Copy this file to `agents/hydra-{your-agent-name}.md` and customize.
-Then run `./scripts/install.sh --user` or `--project` to deploy.
+Copy this file to `~/.claude/agents/hydra-{your-agent-name}.md` (or
+`.claude/agents/` for project-level) and customize. Restart your CLI to deploy.
 
 ---
 name: hydra-{your-agent-name} ({Model Name and Version})

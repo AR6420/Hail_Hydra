@@ -7,7 +7,8 @@
 <h1 align="center">🐉 H Y D R A</h1>
 
 <p align="center">
-  <strong>Multi-Headed Speculative Execution for Claude Code</strong>
+  <strong>Multi-Headed Speculative Execution for AI Coding CLIs</strong><br/>
+  <sub>Claude Code &nbsp;·&nbsp; Gemini CLI &nbsp;·&nbsp; Codex CLI</sub>
 </p>
 
 <p align="center">
@@ -37,14 +38,14 @@
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 12 slash commands &nbsp;·&nbsp; 4 hooks &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 12 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 3 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for Claude Code. It ships 10 specialized agents pinned to cost-effective models (Haiku and Sonnet), 12 slash commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, and **Codex CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 12 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -59,6 +60,8 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
 **New in v2.3.2 — Internal Compression:** Subagents now run with compressed **INTERNAL thinking**, not just compressed final output. The intermediate prose ("Let me check…", "I'll examine…", "Now I'll trace…") that no one ever reads is drastically reduced — ~40–60% fewer billed tokens per subagent dispatch, with no change to the final output Opus receives. The new `/hydra:stfu` skill extends this compression to ALL subagents in a session — Hydra's own, third-party, and Claude Code's built-in agents. Session-scoped, runtime-only, no file modifications. Activate via `/hydra:stfu`; deactivate via `/skills`.
 
 **New in v2.4.0 — Toolkit Repositioning:** SKILL.md refocused to the toolkit-with-touchpoints model. The hydra-auto-guard hook now injects a sentinel verification directive after substantial code changes (new files, MultiEdit batches, or edits affecting more than ~5 lines). Trivial edits stay silent. `/hydra:stats` shows actionable guidance when no Hydra dispatches occurred in the session instead of empty zeros.
+
+**New in v3.0.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 12 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
 
 ## When to Use Hydra Explicitly
 
@@ -84,99 +87,111 @@ For one-off questions, simple edits, or conversational work, Claude Code handles
 npx hail-hydra-cc@latest
 ```
 
-[OR]
-
-```bash
-npm i hail-hydra-cc@latest
-```
-
-Runs the interactive installer — deploys 10 agents, 12 slash commands, 4 hooks, and registers
-the statusline and update checker. Done in seconds.
-
-### Manual Install
-
-```bash
-# Clone the repo
-git clone https://github.com/AR6420/Hail_Hydra.git
-cd hydra
-
-# Deploy heads globally (recommended — available in every project)
-./scripts/install.sh --user
-
-# 🐉 Hail Hydra! Framework active in all Claude Code sessions.
-# ✅ 10 agents  ✅ 12 commands  ✅ 4 hooks  ✅ StatusLine  ✅ VERSION
-```
+Runs the interactive installer — pick your CLI(s) (Claude Code, Gemini CLI, Codex CLI)
+and scope, and it deploys the agents, commands, hooks, and per-host wiring. Done in seconds.
 
 ### Installation Options
 
 ```bash
-# User-level — available in ALL your Claude Code projects
-./scripts/install.sh --user
+# Claude Code, all projects — no prompts (v2-compatible default)
+npx hail-hydra-cc --global
 
-# Project-level — just this one project
-./scripts/install.sh --project
+# Pick your agent(s) explicitly
+npx hail-hydra-cc --agent=claude --global
+npx hail-hydra-cc --gemini --global
+npx hail-hydra-cc --codex --global
+npx hail-hydra-cc --agent=claude,gemini,codex --global
 
-# Both — maximum coverage
-./scripts/install.sh --both
+# Every detected agent, fully non-interactive
+npx hail-hydra-cc --all --global --yes
+
+# This project only / both scopes
+npx hail-hydra-cc --claude --local
+npx hail-hydra-cc --claude --both
+
+# Preview what would be written (writes nothing)
+npx hail-hydra-cc --dry-run --all
 
 # Check what's deployed
-./scripts/install.sh --status
+npx hail-hydra-cc --status
 
 # Remove everything
-./scripts/install.sh --uninstall
+npx hail-hydra-cc --uninstall
 ```
+
+All flags: `--agent=<list>` (`claude,gemini,codex`) or the aliases `--claude` /
+`--gemini` / `--codex` / `--all` (every detected agent) · scope `--global` /
+`--local` / `--both` · `--yes` non-interactive (requires an agent selection) ·
+`--dry-run` · `--config-dir <path>` config-dir override (single agent only) ·
+`--status` · `--uninstall`.
+
+### Per-Host Invocation
+
+| Host | Commands | Notes |
+|:-----|:---------|:------|
+| **Claude Code** | `/hydra:help`, `/hydra:stats`, … | StatusLine + hooks registered in `~/.claude/settings.json` |
+| **Gemini CLI** | `/hydra:help`, `/hydra:stats`, … | Restart Gemini CLI (or run `/commands reload`) to pick up the new commands |
+| **Codex CLI** | `$hydra-help`, `$hydra-stats`, … (skills with a `$` trigger) | **Required once:** run `/hooks` inside Codex to review and trust the Hydra hooks — they stay inert until then |
 
 ### What Gets Installed
 
+**Claude Code** — `~/.claude/` (or `./.claude/` with `--local`):
+
 ```
 ~/.claude/
-├── agents/                      # 10 agent definitions (all with memory: project)
-│   ├── hydra-scout.md           # 🟢 Haiku — explore codebase
-│   ├── hydra-runner.md          # 🟢 Haiku — run tests/builds
-│   ├── hydra-scribe.md          # 🟢 Haiku — write documentation
-│   ├── hydra-guard.md           # 🟢 Haiku — security/quality gate
-│   ├── hydra-git.md             # 🟢 Haiku — git operations
-│   ├── hydra-sentinel-scan.md   # 🟢 Haiku — fast integration sweep
-│   ├── hydra-preflight.md       # 🟢 Haiku — environment preflight check
-│   ├── hydra-coder.md           # 🔵 Sonnet — write/edit code
-│   ├── hydra-analyst.md         # 🔵 Sonnet — debug/diagnose
-│   └── hydra-sentinel.md        # 🔵 Sonnet — deep integration analysis
-├── commands/hydra/              # 10 slash commands
-│   ├── help.md                  # /hydra:help
-│   ├── status.md                # /hydra:status
-│   ├── update.md                # /hydra:update
-│   ├── config.md                # /hydra:config
-│   ├── guard.md                 # /hydra:guard
-│   ├── quiet.md                 # /hydra:quiet
-│   ├── verbose.md               # /hydra:verbose
-│   ├── report.md                # /hydra:report
-│   ├── map.md                   # /hydra:map
-│   └── preflight.md             # /hydra:preflight
-├── hooks/                       # 4 lifecycle hooks
+├── agents/                      # 10 agent definitions (Haiku/Sonnet pinned, memory: project)
+├── commands/hydra/              # 12 slash commands (/hydra:*)
+├── hooks/                       # 6 hook scripts + notification sound
 │   ├── hydra-check-update.js    # SessionStart — version check (background)
 │   ├── hydra-statusline.js      # StatusLine — status bar display
+│   ├── hydra-token-math.js      # Token parsing + savings math (shared library)
 │   ├── hydra-auto-guard.js      # PostToolUse — file change tracker
 │   ├── hydra-notify.js          # Notification — task completion sound
+│   ├── hydra-sentinel-done.js   # Sentinel tracking cleanup
 │   └── hydra-task-complete.wav  # Notification sound file
 └── skills/
-    └── hydra/                   # Skill (Claude Code discoverable)
-        ├── SKILL.md             # Orchestrator instructions
-        ├── VERSION              # Installed version number
-        ├── config/
-        │   └── hydra.config.md  # User configuration (created by --config)
-        └── references/
-            ├── model-capabilities.md
-            └── routing-guide.md
-
-> **Note:** `settings.json` is at `~/.claude/settings.json` — hooks and statusLine are registered there.
+    ├── hydra/                   # SKILL.md + VERSION + references/
+    └── stfu-agents/             # SKILL.md
 ```
 
-> **Project-level** (`--project`): same files written to `.claude/` in your working
-> directory instead of `~/.claude/`. Project-level takes precedence when both exist.
+Hooks and the statusLine are registered in `~/.claude/settings.json` — existing
+entries are preserved, and a custom statusLine is never overwritten.
+
+**Gemini CLI** — `~/.gemini/` (or `./.gemini/` with `--local`):
+
+```
+~/.gemini/
+├── agents/                      # 10 agent definitions (Flash-tier pinned)
+├── commands/hydra/              # 12 TOML commands (/hydra:*)
+├── hydra/                       # SKILL.md, VERSION, references/, hooks/
+└── GEMINI.md                    # Hydra marker block (appended, reversible)
+```
+
+Hooks (AfterTool, SessionStart, Notification) are registered in `~/.gemini/settings.json`.
+
+**Codex CLI** — `~/.codex/` (or `./.codex/` with `--local`):
+
+```
+~/.codex/
+├── agents/                      # 10 agent definitions (*.toml, Luna/Terra pinned)
+├── hydra/                       # VERSION, references/, hooks/
+├── hooks.json                   # Hook registrations — trust once via /hooks
+├── config.toml                  # [features] hooks + notify chain (marker blocks, reversible)
+└── AGENTS.md                    # Hydra marker block (appended, reversible)
+~/.agents/skills/                # Skills: $hydra-help, $hydra-stats, $hydra-guard, …
+```
+
+> **Local scope** (`--local`): the per-project payload goes to `./.claude/`,
+> `./.gemini/`, or `./.codex/` in your working directory. Hooks and host wiring
+> (settings/hooks registration, context files, Codex skills) always stay user-level.
 
 ---
 
 ## ⚡ Slash Commands
+
+> **Codex CLI:** the same commands ship as skills invoked with a `$` trigger —
+> `$hydra-help`, `$hydra-stats`, `$hydra-guard`, … The `/hydra:*` form below is
+> for Claude Code and Gemini CLI.
 
 | Command | Description |
 |---------|-------------|
@@ -188,6 +203,7 @@ cd hydra
 | `/hydra:quiet` | Suppress dispatch logs for this session |
 | `/hydra:verbose` | Enable verbose dispatch logs with timing |
 | `/hydra:report` | Report a bug, request a feature, or share feedback |
+| `/hydra:stfu` | Compress internal thinking for every subagent in the session |
 | `/hydra:map` | View codebase dependency map, query blast radius, rebuild |
 | `/hydra:preflight` | Two-phase environment and compatibility check before starting a new project build |
 | `/hydra:stats` | Show real token usage, delegation rate, and actual savings (parses Claude Code session JSONL — no AI estimation) |
@@ -209,6 +225,9 @@ Hydra runs a two-phase check:
 ---
 
 ## 🖥️ Status Line
+
+> Claude Code only — Gemini CLI and Codex CLI have no statusline; use
+> `/hydra:stats` (or `$hydra-stats`) there instead.
 
 After installation, your Claude Code status bar shows real-time framework info:
 
@@ -694,14 +713,15 @@ Is it read-only? ─── Yes ──→ Finding files?
 
 ## ⚙️ Configuration
 
-Customize Hydra's behavior with an optional config file:
+Customize Hydra's behavior with an optional config file — create it by hand at
+your host's config path (the installer doesn't write one, and `--uninstall`
+leaves it alone):
 
-```bash
-# Create a default config (user-level — applies to all projects)
-./scripts/install.sh --config
-```
-
-Then edit `~/.claude/skills/hydra/config/hydra.config.md`:
+| Host | Global | Project-level (overrides global) |
+|:-----|:-------|:---------------------------------|
+| Claude Code | `~/.claude/skills/hydra/config/hydra.config.md` | `.claude/skills/hydra/config/hydra.config.md` |
+| Gemini CLI | `~/.gemini/hydra/config/hydra.config.md` | `.gemini/hydra/config/hydra.config.md` |
+| Codex CLI | `~/.codex/hydra/config/hydra.config.md` | `.codex/hydra/config/hydra.config.md` |
 
 ```markdown
 mode: balanced          # conservative | balanced (default) | aggressive
@@ -709,10 +729,8 @@ dispatch_log: on        # on (default) | off | verbose
 auto_guard: on          # on (default) | off
 ```
 
-**Project-level config** (overrides user-level):
-Place at `.claude/skills/hydra/config/hydra.config.md` in your project root.
-
-See [`config/hydra.config.md`](config/hydra.config.md) for the full reference with all options.
+Run `/hydra:config` (`$hydra-config` on Codex) to see what's currently loaded.
+See [`content/config/hydra.config.md`](content/config/hydra.config.md) for the full reference with all options.
 
 ---
 
@@ -720,19 +738,18 @@ See [`config/hydra.config.md`](config/hydra.config.md) for the full reference wi
 
 Add your own specialized head in three steps:
 
-**1. Copy the template:**
+**1. Copy the template** straight into the agents directory Hydra installed:
 ```bash
-cp templates/custom-agent.md agents/hydra-myspecialist.md
+cp templates/custom-agent.md ~/.claude/agents/hydra-myspecialist.md
+# project-level: cp templates/custom-agent.md .claude/agents/hydra-myspecialist.md
 ```
 
 **2. Customize the agent** — edit the name, description, tools, and instructions.
 
-**3. Deploy it:**
-```bash
-./scripts/install.sh --user   # or --project
-```
+**3. Restart your CLI** — the new head is discoverable alongside the built-in ten.
 
-Your new head is now discoverable by Claude Code alongside the built-in ten.
+The template uses the Markdown agent format shared by Claude Code and Gemini CLI
+(`~/.gemini/agents/`); Codex CLI agents live in `~/.codex/agents/` as TOML.
 See [`templates/custom-agent.md`](templates/custom-agent.md) for the full template with
 instructions on writing effective agent descriptions, output formats, and collaboration protocols.
 
@@ -742,27 +759,24 @@ instructions on writing effective agent descriptions, output formats, and collab
 
 ```
 hydra/
-├── 📄 SKILL.md                          # Core framework instructions
-├── 🐲 agents/
-│   ├── hydra-scout.md                   # 🟢 Codebase explorer
-│   ├── hydra-runner.md                  # 🟢 Test & build executor
-│   ├── hydra-scribe.md                  # 🟢 Documentation writer
-│   ├── hydra-guard.md                   # 🟢 Security/quality gate
-│   ├── hydra-git.md                     # 🟢 Git operations
-│   ├── hydra-sentinel-scan.md           # 🟢 Fast integration sweep
-│   ├── hydra-preflight.md               # 🟢 Environment preflight check
-│   ├── hydra-coder.md                   # 🔵 Code implementer
-│   ├── hydra-analyst.md                 # 🔵 Code reviewer & debugger
-│   └── hydra-sentinel.md               # 🔵 Deep integration analysis
-├── 📚 references/
-│   ├── routing-guide.md                 # 30+ task classification examples
-│   └── model-capabilities.md            # What each model excels at
-├── ⚙️ config/
-│   └── hydra.config.md                  # User configuration template
+├── 📄 bin/cli.js                        # The npx installer (hail-hydra-cc)
+├── 🧬 content/                          # Canonical source — single origin for every host
+│   ├── SKILL.md                         # Orchestrator instructions (full)
+│   ├── skill-core.md                    # Compressed core for size-capped hosts
+│   ├── agents/                          # 10 agent definitions
+│   ├── commands/                        # 12 command definitions
+│   ├── references/                      # Routing guide + model capabilities
+│   ├── config/hydra.config.md           # User configuration template
+│   └── skills/stfu-agents/              # STFU-Agents skill
+├── ⚙️ src/
+│   ├── generator/                       # Emitters: content/ → dist/<host>/
+│   ├── installer/                       # Multi-host installer (hosts/claude|gemini|codex.js)
+│   ├── hooks/<host>/                    # Per-host lifecycle hooks
+│   └── lib/                             # Shared cores (token math, guard, sentinel state)
+├── 📦 dist/                             # Generated per-host payload (`npm run build` — gitignored)
 ├── 📋 templates/
 │   └── custom-agent.md                  # Template for adding your own heads
-└── 🔧 scripts/
-    └── install.sh                       # One-command deployment
+└── 🧪 test/                             # Node test suite (`npm test`)
 ```
 
 ---
@@ -796,6 +810,12 @@ hydra/
 Note: When Hydra is invoked across a representative mix of task types, blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48% of all-Opus.
 Per-dispatch savings of **40–60%** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
 Savings calculated against Opus ($5/$25 per MTok) as of February 2026.
+
+On Gemini CLI and Codex CLI the same routing applies against that host's own
+frontier model — Flash-tier heads measured against an all-Gemini-Pro baseline,
+Luna/Terra heads against an all-GPT-5.6-Sol baseline — landing around the same
+~50% blended mark. `/hydra:stats` (`$hydra-stats` on Codex) reports real
+per-host numbers.
 
 ### Measure Your Savings
 
@@ -911,12 +931,15 @@ Yes. Hydra heads coexist with any other subagents. Claude Code discovers all age
 <summary><strong>How do I uninstall?</strong></summary>
 <br/>
 
-Removes all agents, commands, hooks, and cache files. Deregisters hooks from
-`~/.claude/settings.json`. Your other Claude Code configuration is preserved.
+Removes all agents, commands, skills, hooks, and cache files, and reverses the
+host wiring — hooks/statusLine in `~/.claude/settings.json`, hooks in
+`~/.gemini/settings.json` plus the `GEMINI.md` marker block, and Codex's
+`hooks.json`, `config.toml` marker blocks, and `AGENTS.md` block. Your own
+configuration (including any `hydra/config/` files) is preserved.
 
 ```bash
-./scripts/install.sh --uninstall
-# or: npx hail-hydra-cc --uninstall
+npx hail-hydra-cc --uninstall              # every host with Hydra installed
+npx hail-hydra-cc --uninstall --gemini     # just one host
 ```
 
 </details>
@@ -1042,7 +1065,7 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/><br/>
   <em>Built with 🧠 by Claude Opus — ironically, the model this framework is designed to use less of.</em>
   <br/>
-  <em>v2.0.4 — Now with memory, integration integrity, and task notifications.</em>
+  <em>v3.0.0 — Now multi-host: Claude Code, Gemini CLI, and Codex CLI.</em>
 </p>
 
 ---

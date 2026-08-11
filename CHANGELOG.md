@@ -5,6 +5,47 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-08-10
+
+### Breaking
+- **Repository restructure — single-source `content/` + generated `dist/`** —
+  All agents, commands, skills, and references now live once in `content/`
+  and are emitted per host into `dist/<host>/` by `npm run build`. The
+  hand-synced `npm-package/` mirror and `scripts/install.sh` are removed —
+  `npx hail-hydra-cc` is the one supported install path.
+
+### Added
+- **Multi-host support: Gemini CLI and Codex CLI** — The installer now
+  targets three hosts. Gemini CLI gets Markdown agents, TOML `/hydra:*`
+  commands, hooks registered in `~/.gemini/settings.json`, and a `GEMINI.md`
+  marker block. Codex CLI gets TOML agents, `$hydra-*` skills in
+  `~/.agents/skills/`, hooks via `hooks.json` + `config.toml` marker blocks,
+  and an `AGENTS.md` marker block (one-time `/hooks` trust review required).
+  Agents pin to each host's own model tiers, and `/hydra:stats` prices them
+  with host-native pricing.
+- **New CLI flags** — `--agent=claude,gemini,codex` (aliases `--claude` /
+  `--gemini` / `--codex`), `--all` (every detected agent), `--local` /
+  `--both` scopes, `--yes` (non-interactive), `--dry-run`, and
+  `--config-dir <path>`. `--global`, `--status`, and `--uninstall` behave as
+  before, now host-aware.
+
+### Fixed
+- **Update banner was dead in v2.x** — the SessionStart check read VERSION
+  from a path the installer never wrote, so the installed version stayed
+  `unknown` and the `⚡ vX.Y.Z available` banner never appeared. VERSION is
+  now read from `<base>/skills/hydra/VERSION` (project first, then global).
+- **`⚠ Sentinel pending` indicator stuck on Windows** — the pending flag's
+  producer and consumer used bash `${TMPDIR:-/tmp}` blocks that diverged
+  from `os.tmpdir()` on Windows. All hooks now share
+  `src/lib/sentinel-state.js`, keyed on `os.tmpdir()` everywhere.
+- **Pricing keyed by tier + Fable tier added** — the PRICING map was keyed
+  by model prefix (`claude-opus-4`, …) and went stale the moment the
+  5-series shipped; it is now keyed by tier so `getTier()` is the single
+  place that knows model IDs. `claude-fable-*` / `claude-mythos-*` turns
+  were previously dropped into `unknownModels` and excluded from cost and
+  delegation math; they now bill at the Fable tier ($10/$50 per MTok),
+  excluded from delegated tiers.
+
 ## [2.4.2] - 2026-06-09
 
 ### Fixed
