@@ -22,15 +22,28 @@ function trackingFile(sessionId) { return path.join(GUARD_DIR(), `${sessionId}.t
 
 // Producer side (auto-guard): record an edited file, refresh the pending flag,
 // invalidate any prior clean marker.
+// ponytail: unlocked read-modify-write — parallel hook processes can drop each
+// other's path from `files` (statusline count only; the pending flag itself
+// always survives). Upgrade to an O_APPEND line format or a lock file if the
+// count ever needs to be exact. Temp+rename below only prevents torn JSON.
 function markPending(sessionId, filePath) {
   const dir = SENTINEL_DIR();
   fs.mkdirSync(dir, { recursive: true });
 
   let pending = { files: [], created_at: Date.now() };
   try { pending = JSON.parse(fs.readFileSync(pendingFile(sessionId), 'utf8')); } catch {}
+  if (!Array.isArray(pending.files)) pending.files = [];
   if (!pending.files.includes(filePath)) pending.files.push(filePath);
   pending.updated_at = Date.now();
-  fs.writeFileSync(pendingFile(sessionId), JSON.stringify(pending));
+  const target = pendingFile(sessionId);
+  const tmp = `${target}.${process.pid}.tmp`;
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(pending));
+    fs.renameSync(tmp, target);
+  } catch {
+    try { fs.unlinkSync(tmp); } catch {}
+    fs.writeFileSync(target, JSON.stringify(pending)); // win32: rename can fail if target is open
+  }
 
   try {
     const marker = scanMarker(sessionId);

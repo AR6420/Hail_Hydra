@@ -34,28 +34,39 @@ const crypto = require('crypto');
 
 const { tierCost, emptyStats, makeSummary } = require('../../lib/token-math-core');
 
-// Keyed by tier — getTier() owns the model→tier mapping. 2.5-flash (cheap
-// agent tier) and 3-flash-preview (mid agent tier) price differently, so they
-// get separate tiers rather than one 'flash' bucket.
+// Keyed by tier — getTier() owns the model→tier mapping. Every generation
+// prices differently (G23), so each priced generation gets its own tier;
+// generations without a published price go to unknownModels, never a
+// neighboring tier's rate.
 const PRICING = {
-  'flash-lite': { input: 0.10, output: 0.40, cacheRead: 0.01 },
-  'flash':      { input: 0.30, output: 2.50, cacheRead: 0.03 },
-  'flash-3':    { input: 0.50, output: 3.00, cacheRead: 0.05 },
-  'pro':        { input: 2.00, output: 12.00, cacheRead: 0.20, proxyOf: 'gemini-3.1-pro-preview' },
+  'flash-lite':     { input: 0.10, output: 0.40,  cacheRead: 0.01 },
+  'flash-lite-3.1': { input: 0.25, output: 1.50,  cacheRead: 0.025 },
+  'flash':          { input: 0.30, output: 2.50,  cacheRead: 0.03 },
+  'flash-3':        { input: 0.50, output: 3.00,  cacheRead: 0.05 },
+  'flash-3.5':      { input: 1.50, output: 9.00,  cacheRead: 0.15 },
+  'flash-3.6':      { input: 1.50, output: 7.50,  cacheRead: 0.15 },
+  'pro-2.5':        { input: 1.25, output: 10.00, cacheRead: 0.125 },
+  'pro':            { input: 2.00, output: 12.00, cacheRead: 0.20, proxyOf: 'gemini-3.1-pro-preview' },
 };
 
-const DELEGATED_TIERS = ['flash-lite', 'flash', 'flash-3'];
+const DELEGATED_TIERS = ['flash-lite', 'flash-lite-3.1', 'flash', 'flash-3', 'flash-3.5', 'flash-3.6'];
 const TIERS = Object.keys(PRICING);
 const BASELINE_TIER = 'pro';
 
 const pricingConfig = { PRICING, TIERS, DELEGATED_TIERS, baselineTier: BASELINE_TIER };
 
+// Exact generation matching — an unmatched generation returns null (reported
+// as unknown/uncounted) rather than being billed at another generation's rate.
 function getTier(model) {
   if (!model || !model.startsWith('gemini')) return null;
-  if (model.includes('flash-lite')) return 'flash-lite';
-  if (/^gemini-3(\.\d+)?-flash/.test(model)) return 'flash-3';
-  if (model.includes('flash')) return 'flash';
-  if (model.includes('pro')) return 'pro';
+  if (model.startsWith('gemini-2.5-flash-lite')) return 'flash-lite';
+  if (model.startsWith('gemini-3.1-flash-lite')) return 'flash-lite-3.1';
+  if (model.startsWith('gemini-2.5-flash')) return 'flash';
+  if (model.startsWith('gemini-3-flash')) return 'flash-3';       // gemini-3-flash-preview
+  if (model.startsWith('gemini-3.5-flash')) return 'flash-3.5';
+  if (model.startsWith('gemini-3.6-flash')) return 'flash-3.6';
+  if (model.startsWith('gemini-2.5-pro')) return 'pro-2.5';
+  if (model.startsWith('gemini-3-pro') || model.startsWith('gemini-3.1-pro')) return 'pro';
   return null;
 }
 
@@ -240,10 +251,14 @@ function fmt(n) {
 }
 
 const TIER_LABELS = {
-  'flash-lite': '🟢 Flash-Lite',
-  'flash':      '🟢 Flash 2.5 ',
-  'flash-3':    '🔵 Flash 3   ',
-  'pro':        '🟣 Pro       ',
+  'flash-lite':     '🟢 Flash-Lite',
+  'flash-lite-3.1': '🟢 Lite 3.1  ',
+  'flash':          '🟢 Flash 2.5 ',
+  'flash-3':        '🔵 Flash 3   ',
+  'flash-3.5':      '🔵 Flash 3.5 ',
+  'flash-3.6':      '🔵 Flash 3.6 ',
+  'pro-2.5':        '🟣 Pro 2.5   ',
+  'pro':            '🟣 Pro       ',
 };
 
 function formatReport(summary) {

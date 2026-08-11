@@ -34,9 +34,14 @@ function spawnCheck({ cacheFile, versionFiles }) {
     const versionFiles = ${JSON.stringify(versionFiles)};
 
     try {
+      // VERSION can live in an untrusted working tree and its value reaches
+      // the model's context via the update banner — accept only a
+      // semver-shaped string; anything else is skipped (stays 'unknown').
       let installed = 'unknown';
       for (const vf of versionFiles) {
-        try { installed = fs.readFileSync(vf, 'utf8').trim(); break; } catch (e) {}
+        let v;
+        try { v = fs.readFileSync(vf, 'utf8').trim(); } catch (e) { continue; }
+        if (v.length <= 64 && /^\\d+\\.\\d+\\.\\d+[\\w.-]*$/.test(v)) { installed = v; break; }
       }
 
       const latest = execSync('npm view ${PKG_NAME} version', {

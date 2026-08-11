@@ -23,17 +23,19 @@
 //     so summing last_token_usage double-counts. We therefore consume
 //     total_token_usage as per-row DELTAS (repeat rows delta to zero and are
 //     skipped); if a delta goes negative (counter reset), the row's totals
-//     are taken as a fresh baseline. last_token_usage is only a fallback when
-//     total_token_usage is absent.
+//     are taken as a fresh baseline. last_token_usage is only a fallback while
+//     NO total_token_usage baseline has been seen — after that, last-only rows
+//     are ignored (their tokens arrive in the next cumulative delta).
 //   - info can be null for individual rows or ENTIRE sessions (some vscode /
 //     app-server surfaces — C17): those sessions produce an explicit
 //     "no usage data" result ({available:false, noUsageData:true}), never NaN.
 //   - pricing per C21 (USD/1M, in/cached/out): luna 0.20/0.02/1.20,
-//     terra 2.00/0.20/12.00, sol 5.00/0.50/30.00. gpt-5.5 bills identically
-//     to sol (published prices match) and maps to the sol tier. Models with
-//     no published price (gpt-5.3-codex-spark, codex-mini) are reported as
-//     unknown/uncounted, never guessed. Baseline = all-Sol; delegated tiers
-//     = luna + terra.
+//     terra 2.00/0.20/12.00, sol 5.00/0.50/30.00, gpt-5.3-codex
+//     1.75/0.175/14.00. gpt-5.5 bills identically to sol (published prices
+//     match) and maps to the sol tier. Models with no published price
+//     (gpt-5.3-codex-spark, codex-mini) are reported as unknown/uncounted,
+//     never guessed. Baseline = all-Sol; delegated tiers = luna + terra
+//     (gpt-5.3-codex is a user-pinned main model, not a delegation target).
 //
 // Cost formula (C17/C21), realized through lib tierCost with explicit
 // cacheRead prices (stats.input already excludes cached tokens):
@@ -49,6 +51,7 @@ const PRICING = {
   luna:  { input: 0.20, output: 1.20,  cacheRead: 0.02 },
   terra: { input: 2.00, output: 12.00, cacheRead: 0.20 },
   sol:   { input: 5.00, output: 30.00, cacheRead: 0.50 },
+  'codex-5.3': { input: 1.75, output: 14.00, cacheRead: 0.175 },
 };
 
 const DELEGATED_TIERS = ['luna', 'terra'];
@@ -64,6 +67,7 @@ function getTier(model) {
   if (model.includes('sol')) return 'sol';
   if (model === 'gpt-5.6') return 'sol';            // alias (C20)
   if (/^gpt-5\.5($|[^0-9])/.test(model)) return 'sol'; // identical published price (C21)
+  if (/^gpt-5\.3-codex($|[^-])/.test(model)) return 'codex-5.3'; // published price (C21); -spark/-mini excluded
   return null; // spark / codex-mini / retired gpt-5.4* — unpriced (C21)
 }
 
@@ -183,7 +187,11 @@ function parseSession(sessionFile) {
           dIn = cur.input; dCached = cur.cached; dOut = cur.output;
         }
         prev = cur;
-      } else if (last) {
+      } else if (last && !prev) {
+        // Fallback only while NO cumulative baseline exists: once a
+        // total_token_usage row has been seen, a last-only row's tokens are
+        // already contained in the next cumulative delta — billing it too
+        // would double-count.
         dIn = last.input_tokens || 0;
         dCached = last.cached_input_tokens || 0;
         dOut = last.output_tokens || 0;
@@ -258,6 +266,7 @@ const TIER_LABELS = {
   luna:  '🟢 Luna ',
   terra: '🔵 Terra',
   sol:   '🟣 Sol  ',
+  'codex-5.3': '🔵 Codex',
 };
 
 function formatReport(summary) {

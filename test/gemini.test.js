@@ -183,16 +183,16 @@ const tm = require(path.join(DIST, 'hooks', 'hydra-token-math.js'));
 
 // getTier / getPrice.
 assert.strictEqual(tm.getTier('gemini-2.5-flash-lite'), 'flash-lite');
-assert.strictEqual(tm.getTier('gemini-3.1-flash-lite'), 'flash-lite');
+assert.strictEqual(tm.getTier('gemini-3.1-flash-lite'), 'flash-lite-3.1', 'own priced tier (G23)');
 assert.strictEqual(tm.getTier('gemini-2.5-flash'), 'flash');
 assert.strictEqual(tm.getTier('gemini-3-flash-preview'), 'flash-3');
-assert.strictEqual(tm.getTier('gemini-3.1-flash'), 'flash-3');
-assert.strictEqual(tm.getTier('gemini-2.5-pro'), 'pro');
+assert.strictEqual(tm.getTier('gemini-3.1-flash'), null, 'no published price → unknown, never a wrong tier');
+assert.strictEqual(tm.getTier('gemini-2.5-pro'), 'pro-2.5', 'own priced tier, not the 3.1-pro proxy (G23)');
 assert.strictEqual(tm.getTier('gemini-3-pro-preview'), 'pro');
 assert.strictEqual(tm.getTier('gemini-3.1-pro-preview'), 'pro');
 assert.strictEqual(tm.getTier('claude-opus-5'), null);
 assert.strictEqual(tm.getTier(''), null);
-assert.deepStrictEqual(tm.DELEGATED_TIERS, ['flash-lite', 'flash', 'flash-3']);
+assert.deepStrictEqual(tm.DELEGATED_TIERS, ['flash-lite', 'flash-lite-3.1', 'flash', 'flash-3', 'flash-3.5', 'flash-3.6']);
 assert.strictEqual(tm.PRICING.pro.proxyOf, 'gemini-3.1-pro-preview', 'pro tier carries the proxy note');
 assert.strictEqual(tm.getPrice('gemini-2.5-flash').input, 0.30);
 

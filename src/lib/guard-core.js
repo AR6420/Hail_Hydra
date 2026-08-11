@@ -43,13 +43,18 @@ function processEdit({ sessionId, toolKind, filePath, oldStr, newStr, configDirN
   if (!filePath) return null;
   const sid = sessionId || 'unknown';
 
-  sentinel.trackEditedFile(sid, filePath);
-  sentinel.markPending(sid, filePath);
+  // filePath comes from tool_input (untrusted): strip control chars so the
+  // injected directive stays one line and the newline-delimited tracking
+  // file stays one path per line.
+  const cleanPath = String(filePath).replace(/[\x00-\x1f\x7f]+/g, ' ');
+
+  sentinel.trackEditedFile(sid, cleanPath);
+  sentinel.markPending(sid, cleanPath);
 
   if (!isSubstantial({ toolKind, oldStr, newStr })) return null;
 
-  const note = riskNote(filePath, configDirName);
-  return `🐉 Hydra Auto-Guard: Substantial change to ${path.basename(filePath)}.${note} Dispatch hydra-sentinel-scan to verify integration before presenting results to the user.`;
+  const note = riskNote(cleanPath, configDirName);
+  return `🐉 Hydra Auto-Guard: Substantial change to ${path.basename(cleanPath)}.${note} Dispatch hydra-sentinel-scan to verify integration before presenting results to the user.`;
 }
 
 module.exports = { isSubstantial, riskNote, processEdit };
