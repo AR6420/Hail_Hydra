@@ -60,18 +60,21 @@ Present results as a clean status card:
 ```
 🐉 Hydra Framework Status
 ──────────────────────────────
-Version:     1.0.0 (latest: 1.0.0 ✅)  OR  (update available: 1.1.0 ⚡)
+Version:     X.Y.Z (latest: X.Y.Z ✅)  OR  (update available: X.Y.Z ⚡)
 Install:     Global (~/.claude/)
-Agents (7):
-  🟢 hydra-scout    (Haiku 4.5)   ✅
-  🟢 hydra-runner   (Haiku 4.5)   ✅
-  🟢 hydra-scribe   (Haiku 4.5)   ✅
-  🟢 hydra-guard    (Haiku 4.5)   ✅
-  🟢 hydra-git      (Haiku 4.5)   ✅
-  🔵 hydra-coder    (Sonnet 4.6)  ✅
-  🔵 hydra-analyst  (Sonnet 4.6)  ✅
-Commands (12): update, status, help, config, guard, quiet, verbose, report, map, preflight, stats, stfu
-Hooks (4):    check-update ✅, statusline ✅, auto-guard ✅, notify ✅
+Agents (10):
+  🟢 hydra-scout         (cheap tier) ✅
+  🟢 hydra-runner        (cheap tier) ✅
+  🟢 hydra-scribe        (cheap tier) ✅
+  🟢 hydra-guard         (cheap tier) ✅
+  🟢 hydra-git           (cheap tier) ✅
+  🟢 hydra-preflight     (cheap tier) ✅
+  🟢 hydra-sentinel-scan (cheap tier) ✅
+  🔵 hydra-coder         (mid tier)   ✅
+  🔵 hydra-analyst       (mid tier)   ✅
+  🔵 hydra-sentinel      (mid tier)   ✅
+Commands (11): update, status, help, config, guard, quiet, report, map, preflight, stats, stfu
+Hooks (6):    check-update ✅, statusline ✅, token-math ✅, auto-guard ✅, notify ✅, sentinel-done ✅
 Map:          ✅ Current (487 files, built 2026-03-26)
 Config:       balanced mode, dispatch log on, auto-guard on
 ──────────────────────────────

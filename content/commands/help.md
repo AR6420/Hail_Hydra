@@ -17,7 +17,6 @@ COMMANDS
   /hydra:guard     Run security scan on files (usage: /hydra:guard src/auth.py)
   /hydra:quiet     Suppress dispatch logs for this session
   /hydra:map       View, rebuild, or query the codebase map
-  /hydra:verbose   Enable verbose dispatch logs with timing
   /hydra:report    Report a bug, request a feature, or share feedback
   /hydra:preflight Two-phase environment & compatibility check before new projects
   /hydra:stats     Show real token usage and estimated savings (no AI estimation)

@@ -9,8 +9,6 @@ Acknowledge this command and remember for the rest of this session:
 **Do NOT display the Hydra Dispatch Log footer after tasks.**
 
 Respond with:
-"🐉 Quiet mode enabled. Dispatch logs suppressed for this session. Use /hydra:verbose to re-enable."
+"🐉 Quiet mode enabled. Dispatch logs suppressed for this session. Say \"show dispatch logs\" to re-enable."
 
 Continue operating Hydra normally (delegation, verification, auto-guard) — just don't show the dispatch log table.
-
-Also suppress the task completion notification sound for this session.

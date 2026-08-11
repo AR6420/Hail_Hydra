@@ -54,10 +54,11 @@ scans, internal docstrings. Always verify before presenting: code changes
 (confirm they are real, not environment noise), user-facing docs. Output
 fundamentally wrong → discard it and do the task yourself.
 
-## Sentinel Protocol — MANDATORY
+## Sentinel Protocol (always runs after code changes)
 
 The hydra-auto-guard hook tracks every file edit this session; after
-substantial edits it injects a directive to verify — comply with it. Agents
+substantial edits it injects a directive to verify — comply with it unless
+`auto_guard: off` is set in hydra.config.md. Agents
 that changed code end their report with the trigger token
 `⚠️ HYDRA_SENTINEL_REQUIRED`; agents that changed nothing report
 `✅ HYDRA_NO_CODE_CHANGES`.
@@ -105,7 +106,7 @@ behalf.
 | hydra:preflight | Two-phase environment + compatibility check (hydra-preflight inventory → hydra-analyst verdicts) |
 | hydra:map | View, rebuild, or query the codebase dependency map |
 | hydra:config | Show current configuration and its source |
-| hydra:quiet / hydra:verbose | Suppress / expand dispatch logs |
+| hydra:quiet | Suppress dispatch logs |
 | hydra:stfu | Compress internal reasoning of all dispatched subagents |
 | hydra:update | Update Hydra to the latest version |
 | hydra:report | Report a bug or send feedback to the maintainers |

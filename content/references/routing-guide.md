@@ -1,18 +1,20 @@
-# Routing Guide — Mandatory Delegation Examples
+# Routing Guide — Delegation Examples
 
-This reference provides concrete examples to see mandatory delegation in action.
-Read this when you need to see how delegation rules apply to real tasks.
+This reference provides concrete examples of effective delegation.
+Read this when you need to see how the routing rules apply to real tasks.
 
 ## Table of Contents
-1. [ALWAYS Delegate — Haiku 4.5 Agents](#always-delegate-haiku)
-2. [ALWAYS Delegate — Sonnet 4.6 Agents](#always-delegate-sonnet)
-3. [ALWAYS Handle Yourself — Opus 4.6](#always-handle-yourself-opus)
-4. [Compound Task Decomposition](#compound-tasks)
+1. [Delegate — Haiku 4.5 Agents](#delegate--haiku-45-agents)
+2. [Delegate — Sonnet 4.6 Agents](#delegate--sonnet-46-agents)
+3. [Handle Yourself — Orchestrator](#handle-yourself--orchestrator)
+4. [Compound Tasks](#compound-tasks)
 5. [Common Misclassifications](#common-misclassifications)
+6. [Quick Decision Flowchart](#quick-decision-flowchart)
+7. [Sentinel Routing](#sentinel-routing)
 
 ---
 
-## ALWAYS Delegate — Haiku 4.5 Agents
+## Delegate — Haiku 4.5 Agents
 
 ### hydra-scout (Haiku 4.5) examples
 | User says | Route to | Why |
@@ -31,7 +33,6 @@ Read this when you need to see how delegation rules apply to real tasks.
 | "Run the tests" | hydra-runner (Haiku 4.5) | Execute test command, report results |
 | "Does the build pass?" | hydra-runner (Haiku 4.5) | Run build, report success/failure |
 | "Check if there are any lint errors" | hydra-runner (Haiku 4.5) | Run linter, report findings |
-| "What's the git status?" | hydra-runner (Haiku 4.5) | Run git status/diff |
 | "Run the migration" | hydra-runner (Haiku 4.5) | Execute migration command |
 | "Check if the server starts" | hydra-runner (Haiku 4.5) | Start server, check for errors |
 
@@ -64,7 +65,7 @@ Read this when you need to see how delegation rules apply to real tasks.
 
 ---
 
-## ALWAYS Delegate — Sonnet 4.6 Agents
+## Delegate — Sonnet 4.6 Agents
 
 ### hydra-coder (Sonnet 4.6) examples
 | User says | Route to | Why |
@@ -88,10 +89,10 @@ Read this when you need to see how delegation rules apply to real tasks.
 
 ---
 
-## ALWAYS Handle Yourself — Opus 4.6
+## Handle Yourself — Orchestrator
 
-| User says | Why Opus? |
-|-----------|-----------|
+| User says | Why the orchestrator? |
+|-----------|-----------------------|
 | "Design the database schema for a multi-tenant SaaS" | Novel architecture decisions |
 | "This works in staging but not production and I can't figure out why" | Subtle debugging, no clear clues |
 | "How should we structure the microservices?" | System design requiring tradeoff analysis |
@@ -113,11 +114,21 @@ Many real user requests contain multiple subtasks at different tiers. Decompose 
 
 ### Example 1: "Fix the bug in auth.py and add tests"
 1. **hydra-scout (Haiku 4.5)** [BLOCKING] → Find auth.py, read it, understand the context
-2. **hydra-coder (Sonnet 4.6)** [BLOCKING] → Fix the bug and write tests
-3. **hydra-sentinel-scan (Haiku 4.5)** [BLOCKING] → Integration sweep on changed files
+2. **hydra-analyst (Sonnet 4.6)** [BLOCKING] → Diagnose the root cause (skip for obvious errors)
+3. **hydra-coder (Sonnet 4.6)** [BLOCKING] → Fix the bug and write tests
+4. **hydra-sentinel-scan (Haiku 4.5)** [BLOCKING] → Integration sweep on changed files
    **hydra-guard (Haiku 4.5)** [BLOCKING] → Security scan on changed files
    **hydra-runner (Haiku 4.5)** [BLOCKING] → Run the tests to verify
-4. *(If sentinel-scan flags issues)* **hydra-sentinel (Sonnet 4.6)** [BLOCKING] → Deep analysis
+5. *(If sentinel-scan flags issues)* **hydra-sentinel (Sonnet 4.6)** [BLOCKING] → Deep analysis
+
+**With the codebase map**: step 1 starts with a map lookup — if auth.py shows
+risk=critical with 12 dependents, sentinel-scan checks all 12 dependents from the
+map's blast radius (no codebase-wide grep), and deep sentinel analysis is
+auto-escalated because of the critical risk score.
+
+**The anti-pattern**: reading auth.py yourself, fixing it yourself, and running
+the tests yourself — the orchestrator burns frontier-tier tokens on work the
+cheap and mid tiers handle at a fraction of the cost.
 
 ### Example 2: "Refactor the API module and update the docs"
 1. **hydra-scout (Haiku 4.5)** [BLOCKING] → Map the current API module structure
@@ -131,13 +142,44 @@ Many real user requests contain multiple subtasks at different tiers. Decompose 
 ### Example 3: "Review the codebase and suggest architecture improvements"
 1. **hydra-scout (Haiku 4.5)** → Map the project structure and key files
 2. **hydra-analyst (Sonnet 4.6)** → Review code quality and patterns
-3. **Opus 4.6 (you)** → Synthesize findings into architecture recommendations
+3. **Orchestrator (you)** → Synthesize findings into architecture recommendations
 
 ### Example 4: "Set up CI/CD for this project"
 1. **hydra-scout (Haiku 4.5)** → Understand the project structure, build system, test framework
-2. **Opus 4.6 (you)** → Design the CI/CD pipeline (architectural decision)
+2. **Orchestrator (you)** → Design the CI/CD pipeline (architectural decision)
 3. **hydra-coder (Sonnet 4.6)** → Implement the config files
 4. **hydra-runner (Haiku 4.5)** → Validate the configuration
+
+### Example 5: "This function is slow, figure out why"
+1. **hydra-analyst (Sonnet 4.6)** → Profile and diagnose the performance issue
+2. **Orchestrator (you)** → Decide the optimization approach (architectural judgment)
+3. **hydra-coder (Sonnet 4.6)** → Implement the optimization
+4. **hydra-runner (Haiku 4.5)** → Benchmark before and after
+
+### Example 6: "Redesign the auth module to use OAuth2"
+1. **hydra-scout** → map current auth module structure [parallel with Step 2]
+2. **hydra-scout** → research OAuth2 patterns in codebase [parallel with Step 1]
+3. **Orchestrator (you)** → design the new architecture (this is YOUR job)
+4. **hydra-coder #1** → implement OAuth2 provider [parallel with Steps 5-6]
+5. **hydra-coder #2** → implement token management [parallel with Steps 4, 6]
+6. **hydra-coder #3** → update route handlers [parallel with Steps 4-5]
+7. **hydra-sentinel-scan** → integration sweep on all changes
+8. **hydra-runner** → run full test suite
+
+**With the codebase map**: if the map shows the module (e.g. src/db/connection.ts
+in a comparable refactor) at risk=critical with 15 dependents, plan the parallel
+coder dispatches around the full blast radius and treat sentinel deep analysis
+as required, not optional.
+
+### Example 7: "Quick — add a console.log to line 5"
+**Handle it yourself.** A trivial one-shot edit is faster done directly than
+dispatched — this is the standing exception, not a violation.
+
+### Low-risk shortcut: "Add a new utility function"
+1. Check map: new file, risk=low (zero dependents initially)
+2. **hydra-coder** → write the function
+3. **hydra-sentinel-scan** → low risk, quick scan, auto-accept if clean
+   (without the map, the same expensive scan as a critical file)
 
 ---
 
@@ -150,37 +192,9 @@ These are tasks that look like one tier but are actually another:
 | "Add a simple button" | Haiku (simple) | hydra-coder (Sonnet) | Needs to match existing component patterns |
 | "Read the logs and find the error" | Haiku (read) | hydra-analyst (Sonnet) | Log analysis requires reasoning |
 | "Fix the typo in line 42" | hydra-coder (Sonnet) | hydra-scribe (Haiku) | Trivial mechanical change |
-| "Add caching" | hydra-coder (Sonnet) | Opus (handle yourself) | Cache invalidation strategy is hard |
+| "Add caching" | hydra-coder (Sonnet) | Orchestrator (handle yourself) | Cache invalidation strategy is hard |
 | "Write a migration to add a column" | hydra-coder (Sonnet) | hydra-scribe (Haiku) | Template-level SQL |
-| "Upgrade React from 17 to 18" | Haiku (simple) | Opus (handle yourself) | Breaking changes need careful analysis |
-
----
-
-## Map-Aware Routing Examples
-
-These examples show how the codebase map changes routing decisions by providing
-risk scores and blast radius data upfront.
-
-### "Fix the bug in auth.ts"
-1. Check map: auth.ts has risk=critical, 12 dependents
-2. hydra-scout → verify map is current (incremental update if needed)
-3. hydra-analyst → diagnose the bug
-4. hydra-coder → implement the fix
-5. hydra-sentinel-scan → map shows blast radius of 12 files, check all 12
-   (without map, would have to grep the entire codebase)
-6. hydra-sentinel → deep analysis (auto-escalated because risk=critical)
-
-### "Add a new utility function"
-1. Check map: new file, risk=low (zero dependents initially)
-2. hydra-coder → write the function
-3. hydra-sentinel-scan → low risk, quick scan, auto-accept if clean
-   (without map, would run the same expensive scan as a critical file)
-
-### "Refactor the database connection module"
-1. Check map: src/db/connection.ts has risk=critical, 15 dependents
-2. Plan execution with full blast radius awareness
-3. Dispatch parallel hydra-coders for each affected file
-4. Sentinel deep analysis is MANDATORY (critical risk)
+| "Upgrade React from 17 to 18" | Haiku (simple) | Orchestrator (handle yourself) | Breaking changes need careful analysis |
 
 ---
 
@@ -189,103 +203,18 @@ risk scores and blast radius data upfront.
 ```
 Task arrives
 │
-├── In ALWAYS Delegate table? ── YES ──→ Route to specified agent
+├── In a Delegate table? ── YES ──→ Route to specified agent
 │
-├── In ALWAYS Handle Yourself table? ── YES ──→ Opus handles directly
+├── In the Handle Yourself table? ── YES ──→ Orchestrator handles directly
 │
 └── Neither? → JUDGMENT CALLS:
-    ├── Requires conversation context? ── YES ──→ Opus
-    ├── Haiku/Sonnet can do equally well? ── NO ──→ Opus
-    └── Delegation takes LONGER? ── YES (and truly trivial) ──→ Opus
+    ├── Requires conversation context? ── YES ──→ Orchestrator
+    ├── Cheap/mid tier can do equally well? ── NO ──→ Orchestrator
+    └── Delegation takes LONGER? ── YES (and truly trivial) ──→ Orchestrator
         └── Otherwise ──→ Delegate to best-fit agent
 ```
 
-## Routing Examples — Mandatory Delegation
-
-These examples show the RIGHT and WRONG way to handle common requests under the mandatory delegation rules.
-
-### 1. "Fix the bug in auth.ts"
-
-**WRONG** (Opus does it all):
-```
-Read auth.ts yourself → find the bug → fix it → run tests
-```
-
-**RIGHT** (mandatory delegation):
-```
-1. hydra-scout → explore auth module, find the bug location
-2. hydra-analyst → analyze the bug, identify root cause
-3. hydra-coder → implement the fix
-4. hydra-sentinel-scan + hydra-guard → verify changes [parallel]
-5. hydra-runner → run tests to confirm fix
-```
-
-### 2. "What's the project structure?"
-
-**WRONG** (Opus runs find/ls itself):
-```
-Run `find . -type f` or `ls -R` yourself
-```
-
-**RIGHT** (mandatory delegation):
-```
-1. hydra-scout → map project structure, report back
-```
-
-### 3. "Run the tests"
-
-**WRONG** (Opus runs npm test itself):
-```
-Run `npm test` yourself
-```
-
-**RIGHT** (mandatory delegation):
-```
-1. hydra-runner → execute test suite, report results
-```
-
-### 4. "Commit these changes"
-
-**WRONG** (Opus runs git add/commit itself):
-```
-Run `git add . && git commit -m "..."` yourself
-```
-
-**RIGHT** (mandatory delegation):
-```
-1. hydra-git → stage and commit with well-crafted message
-```
-
-### 5. "This function is slow, figure out why"
-
-**RIGHT** (Opus orchestrates, delegates execution):
-```
-1. hydra-analyst → profile and diagnose the performance issue
-2. YOU → decide the optimization approach (architectural judgment)
-3. hydra-coder → implement the optimization
-4. hydra-runner → benchmark before and after
-```
-
-### 6. "Redesign the auth module to use OAuth2"
-
-**RIGHT** (Opus architects, delegates implementation):
-```
-1. hydra-scout → map current auth module structure [parallel with Step 2]
-2. hydra-scout → research OAuth2 patterns in codebase [parallel with Step 1]
-3. YOU → design the new architecture (this is YOUR job)
-4. hydra-coder #1 → implement OAuth2 provider [parallel with Steps 5-6]
-5. hydra-coder #2 → implement token management [parallel with Steps 4, 6]
-6. hydra-coder #3 → update route handlers [parallel with Steps 4-5]
-7. hydra-sentinel-scan → integration sweep on all changes
-8. hydra-runner → run full test suite
-```
-
-### 7. "Quick — add a console.log to line 5"
-
-**ACCEPTABLE** (trivial <5s edit — uses overhead budget):
-```
-YOU → add the console.log directly (counts as 1 of max 2-3 exceptions per session)
-```
+---
 
 ## Sentinel Routing
 

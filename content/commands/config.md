@@ -25,7 +25,6 @@ Show the current Hydra configuration:
 Mode:          balanced
 Dispatch Log:  on
 Auto-Guard:    on
-Model Overrides: none
 ─────────────────────────────
 To customize, create a config file:
   Global:  ~/.claude/skills/hydra/config/hydra.config.md

@@ -1,6 +1,6 @@
 {
   "name": "hail-hydra-cc",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "Multi-agent orchestration framework for AI coding CLIs (Claude Code, Gemini CLI, Codex CLI). Routes tasks to specialized cheap/fast subagents while the frontier model orchestrates — inspired by speculative decoding. ~50% API cost reduction.",
   "bin": {
     "hail-hydra-cc": "bin/cli.js"
@@ -48,7 +48,7 @@
   },
   "files": [
     "bin/",
-    "src/",
+    "src/installer/",
     "dist/"
   ],
   "publishConfig": {

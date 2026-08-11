@@ -30,7 +30,7 @@ const DIST = path.join(ROOT, 'dist', 'codex');
 const { MARKER_BEGIN, MARKER_END, MODEL_MAP, FRAGMENT_BUDGET } = require('../src/generator/emit-codex.js');
 
 const TRIGGERS = ['⚠️ HYDRA_SENTINEL_REQUIRED', '✅ HYDRA_NO_CODE_CHANGES'];
-const COMMANDS = ['config', 'guard', 'help', 'map', 'preflight', 'quiet', 'report', 'stats', 'status', 'stfu', 'update', 'verbose'];
+const COMMANDS = ['config', 'guard', 'help', 'map', 'preflight', 'quiet', 'report', 'stats', 'status', 'stfu', 'update'];
 
 // ── 1. Structural invariants ────────────────────────────────────────────────
 
@@ -60,10 +60,17 @@ for (const f of agentFiles) {
   if (model[1] === 'gpt-5.6-luna') {
     assert.ok(/^model_reasoning_effort = "low"$/m.test(text), `${f}: luna agents pin low reasoning effort`);
   }
+  if (model[1] === 'gpt-5.6-terra') {
+    assert.ok(/^model_reasoning_effort = "medium"$/m.test(text), `${f}: terra agents pin medium reasoning effort`);
+  }
 
-  // C2 refutation: "inherit" is invalid — inherit by omission. No agent in
-  // the current content set is Write/Edit/Bash-free, so none is sandboxable.
-  assert.ok(!text.includes('sandbox_mode'), `${f}: no sandbox_mode key (inherit by omission)`);
+  // C2 refutation: "inherit" is invalid — inherit by omission. hydra-sentinel
+  // is the one Write/Edit/Bash-free agent, so it alone gets read-only sandbox.
+  if (f === 'hydra-sentinel.toml') {
+    assert.ok(/^sandbox_mode = "read-only"$/m.test(text), `${f}: read-only sandbox (no write tools)`);
+  } else {
+    assert.ok(!text.includes('sandbox_mode'), `${f}: no sandbox_mode key (inherit by omission)`);
+  }
   assert.ok(text.includes('## Tool Restrictions (Codex)'), `${f}: tool-restriction prose present (C3)`);
 
   assert.ok(!text.includes('.claude'), `${f}: no .claude paths`);
@@ -74,17 +81,22 @@ assert.ok(
   fs.readFileSync(path.join(DIST, 'agents', 'hydra-analyst.toml'), 'utf8').includes('Never create or modify files.'),
   'analyst restriction prose forbids writes'
 );
+// sentinel dropped its Write grant in v2.5.1 — same restriction prose applies.
+assert.ok(
+  fs.readFileSync(path.join(DIST, 'agents', 'hydra-sentinel.toml'), 'utf8').includes('Never create or modify files.'),
+  'sentinel restriction prose forbids writes'
+);
 // C22 fix: codebase-map path is .codex (lowercase), never .Codex/.claude.
 const scoutToml = fs.readFileSync(path.join(DIST, 'agents', 'hydra-scout.toml'), 'utf8');
 assert.ok(scoutToml.includes('.codex/hydra/codebase-map.json'), 'scout map path is .codex/hydra/codebase-map.json');
 assert.ok(!scoutToml.includes('.Codex'), 'no capital-C .Codex leak');
 
-// Skills: 12 commands + full protocol + stfu.
+// Skills: 11 commands + full protocol + stfu.
 const skillDirs = fs.readdirSync(path.join(DIST, 'skills')).sort();
 assert.deepStrictEqual(
   skillDirs,
   [...COMMANDS.map((c) => `hydra-${c}`), 'hydra', 'stfu-agents'].sort(),
-  '14 skill dirs emitted'
+  '13 skill dirs emitted'
 );
 for (const dir of skillDirs) {
   const text = fs.readFileSync(path.join(DIST, 'skills', dir, 'SKILL.md'), 'utf8');
@@ -121,6 +133,9 @@ assert.ok(updateSkill.includes('--agent=codex --global --yes'), 'update reinstal
 assert.ok(/^name: stfu-agents\r?$/m.test(fs.readFileSync(path.join(DIST, 'skills', 'stfu-agents', 'SKILL.md'), 'utf8')), 'stfu skill name slugified');
 const fullSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra', 'SKILL.md'), 'utf8');
 for (const t of TRIGGERS) assert.ok(fullSkill.includes(t), `full skill carries trigger ${t} byte-exact`);
+// hydra-notify.js is never installed on Codex (notify chain owns the sound) —
+// the emitted skill must not instruct running it.
+assert.ok(!fullSkill.includes('hydra-notify.js'), 'codex skill does not reference the uninstalled hydra-notify.js');
 
 // Sentinel-done cleanup is shell-agnostic (bash ${VAR:-...}/redirects break in
 // PowerShell/cmd on Windows) — node -e form, no redirects.

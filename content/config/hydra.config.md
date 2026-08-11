@@ -11,20 +11,19 @@ Place this file at one of these locations to customize Hydra's behavior:
 mode: balanced
 
 ### Modes:
-- **conservative**: Only delegate clearly mechanical tasks. Higher Opus 4.6 usage, fewer rejections.
+- **conservative**: Only delegate clearly mechanical tasks. Higher orchestrator usage, fewer rejections.
 - **balanced** (default): Standard classification as described in SKILL.md.
 - **aggressive**: Delegate everything possible. Lower costs, slightly higher rejection risk.
 
 ---
 
 ## Dispatch Log
-<!-- Set to: on (default), off, verbose -->
+<!-- Set to: on (default), off -->
 dispatch_log: on
 
 ### Options:
 - **on** (default): Show dispatch log footer after multi-agent tasks
 - **off**: Fully invisible operation (stealth mode)
-- **verbose**: Show dispatch log + per-agent timing
 
 ---
 
@@ -33,18 +32,9 @@ dispatch_log: on
 auto_guard: on
 
 ### Options:
-- **on** (default): Automatically scan code changes with hydra-guard (Haiku 4.5) after hydra-coder
-- **off**: Skip the security/quality gate
+- **on** (default): Automatically scan code changes with hydra-guard (cheap tier) after hydra-coder
+- **off**: The orchestrator skips the security/quality gate (the post-edit hook reminder still appears)
 
 ---
 
-## Custom Agent Overrides
-<!-- Override default model assignments if needed -->
-<!-- Uncomment and modify: -->
-<!-- hydra-scout: sonnet -->
-<!-- hydra-runner: sonnet -->
-<!-- hydra-scribe: sonnet -->
-<!-- hydra-guard: sonnet -->
-<!-- hydra-git: sonnet -->
-<!-- hydra-coder: opus -->
-<!-- hydra-analyst: opus -->
+To change which model an agent runs on, edit the `model:` line in that agent's installed file for your host.

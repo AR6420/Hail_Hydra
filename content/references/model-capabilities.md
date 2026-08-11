@@ -7,7 +7,7 @@ This reference helps calibrate delegation decisions.
 
 ### Strengths
 - Extremely fast response times (~10× faster than Opus)
-- Very low cost per token (~5× cheaper than Opus 4.6 — $1/$5 vs $5/$25 per MTok)
+- Very low cost per token (~5× cheaper than Opus)
 - Excellent at following clear, well-defined instructions
 - Strong at text extraction, search, and pattern matching
 - Good at generating code from templates and clear patterns
@@ -32,19 +32,18 @@ Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguou
 - **hydra-scribe**: Internal docstrings, inline comments, changelog entries
 - **Requires verify**: Any analysis, interpretation, or user-facing documentation
 
-### hydra-scout (Haiku 4.5) — Updated in v2.1.0
-- **Strengths**: Codebase exploration, file search, reading, AND codebase
-  map building/maintenance
-- **New capability**: Builds and incrementally updates the codebase dependency
-  map using grep-based import extraction. No external parsers required.
+### hydra-scout (Haiku 4.5)
+- **Strengths**: Codebase exploration, file search, reading, and codebase
+  map building/maintenance — builds and incrementally updates the dependency
+  map using grep-based import extraction, no external parsers required
 - **Memory focus**: Codebase structure, key file locations, module boundaries,
   map build history, files that failed to parse
 
-### hydra-sentinel-scan (Haiku 4.5) — Updated in v2.1.0
+### hydra-sentinel-scan (Haiku 4.5)
 - **Strengths**: Pattern matching, grep-level analysis, import tracing,
-  fast structural checks, AND map-based instant blast-radius lookups
-- **New capability**: Reads codebase map for instant dependency lookups
-  instead of grepping. Falls back to grep if map doesn't exist.
+  fast structural checks, and map-based instant blast-radius lookups
+  (reads the codebase map for dependency lookups; falls back to grep
+  if the map doesn't exist)
 - **Map-aware checks**: Risk-based severity, test coverage warnings,
   env var index lookups, blast radius reporting
 - **Limitations**: Cannot understand semantic meaning of data shapes,
@@ -116,31 +115,16 @@ N/A — Opus is the orchestrator, not a delegated head. Opus output goes directl
 
 ---
 
-## Cost and Speed Comparison (February 2026 Pricing)
+## Cost
 
-| Model | Input Cost | Output Cost | Relative Speed | Input Cost vs Opus 4.6 | Output Cost vs Opus 4.6 |
-|-------|-----------|-------------|----------------|----------------------|------------------------|
-| Haiku 4.5 | $1 / MTok | $5 / MTok | ~10× faster | 5× cheaper | 5× cheaper |
-| Sonnet 4.6 | $3 / MTok | $15 / MTok | ~3× faster | ~1.7× cheaper | ~1.7× cheaper |
-| Opus 4.6 | $5 / MTok | $25 / MTok | 1× (baseline) | 1× (baseline) | 1× (baseline) |
+Real per-model prices live in the PRICING map inside the installed
+`hydra-token-math.js` hook — the single source of pricing truth. Run
+`/hydra:stats` for actual session costs and savings.
 
-Source: https://platform.claude.com/docs/en/about-claude/pricing
-
-### Blended Cost with Hydra (typical 50/30/20 task split)
-
-| Metric | All Opus 4.6 | With Hydra | Savings |
-|--------|-------------|------------|---------|
-| Input cost / MTok | $5.00 | $2.40 | 52% |
-| Output cost / MTok | $25.00 | $12.00 | 52% |
-| Blended effective cost | $30.00 / MTok | $14.40 / MTok | ~50% |
-
-Note: Savings calculated against Opus 4.6 pricing ($5/$25 per MTok) as of February 2026.
-Savings would be significantly higher when compared to Opus 4.1/4.0 pricing ($15/$75 per MTok).
-
-These are approximate ratios. The key insight: for 60-70% of coding tasks, Haiku 4.5 or
-Sonnet 4.6 produces output identical in quality to what Opus 4.6 would produce, but
-dramatically faster and cheaper. The skill is in identifying the 30-40% where Opus 4.6
-is genuinely needed.
+The key insight: for 60-70% of coding tasks, the cheap and mid tiers produce
+output identical in quality to what the orchestrator would produce, but
+dramatically faster and cheaper. The skill is in identifying the 30-40% where
+the orchestrator is genuinely needed.
 
 ---
 
@@ -150,8 +134,8 @@ Drawing from speculative decoding theory, track these metrics mentally:
 
 | Draft Model | Expected Acceptance Rate | Notes |
 |-------------|------------------------|-------|
-| Haiku → Opus verification | ~85-90% | For well-classified Tier 1 tasks |
-| Sonnet → Opus verification | ~90-95% | For well-classified Tier 2 tasks |
+| Haiku → Opus verification | ~85-90% | For well-classified cheap-tier tasks |
+| Sonnet → Opus verification | ~90-95% | For well-classified mid-tier tasks |
 | sentinel-scan → sentinel escalation | ~20% | ~80%+ of scans return clean — only ~20% escalate to deep analysis |
 | sentinel → Opus verification | ~95% | Sonnet's deep analysis is highly accurate; Opus rarely overrides |
 

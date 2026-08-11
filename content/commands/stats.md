@@ -105,7 +105,6 @@ if (delegatedTurns === 0 || savedUSD < 0.01) {
   console.log('No Hydra subagent dispatches recorded in this session.');
   console.log('');
   console.log('Hydra works best when invoked explicitly. Try:');
-  console.log('  /hydra:scout       — codebase exploration on Haiku');
   console.log('  /hydra:guard       — security scan on Haiku');
   console.log('  /hydra:preflight   — environment validation');
   console.log('  /hydra:map         — codebase dependency map');

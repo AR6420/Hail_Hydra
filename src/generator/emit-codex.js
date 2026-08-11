@@ -4,7 +4,7 @@
 //   agents/hydra-*.toml        C1/C2 TOML agents (name/description/
 //                              developer_instructions; model tier map; NEVER
 //                              sandbox_mode="inherit" — omit to inherit)
-//   skills/hydra-<cmd>/SKILL.md  12 commands as user skills, invoked
+//   skills/hydra-<cmd>/SKILL.md  11 commands as user skills, invoked
 //                              `$hydra-<cmd>` (C12 — /hydra:* namespacing is
 //                              impossible on Codex)
 //   skills/hydra/SKILL.md      full protocol the AGENTS.md core points to
@@ -41,12 +41,12 @@ const TOKENS = {
     `node -e "require(require('os').homedir()+'/.codex/hydra/hooks/hydra-sentinel-done.js')"`,
 };
 
-// Claude model tier → Codex model (C20). haiku (cheap) also pins low
-// reasoning effort; terra default effort. Never gpt-5.4*/spark (retiring /
+// Claude model tier → Codex model (C20). haiku (cheap) pins low reasoning
+// effort, sonnet (mid) pins medium. Never gpt-5.4*/spark (retiring /
 // research-preview — C20).
 const MODEL_MAP = {
   haiku: { model: 'gpt-5.6-luna', effort: 'low' },
-  sonnet: { model: 'gpt-5.6-terra', effort: null },
+  sonnet: { model: 'gpt-5.6-terra', effort: 'medium' },
 };
 
 // Ordered literal rewrites (specific layout moves first, then catch-alls,
@@ -69,8 +69,6 @@ const REWRITES = [
   // References install under <base>/hydra/references/ on this host.
   ['references/routing-guide.md', '~/.codex/hydra/references/routing-guide.md'],
   ['references/model-capabilities.md', '~/.codex/hydra/references/model-capabilities.md'],
-  // Must run before the bare .claude catch-all mangles the URL.
-  ['https://platform.claude.com/docs/en/about-claude/pricing', 'the Anthropic pricing docs'],
   ['.claude/', '.codex/'],
   ['.claude', '.codex'],
   ['CLAUDE.md', 'AGENTS.md'],
@@ -287,7 +285,14 @@ function emit() {
   }
 
   // Full protocol skill + stfu skill (skill names must be slugs on Codex).
-  write(path.join(out, 'skills', 'hydra', 'SKILL.md'), prepare(path.join(CONTENT, 'SKILL.md')));
+  // The Task Completion Notification section instructs running hydra-notify.js,
+  // which is never installed on Codex (the config.toml notify chain owns the
+  // sound here) — strip it so the skill never points at a missing file.
+  write(
+    path.join(out, 'skills', 'hydra', 'SKILL.md'),
+    prepare(path.join(CONTENT, 'SKILL.md'))
+      .replace(/## Task Completion Notification\r?\n[\s\S]*?(?=## Reference Material)/, '')
+  );
   write(
     path.join(out, 'skills', 'stfu-agents', 'SKILL.md'),
     prepare(path.join(CONTENT, 'skills', 'stfu-agents', 'SKILL.md'))

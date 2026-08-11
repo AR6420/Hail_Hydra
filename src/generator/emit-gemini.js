@@ -71,8 +71,6 @@ const REWRITES = [
   // References install under <base>/hydra/references/ on this host.
   ['references/routing-guide.md', '~/.gemini/hydra/references/routing-guide.md'],
   ['references/model-capabilities.md', '~/.gemini/hydra/references/model-capabilities.md'],
-  // Must run before the bare .claude catch-all mangles the URL.
-  ['https://platform.claude.com/docs/en/about-claude/pricing', 'the Anthropic pricing docs'],
   ['.claude/', '.gemini/'],   // agents/, hydra/ (map), */.claude/* find filters
   ['.claude', '.gemini'],     // bare mentions (ignore lists)
   ['CLAUDE.md', 'GEMINI.md'],
@@ -154,6 +152,13 @@ function transformAgent(text, fileName) {
       `remaining tools.\n\n` + body;
   }
 
+  // Gemini overlay: the two lines Google's agentic system-instruction template
+  // recommends for worker agents (persistence + anti-hallucination). Appended
+  // per host at build time so the shared source stays family-neutral.
+  const overlay =
+    '\n\nContinue until the task is completely resolved. If required context ' +
+    'is missing, report the gap — do not fabricate data.\n';
+
   return [
     '---',
     `name: ${name}`,
@@ -163,7 +168,7 @@ function transformAgent(text, fileName) {
     `model: ${MODEL_MAP[model]}`,
     '---',
     '',
-  ].join('\n') + body;
+  ].join('\n') + body.replace(/\s*$/, '') + overlay;
 }
 
 // ── Commands ─────────────────────────────────────────────────────────────────

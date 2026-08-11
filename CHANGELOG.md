@@ -5,6 +5,55 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-08-11
+
+### Removed
+- **`/hydra:verbose`** — removed entirely (command file, help/status listings,
+  SKILL.md rows, README, plugin manifest, and the `dispatch_log: verbose`
+  config value). The dispatch log itself and `/hydra:quiet` are unchanged;
+  say "show dispatch logs" to re-enable after quiet. Command count is now 11.
+- **Unwired config claims** — the "Custom Agent Overrides" section of
+  `hydra.config.md` promised per-agent model overrides nothing reads; deleted
+  (edit the agent file's `model:` line instead). `/hydra:quiet`'s claim to
+  suppress the completion sound was unwired (the hook plays unconditionally);
+  the claim is gone. `auto_guard: off` is now documented honestly as
+  orchestrator-honored (the hook reminder still appears).
+- **Phantom `/hydra:scout` command** — was listed in SKILL.md, stats, and the
+  README but never existed; references now point at "use hydra-scout".
+- **Second pricing table** — `references/model-capabilities.md` no longer
+  carries hardcoded prices that drift; the PRICING map in
+  `hydra-token-math.js` is the single source, `/hydra:stats` shows real costs.
+
+### Changed
+- **Prompts modernized for the 2026 model families** — all 10 agent prompts
+  and SKILL.md rewritten for current Claude / Gemini / Codex models: thinking-
+  compression scaffolds deleted (built into modern models), threats and
+  ALL-CAPS replaced by single reasoned rules, duplicate output formats merged
+  into the one compressed contract, prose model names genericized to tier
+  language. Shipped prompt text shrinks ~46% (SKILL.md 1171 → 616 lines,
+  agents ~1700 → ~1020) — a direct per-session context-tax cut on all hosts.
+- **Per-family overlays (thin, emitter-applied)** — Gemini agents append
+  Google's official 2-line persistence + anti-hallucination directive; Codex
+  mid-tier agents now pin `model_reasoning_effort = "medium"` (cheap tier
+  already pinned `low`); Claude output is unchanged (source is Claude-native).
+- **hydra-sentinel is read-only** — its unused `Write` grant (forbidden by its
+  own instructions) is gone; on Codex it now emits `sandbox_mode = "read-only"`.
+- **Codex skill no longer references `hydra-notify.js`** — that hook is never
+  installed on Codex (the `config.toml` notify chain owns the sound); the
+  emitter strips the section.
+- **`/hydra:status` template refreshed** — 10 agents / 11 commands / 6 hooks
+  with tier labels instead of pinned model names.
+- **routing-guide.md deduplicated** — three overlapping example sets merged,
+  the git-status routing contradiction fixed (hydra-git owns it).
+
+### Fixed
+- **npm package 62% smaller** (516.9 KB → 194.5 kB packed, 1.7 MB → 791 kB
+  unpacked) — notification WAV re-encoded to mono 22.05 kHz
+  PCM (201 KB → 50 KB ×4 copies) and the tarball no longer ships `src/hooks/`
+  + `src/generator/` (never read at install/runtime). The README's
+  `cp templates/...` instruction now uses a `curl` command that works for
+  npx installs.
+
 ## [2.5.0] - 2026-08-10
 
 ### Breaking

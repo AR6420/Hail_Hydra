@@ -38,14 +38,14 @@
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 12 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 3 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 11 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 3 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, and **Codex CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 12 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, and **Codex CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 11 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -53,7 +53,7 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
 >
 > Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
 
-**New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 12 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
+**New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 11 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
 
 Everything else Hydra is known for is still here: persistent agent memory, the codebase map with blast-radius lookups, the sentinel verification touchpoint after substantial edits, internal-thinking compression (`/hydra:stfu`), and real token tracking with `/hydra:stats`. Full version history lives in the [CHANGELOG](CHANGELOG.md).
 
@@ -63,7 +63,7 @@ Hydra's biggest cost savings come from explicit invocation in scenarios where sp
 
 | Scenario | How to Invoke | Why It Saves |
 |----------|---------------|-------------|
-| Broad codebase exploration | `/hydra:scout <topic>` or "use hydra-scout to find X" | Haiku reads files faster and cheaper than Opus |
+| Broad codebase exploration | "use hydra-scout to find X" | Haiku reads files faster and cheaper than Opus |
 | Multi-file changes | "use hydra-coder to update X across these files" | Parallel Sonnet dispatch beats sequential Opus |
 | Security review | `/hydra:guard` | Pattern matching is Haiku-cheap |
 | Environment validation | `/hydra:preflight` | Cross-references compatibility matrices on Sonnet |
@@ -134,7 +134,7 @@ All flags: `--agent=<list>` (`claude,gemini,codex`) or the aliases `--claude` /
 ```
 ~/.claude/
 ├── agents/                      # 10 agent definitions (Haiku/Sonnet pinned, memory: project)
-├── commands/hydra/              # 12 slash commands (/hydra:*)
+├── commands/hydra/              # 11 slash commands (/hydra:*)
 ├── hooks/                       # 6 hook scripts + notification sound
 │   ├── hydra-check-update.js    # SessionStart — version check (background)
 │   ├── hydra-statusline.js      # StatusLine — status bar display
@@ -156,7 +156,7 @@ entries are preserved, and a custom statusLine is never overwritten.
 ```
 ~/.gemini/
 ├── agents/                      # 10 agent definitions (Flash-tier pinned)
-├── commands/hydra/              # 12 TOML commands (/hydra:*)
+├── commands/hydra/              # 11 TOML commands (/hydra:*)
 ├── hydra/                       # SKILL.md, VERSION, references/, hooks/
 └── GEMINI.md                    # Hydra marker block (appended, reversible)
 ```
@@ -195,7 +195,6 @@ Hooks (AfterTool, SessionStart, Notification) are registered in `~/.gemini/setti
 | `/hydra:config` | Show current configuration |
 | `/hydra:guard [files]` | Run manual security & quality scan |
 | `/hydra:quiet` | Suppress dispatch logs for this session |
-| `/hydra:verbose` | Enable verbose dispatch logs with timing |
 | `/hydra:report` | Report a bug, request a feature, or share feedback |
 | `/hydra:stfu` | Compress internal thinking for every subagent in the session |
 | `/hydra:map` | View codebase dependency map, query blast radius, rebuild |
@@ -263,7 +262,6 @@ Hydra plays a short notification sound when Claude Code finishes a substantial t
 - **Cross-platform** — macOS (`afplay`), Windows (PowerShell), Linux (`paplay`/`aplay`)
 - **Non-blocking** — the sound plays detached; it never delays the response
 - **Host-native** — wired to each CLI's notification event (Claude Code and Gemini `Notification` hooks; Codex `notify` chain that preserves your existing notifier)
-- **Controllable** — `/hydra:quiet` suppresses it, `/hydra:verbose` re-enables it
 
 The notification hook is registered automatically during installation.
 
@@ -301,9 +299,9 @@ After updating, restart Claude Code to load the new files.
 - **Verification touchpoint** — after substantial code changes, the auto-guard hook injects a directive recommending a sentinel + guard verification wave before results are presented; trivial edits stay silent
 - **Auto-Guard** — a PostToolUse hook tracks every file edit; hydra-guard (Haiku) scans the tracked files for security issues on demand (`/hydra:guard`) or as part of the sentinel wave
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
-- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose`, `/hydra:report` for full session control
+- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:report` for full session control
 - **Task completion sound** — plays a notification when Claude finishes substantial tasks
-- **Quick commands** — natural language shortcuts: `hydra status`, `hydra quiet`, `hydra verbose`
+- **Quick commands** — natural language shortcuts: `hydra status`, `hydra quiet`, `hydra map`
 - **Custom agent templates** — Add your own heads using `templates/custom-agent.md`
 - **Session indexing** — Codebase context persists across turns; no re-exploration on every prompt
 - **Speculative pre-dispatch** — hydra-scout launches in parallel with task classification, saving 2–3 seconds per task
@@ -728,7 +726,7 @@ leaves it alone):
 
 ```markdown
 mode: balanced          # conservative | balanced (default) | aggressive
-dispatch_log: on        # on (default) | off | verbose
+dispatch_log: on        # on (default) | off
 auto_guard: on          # on (default) | off
 ```
 
@@ -741,10 +739,10 @@ See [`content/config/hydra.config.md`](content/config/hydra.config.md) for the f
 
 Add your own specialized head in three steps:
 
-**1. Copy the template** straight into the agents directory Hydra installed:
+**1. Fetch the template** straight into the agents directory Hydra installed:
 ```bash
-cp templates/custom-agent.md ~/.claude/agents/hydra-myspecialist.md
-# project-level: cp templates/custom-agent.md .claude/agents/hydra-myspecialist.md
+curl -o ~/.claude/agents/hydra-myspecialist.md https://raw.githubusercontent.com/AR6420/Hail_Hydra/main/templates/custom-agent.md
+# project-level: curl -o .claude/agents/hydra-myspecialist.md https://raw.githubusercontent.com/AR6420/Hail_Hydra/main/templates/custom-agent.md
 ```
 
 **2. Customize the agent** — edit the name, description, tools, and instructions.
@@ -767,7 +765,7 @@ hydra/
 │   ├── SKILL.md                         # Orchestrator instructions (full)
 │   ├── skill-core.md                    # Compressed core for size-capped hosts
 │   ├── agents/                          # 10 agent definitions
-│   ├── commands/                        # 12 command definitions
+│   ├── commands/                        # 11 command definitions
 │   ├── references/                      # Routing guide + model capabilities
 │   ├── config/hydra.config.md           # User configuration template
 │   └── skills/stfu-agents/              # STFU-Agents skill
@@ -944,7 +942,7 @@ Only trivial fixes (like updating an import path after a rename). For medium-com
 <details>
 <summary><strong>Can I disable Sentinel?</strong></summary>
 <br/>
-Yes. Set <code>auto_guard: off</code> in your <code>hydra.config.md</code> to stop the post-edit verification directive, or <code>mode: conservative</code> to make delegation (including verification dispatches) more sparing. The sentinel agents themselves stay installed — you can always invoke them explicitly.
+Yes. Set <code>auto_guard: off</code> in your <code>hydra.config.md</code> and the orchestrator skips the verification dispatch (the hook's post-edit reminder still appears — it's the orchestrator that honors the setting). Or use <code>mode: conservative</code> to make delegation, including verification dispatches, more sparing. The sentinel agents themselves stay installed — you can always invoke them explicitly.
 </details>
 
 <details>
