@@ -99,7 +99,7 @@ const REWRITES = [
   ['If an update is available, it appears in the statusline:',
    'If an update is available (from the cached check in `hydra/cache/hydra-update-check.json`), the SessionStart hook surfaces it as a session message:'],
   ['🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v1.2.0 available',
-   '🐉 Hydra update available: 3.0.0 → 3.1.0. Run /hydra:update to update.'],
+   '🐉 Hydra update available: 2.5.0 → 2.6.0. Run /hydra:update to update.'],
 ];
 
 function rewrite(text) {

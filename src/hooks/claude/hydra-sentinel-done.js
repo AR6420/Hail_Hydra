@@ -10,7 +10,7 @@
  * Falls back to the host session env var, then to clearing the most recently
  * modified pending flag.
  *
- * v3.0.0: replaces the bash `${TMPDIR:-/tmp}` blocks in agent markdown —
+ * v2.5.0: replaces the bash `${TMPDIR:-/tmp}` blocks in agent markdown —
  * bash tmpdir and Node's os.tmpdir() disagree on Windows, which left the
  * "Sentinel pending" indicator stuck. This helper shares lib/sentinel-state
  * with the producer (auto-guard), so both sides always use the same paths.

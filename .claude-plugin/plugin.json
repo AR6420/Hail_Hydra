@@ -1,6 +1,6 @@
 {
   "name": "hail-hydra",
-  "version": "3.0.0",
+  "version": "2.5.0",
   "description": "Multi-agent orchestration toolkit for AI coding CLIs — Claude Code, Gemini CLI, and Codex CLI. Routes tasks to each host's cost-effective model tiers (Haiku/Sonnet on Claude Code) while the frontier model orchestrates — inspired by speculative decoding. Includes 10 specialized heads, 12 commands, real token tracking, and ~50% API cost reduction. Install via the npm installer (npx hail-hydra-cc) — the supported install path for every host; this repo holds the canonical content/ sources, and per-host payloads are generated into dist/ at build time.",
   "author": {
     "name": "Adarsh Balanolla",

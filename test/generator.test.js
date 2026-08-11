@@ -7,7 +7,7 @@
 // 1. Builds dist/ fresh and asserts structural invariants for every host.
 // 2. LEGACY PARITY (migration gate): while npm-package/files/ still exists,
 //    asserts dist/claude is byte-identical to it, except for the files the
-//    v3.0.0 bug fixes deliberately changed (sentinel bash → node helper) and
+//    v2.5.0 bug fixes deliberately changed (sentinel bash → node helper) and
 //    the restructured hooks (verified behaviorally instead). Once
 //    npm-package/ is deleted this section auto-skips.
 // 3. Behavioral checks on the bundled hooks: auto-guard writes tracking state
@@ -110,7 +110,7 @@ for (const name of ['computeSummary', 'computeSummaryCached', 'parseSession', 'f
 
 const LEGACY = path.join(ROOT, 'npm-package', 'files');
 if (fs.existsSync(LEGACY)) {
-  // Files the v3 fixes deliberately changed — checked above, not byte-compared.
+  // Files the v2.5.0 fixes deliberately changed — checked above, not byte-compared.
   const expectDiff = new Set(['SKILL.md', 'agents/hydra-sentinel-scan.md', 'agents/hydra-sentinel.md']);
   const legacyFiles = walk(LEGACY).filter((f) => !f.startsWith('hooks/'));
 

@@ -6,7 +6,7 @@
 // The statusline hook reads this cache file.
 //
 // VERSION is read from where the installer actually writes it:
-// <base>/skills/hydra/VERSION (project first, then global). v3.0.0 fixes the
+// <base>/skills/hydra/VERSION (project first, then global). v2.5.0 fixes the
 // v2.x path mismatch that left `installed` permanently 'unknown' and the
 // update banner dead.
 

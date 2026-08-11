@@ -61,7 +61,7 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
 
 **New in v2.4.0 — Toolkit Repositioning:** SKILL.md refocused to the toolkit-with-touchpoints model. The hydra-auto-guard hook now injects a sentinel verification directive after substantial code changes (new files, MultiEdit batches, or edits affecting more than ~5 lines). Trivial edits stay silent. `/hydra:stats` shows actionable guidance when no Hydra dispatches occurred in the session instead of empty zeros.
 
-**New in v3.0.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 12 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
+**New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 12 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
 
 ## When to Use Hydra Explicitly
 
@@ -1065,7 +1065,7 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/><br/>
   <em>Built with 🧠 by Claude Opus — ironically, the model this framework is designed to use less of.</em>
   <br/>
-  <em>v3.0.0 — Now multi-host: Claude Code, Gemini CLI, and Codex CLI.</em>
+  <em>v2.5.0 — Now multi-host: Claude Code, Gemini CLI, and Codex CLI.</em>
 </p>
 
 ---
