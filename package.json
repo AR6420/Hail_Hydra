@@ -57,7 +57,7 @@
   },
   "scripts": {
     "build": "node src/generator/build.js",
-    "test": "node test/token-math.test.js && node test/generator.test.js",
+    "test": "node test/run.js",
     "prepack": "npm run build && npm test"
   }
 }

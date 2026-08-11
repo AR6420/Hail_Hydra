@@ -8,10 +8,16 @@ const chalk = require('chalk');
 
 const { showInstallHeader, showFileInstalled, showInstallComplete, VERSION } = require('./display');
 
-// Host registry. Phase 2 adds gemini, Phase 3 adds codex.
-const HOSTS = {
-  claude: require('./hosts/claude'),
-};
+// Host registry — auto-discovered from hosts/*.js. Adding a host means
+// adding one module there; the CLI and prompts pick it up automatically.
+const fs = require('fs');
+const path = require('path');
+const HOSTS = {};
+for (const f of fs.readdirSync(path.join(__dirname, 'hosts')).sort()) {
+  if (!f.endsWith('.js')) continue;
+  const host = require('./hosts/' + f);
+  HOSTS[host.id] = host;
+}
 
 const log = {
   header: (label) => showInstallHeader(label),
