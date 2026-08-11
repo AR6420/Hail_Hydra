@@ -24,19 +24,23 @@ COMMANDS
   /hydra:stfu      Silence intermediate prose from every dispatched subagent
 
 AGENTS
-  🟢 hydra-scout    (Haiku 4.5)   — Explore codebase, find files, map structure
-  🟢 hydra-runner   (Haiku 4.5)   — Run tests, linters, build commands
-  🟢 hydra-scribe   (Haiku 4.5)   — Write docs, comments, READMEs
-  🟢 hydra-guard    (Haiku 4.5)   — Security scan, quality gate
-  🟢 hydra-git      (Haiku 4.5)   — Git operations, commits, branches
-  🟢 hydra-preflight (Haiku 4.5)  — Environment detection, version probing, dep inventory
-  🔵 hydra-coder    (Sonnet 4.6)  — Write and edit code
-  🔵 hydra-analyst  (Sonnet 4.6)  — Debug, diagnose, review
+  🟢 hydra-scout         (cheap tier) — Explore codebase, find files, map structure
+  🟢 hydra-runner        (cheap tier) — Run tests, linters, build commands
+  🟢 hydra-scribe        (cheap tier) — Write docs, comments, READMEs
+  🟢 hydra-guard         (cheap tier) — Security scan, quality gate
+  🟢 hydra-git           (cheap tier) — Git operations, commits, branches
+  🟢 hydra-preflight     (cheap tier) — Environment detection, version probing, dep inventory
+  🟢 hydra-sentinel-scan (cheap tier) — Fast integration sweep after code changes
+  🔵 hydra-coder         (mid tier)   — Write and edit code
+  🔵 hydra-analyst       (mid tier)   — Debug, diagnose, review
+  🔵 hydra-sentinel      (mid tier)   — Deep integration analysis (when scan flags issues)
+
+  The concrete model behind each tier depends on the host CLI you installed on.
 
 HOW IT WORKS
-  The Opus 4.6 orchestrator automatically delegates tasks to cheaper,
-  faster agents (Haiku 4.5 and Sonnet 4.6) — saving ~50% on API costs
-  while maintaining Opus-level quality through verification.
+  The orchestrator automatically delegates tasks to cheaper, faster
+  agents in the cheap and mid tiers — saving ~50% on API costs while
+  the orchestrator verifies quality.
 
   You don't need to do anything. Just work normally.
   Hydra operates invisibly unless you check the dispatch log.

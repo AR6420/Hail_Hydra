@@ -69,16 +69,27 @@ for (const f of tomlFiles) {
   assert.ok(text.trimEnd().endsWith("'''"), `${f}: prompt block closed at EOF`);
   assert.ok(!/\{\{HYDRA_/.test(text), `${f}: no unresolved tokens`);
   assert.ok(!text.includes('.claude'), `${f}: no .claude paths`);
+  assert.ok(!text.includes('$ARGUMENTS'), `${f}: no Claude-only $ARGUMENTS token`);
 }
 // The stats command must target the installed gemini helper.
 const statsToml = fs.readFileSync(path.join(DIST, 'commands', 'hydra', 'stats.toml'), 'utf8');
 assert.ok(statsToml.includes("/.gemini/hydra/hooks/hydra-token-math.js').printReport()"), 'stats runs the installed helper');
+// Argument substitution: Gemini's token is {{args}}, and it must survive the
+// generator's own {{HYDRA_*}} token pass untouched.
+const guardToml = fs.readFileSync(path.join(DIST, 'commands', 'hydra', 'guard.toml'), 'utf8');
+assert.ok(guardToml.includes('**Target**: {{args}}'), 'guard target uses the Gemini {{args}} token');
+// Help screen: host-neutral tier labels, all 10 agents, no Anthropic models.
+const helpToml = fs.readFileSync(path.join(DIST, 'commands', 'hydra', 'help.toml'), 'utf8');
+assert.strictEqual((helpToml.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');
+assert.ok(helpToml.includes('(cheap tier)') && helpToml.includes('(mid tier)'), 'help uses tier labels');
+assert.ok(!/Haiku|Sonnet|Opus/.test(helpToml), 'help hardcodes no Anthropic model names');
 
 // Fragment + SKILL.
 const fragment = fs.readFileSync(path.join(DIST, 'GEMINI-fragment.md'), 'utf8');
 assert.ok(fragment.startsWith(MARKER_BEGIN), 'fragment starts with the BEGIN marker');
 assert.ok(fragment.trimEnd().endsWith(MARKER_END), 'fragment ends with the END marker');
-assert.ok(fragment.includes('~/.gemini/hydra/SKILL.md'), 'fragment points at the installed full skill');
+// Path-agnostic pointer: a --local install has no ~/.gemini/hydra/SKILL.md.
+assert.ok(fragment.includes('`hydra/SKILL.md` under your Gemini config dir'), 'fragment full-protocol pointer is path-agnostic');
 const skill = fs.readFileSync(path.join(DIST, 'SKILL.md'), 'utf8');
 for (const t of TRIGGERS) {
   assert.ok(fragment.includes(t), `fragment carries trigger token ${t} byte-exact`);
@@ -86,6 +97,33 @@ for (const t of TRIGGERS) {
 }
 assert.ok(!skill.includes('.claude') && !skill.includes('Claude Code'), 'SKILL vocabulary rewritten');
 assert.ok(fs.existsSync(path.join(DIST, 'skills', 'stfu-agents', 'SKILL.md')), 'stfu skill emitted');
+
+// Sentinel-done cleanup is shell-agnostic (bash ${VAR:-...}/redirects break in
+// PowerShell/cmd, which Gemini uses on Windows) — node -e form, no redirects.
+const SENTINEL_DONE = `node -e "require(require('os').homedir()+'/.gemini/hydra/hooks/hydra-sentinel-done.js')"`;
+for (const [name, text] of [['fragment', fragment], ['SKILL', skill]]) {
+  assert.ok(text.includes(SENTINEL_DONE), `${name} sentinel-done uses the shell-agnostic node -e form`);
+  assert.ok(!text.includes('2>/dev/null') && !text.includes('|| true'), `${name} has no bash-only redirects`);
+}
+assert.ok(
+  fs.readFileSync(path.join(DIST, 'agents', 'hydra-sentinel-scan.md'), 'utf8').includes(SENTINEL_DONE),
+  'sentinel-scan agent cleanup uses the shell-agnostic form'
+);
+assert.ok(
+  !fs.readFileSync(path.join(DIST, 'agents', 'hydra-sentinel.md'), 'utf8').includes('hydra-sentinel-done'),
+  'hydra-sentinel (no shell tool) carries no cleanup command'
+);
+
+// No statusline on Gemini (G20): SKILL prose rewritten to the tracking-state /
+// session-message reality, and references/ ship to <base>/hydra/references/.
+assert.ok(!/statusline|status bar/i.test(skill), 'SKILL has no statusline mentions');
+assert.ok(skill.includes('hydra/cache/hydra-update-check.json'), 'SKILL describes the cache-file update surfacing');
+assert.ok(skill.includes('causing the model to respond'), 'bare-Claude leftover rewritten');
+assert.ok(skill.includes('~/.gemini/hydra/references/routing-guide.md'), 'SKILL points at the installed references');
+assert.ok(!skill.includes('install.sh'), 'SKILL documents the npx flow, not the deleted install.sh');
+for (const f of ['routing-guide.md', 'model-capabilities.md']) {
+  assert.ok(fs.existsSync(path.join(DIST, 'references', f)), `references/${f} emitted`);
+}
 
 // Hooks bundle + parse.
 const hookJs = fs.readdirSync(path.join(DIST, 'hooks')).filter((f) => f.endsWith('.js')).sort();
@@ -275,6 +313,7 @@ assert.strictEqual(res1.statusLineConfigured, false, 'gemini has no statusline')
 assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 10, '10 agents installed');
 assert.strictEqual(fs.readdirSync(path.join(cfg, 'commands', 'hydra')).length, 12, '12 command TOMLs installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'SKILL.md')), 'SKILL installed');
+assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'references', 'routing-guide.md')), 'references installed');
 assert.strictEqual(fs.readFileSync(path.join(cfg, 'hydra', 'VERSION'), 'utf8'), V, 'VERSION written');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'skills', 'stfu-agents', 'SKILL.md')), 'stfu skill installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'manifest.json')), 'manifest written');

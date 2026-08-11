@@ -33,6 +33,12 @@ const { bundleHook } = require('./bundle');
 // Shell expression for the installed hooks dir, used in bash blocks.
 const TOKENS = {
   HYDRA_HOOKS_DIR_SH: '${CODEX_HOME:-$HOME/.codex}/hydra/hooks',
+  // Full sentinel-done invocation. Codex shells out via PowerShell/cmd on
+  // Windows, where bash `${VAR:-...}` / `/dev/null` / `|| true` all break —
+  // the node -e form works unchanged in every shell (same pattern as the
+  // stats skill). The hook is silent and always exits 0.
+  HYDRA_SENTINEL_DONE_CMD:
+    `node -e "require(require('os').homedir()+'/.codex/hydra/hooks/hydra-sentinel-done.js')"`,
 };
 
 // Claude model tier → Codex model (C20). haiku (cheap) also pins low
@@ -51,10 +57,20 @@ const REWRITES = [
   ['.claude/skills/hydra/config/', '.codex/hydra/config/'],
   ['~/.claude/skills/hydra/VERSION', '~/.codex/hydra/VERSION'],
   ['~/.claude/skills/hydra/SKILL.md', '~/.agents/skills/hydra/SKILL.md'],
+  // The '~/'-prefixed variant MUST run before the bare one, or the bare rule
+  // matches inside it and yields a corrupted '~/~/.agents/...' glob.
+  ['~/.claude/commands/hydra/*.md', '~/.agents/skills/hydra-*/SKILL.md'],
   ['.claude/commands/hydra/*.md', '~/.agents/skills/hydra-*/SKILL.md'],
   ['~/.claude/commands/hydra/', '~/.agents/skills/'],
   ['~/.claude/hooks/', '~/.codex/hydra/hooks/'],
   ['skills/stfu-agents/SKILL.md', '~/.agents/skills/stfu-agents/SKILL.md'],
+  // Codex agents install as TOML (C1) — the .md glob can never match.
+  ['agents/hydra-*.md', 'agents/hydra-*.toml'],
+  // References install under <base>/hydra/references/ on this host.
+  ['references/routing-guide.md', '~/.codex/hydra/references/routing-guide.md'],
+  ['references/model-capabilities.md', '~/.codex/hydra/references/model-capabilities.md'],
+  // Must run before the bare .claude catch-all mangles the URL.
+  ['https://platform.claude.com/docs/en/about-claude/pricing', 'the Anthropic pricing docs'],
   ['.claude/', '.codex/'],
   ['.claude', '.codex'],
   ['CLAUDE.md', 'AGENTS.md'],
@@ -68,8 +84,20 @@ const REWRITES = [
   ['orchestrator (Opus)', 'orchestrator'],
   ['Opus reads', 'The orchestrator reads'],
   ['Opus translates', 'The orchestrator translates'],
+  ['causing Claude to respond', 'causing the model to respond'],
   // Codex skills have no argument substitution.
   ['$ARGUMENTS', 'the files or paths the user named after the trigger'],
+  // Codex has no statusline: sentinel state is just tracking state, and
+  // updates surface via the SessionStart hook's session message.
+  ['flag file used by the statusline indicator', 'tracking flag file'],
+  ['This clears the "⚠ Sentinel pending" warning from the status bar.',
+   'This clears the pending-scan tracking state.'],
+  ['(so the statusline can briefly show `✅ Sentinel clean`)',
+   '(clearing the tracking state for the next scan)'],
+  ['If an update is available, it appears in the statusline:',
+   'If an update is available (from the cached check in `hydra/cache/hydra-update-check.json`), the SessionStart hook surfaces it as a session message:'],
+  ['🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v1.2.0 available',
+   '🐉 Hydra update available: 3.0.0 → 3.1.0. Run /hydra:update to update.'],
 ];
 
 function rewrite(text) {
@@ -266,6 +294,11 @@ function emit() {
       .replace('name: STFU Agents', 'name: stfu-agents')
   );
 
+  // References — installed to <base>/hydra/references/.
+  for (const f of listMd(path.join(CONTENT, 'references'))) {
+    write(path.join(out, 'references', f), prepare(path.join(CONTENT, 'references', f)));
+  }
+
   // AGENTS.md fragment (markers included — the installer replaces/appends the
   // whole block between them).
   const core = prepare(path.join(CONTENT, 'skill-core.md')).trim();
@@ -320,6 +353,7 @@ function emit() {
     const text = fs.readFileSync(file, 'utf8');
     if (/\{\{HYDRA_[A-Z0-9_]+\}\}/.test(text)) throw new Error(`Unresolved token in ${file}`);
     if (text.includes('.claude')) throw new Error(`Unrewritten .claude path in ${file}`);
+    if (text.includes('$ARGUMENTS')) throw new Error(`Unrewritten $ARGUMENTS in ${file}`);
     if (text.includes('sandbox_mode = "inherit"')) throw new Error(`Invalid sandbox_mode="inherit" in ${file}`);
   }
   for (const file of ['AGENTS-fragment.md', path.join('skills', 'hydra', 'SKILL.md')]) {

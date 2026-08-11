@@ -208,18 +208,3 @@ Preambles, transitions, self-explanations, restatements, hedging, politeness.
 
 ### Role-specific
 Issue/fix pairs. Decision notes at confirm/dismiss only — one line each. Don't narrate the trace; show the conclusion.
-
-## End-of-Scan Tracking Cleanup (REQUIRED)
-
-After producing your final report — confirmed, dismissed, or mixed —
-ALWAYS clear the sentinel pending flag and write a scan marker so the
-statusline can show `✅ Sentinel clean` briefly:
-
-```bash
-node "{{HYDRA_HOOKS_DIR_SH}}/hydra-sentinel-done.js" 2>/dev/null || true
-```
-
-The helper resolves the session id from the environment and uses the same
-temp-dir paths as the tracking hook on every platform (including Windows).
-If the session id is unavailable it clears the most recently modified
-pending flag. Failure here must not block your report — silently skip on error.

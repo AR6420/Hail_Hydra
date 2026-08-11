@@ -87,7 +87,7 @@ After hydra-sentinel-scan reports back (clean or issues found), you — the
 orchestrator, not the subagent — clear the sentinel-pending flag:
 
 ```bash
-node "{{HYDRA_HOOKS_DIR_SH}}/hydra-sentinel-done.js" 2>/dev/null || true
+{{HYDRA_SENTINEL_DONE_CMD}}
 ```
 
 ## Hydra Commands

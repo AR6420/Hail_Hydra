@@ -67,12 +67,34 @@ for (const f of claudeFiles) {
 }
 
 // The sentinel fix landed: node helper referenced, bash tmpdir blocks gone.
-for (const f of ['SKILL.md', 'agents/hydra-sentinel-scan.md', 'agents/hydra-sentinel.md']) {
+// The invocation comes from the HYDRA_SENTINEL_DONE_CMD token — plain bash
+// form on Claude, no shell redirects (the hook is silent, always exit 0).
+for (const f of ['SKILL.md', 'agents/hydra-sentinel-scan.md']) {
   const text = fs.readFileSync(path.join(claudeDist, f), 'utf8');
-  assert.ok(text.includes('hydra-sentinel-done.js'), `${f} references the sentinel-done helper`);
+  assert.ok(text.includes('node "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/hydra-sentinel-done.js"'),
+    `${f} runs the sentinel-done helper via the claude token value`);
+  assert.ok(!text.includes('2>/dev/null'), `${f} sentinel-done line carries no shell redirects`);
   assert.ok(!text.includes('${TMPDIR:-/tmp}'), `${f} has no bash tmpdir block`);
   assert.ok(!text.includes('rm -f /tmp/hydra-sentinel'), `${f} has no /tmp cleanup block`);
 }
+// hydra-sentinel has no Bash tool — its REQUIRED cleanup block was removed
+// (the orchestrator-side cleanup in SKILL.md covers it).
+assert.ok(
+  !fs.readFileSync(path.join(claudeDist, 'agents', 'hydra-sentinel.md'), 'utf8').includes('hydra-sentinel-done.js'),
+  'hydra-sentinel (no Bash tool) carries no sentinel-done shell command'
+);
+
+// SKILL.md installation guidance uses the npx flow (scripts/install.sh is gone).
+const claudeSkill = fs.readFileSync(path.join(claudeDist, 'SKILL.md'), 'utf8');
+assert.ok(!claudeSkill.includes('install.sh'), 'SKILL.md no longer references scripts/install.sh');
+assert.ok(claudeSkill.includes('npx hail-hydra-cc --global'), 'SKILL.md documents the npx install flow');
+
+// Help screen: all 10 agents, host-neutral tier labels (no hardcoded models).
+const helpMd = fs.readFileSync(path.join(claudeDist, 'commands', 'hydra', 'help.md'), 'utf8');
+assert.strictEqual((helpMd.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');
+assert.ok(helpMd.includes('hydra-sentinel-scan') && helpMd.includes('hydra-sentinel '), 'help lists the sentinel pair');
+assert.ok(helpMd.includes('(cheap tier)') && helpMd.includes('(mid tier)'), 'help uses tier labels');
+assert.ok(!/Haiku|Sonnet|Opus/.test(helpMd), 'help hardcodes no concrete model names');
 
 // Every hook bundle parses and the token-math bundle exports the stable API.
 for (const f of hookJs) {

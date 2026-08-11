@@ -26,6 +26,12 @@ const { bundleHook } = require('./bundle');
 // Bash-shaped like the Claude value — see emit-claude.js.
 const TOKENS = {
   HYDRA_HOOKS_DIR_SH: '${GEMINI_CONFIG_DIR:-$HOME/.gemini}/hydra/hooks',
+  // Full sentinel-done invocation. Gemini's run_shell_command uses PowerShell/
+  // cmd on Windows, where bash `${VAR:-...}` / `/dev/null` / `|| true` all
+  // break — the node -e form works unchanged in every shell (same pattern as
+  // the stats command). The hook is silent and always exits 0.
+  HYDRA_SENTINEL_DONE_CMD:
+    `node -e "require(require('os').homedir()+'/.gemini/hydra/hooks/hydra-sentinel-done.js')"`,
 };
 
 // Claude tool name → Gemini built-in tool name (G5). Anything absent here
@@ -62,6 +68,11 @@ const REWRITES = [
   ['~/.claude/commands/hydra/', '~/.gemini/commands/hydra/'],
   ['~/.claude/hooks/', '~/.gemini/hydra/hooks/'],
   ['skills/stfu-agents/SKILL.md', '~/.gemini/hydra/skills/stfu-agents/SKILL.md'],
+  // References install under <base>/hydra/references/ on this host.
+  ['references/routing-guide.md', '~/.gemini/hydra/references/routing-guide.md'],
+  ['references/model-capabilities.md', '~/.gemini/hydra/references/model-capabilities.md'],
+  // Must run before the bare .claude catch-all mangles the URL.
+  ['https://platform.claude.com/docs/en/about-claude/pricing', 'the Anthropic pricing docs'],
   ['.claude/', '.gemini/'],   // agents/, hydra/ (map), */.claude/* find filters
   ['.claude', '.gemini'],     // bare mentions (ignore lists)
   ['CLAUDE.md', 'GEMINI.md'],
@@ -75,6 +86,20 @@ const REWRITES = [
   ['orchestrator (Opus)', 'orchestrator'],
   ['Opus reads', 'The orchestrator reads'],
   ['Opus translates', 'The orchestrator translates'],
+  ['causing Claude to respond', 'causing the model to respond'],
+  // Gemini TOML commands substitute {{args}}; $ARGUMENTS is Claude-only.
+  ['$ARGUMENTS', '{{args}}'],
+  // Gemini has no statusline (G20): sentinel state is just tracking state,
+  // and updates surface via the SessionStart hook's session message.
+  ['flag file used by the statusline indicator', 'tracking flag file'],
+  ['This clears the "⚠ Sentinel pending" warning from the status bar.',
+   'This clears the pending-scan tracking state.'],
+  ['(so the statusline can briefly show `✅ Sentinel clean`)',
+   '(clearing the tracking state for the next scan)'],
+  ['If an update is available, it appears in the statusline:',
+   'If an update is available (from the cached check in `hydra/cache/hydra-update-check.json`), the SessionStart hook surfaces it as a session message:'],
+  ['🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v1.2.0 available',
+   '🐉 Hydra update available: 3.0.0 → 3.1.0. Run /hydra:update to update.'],
 ];
 
 function rewrite(text) {
@@ -243,7 +268,7 @@ function emit() {
     '',
     '## Host Notes (Gemini CLI)',
     '',
-    '- Full protocol: `~/.gemini/hydra/SKILL.md` — read it when you need the complete Hydra playbook.',
+    '- Full protocol: `hydra/SKILL.md` under your Gemini config dir (project `./.gemini/` first, then `~/.gemini/`) — read it when you need the complete Hydra playbook.',
     '- Hydra commands are native: `/hydra:help`, `/hydra:stats`, `/hydra:guard`, ...',
     '- Force a specific head with `@hydra-<name>`; otherwise delegation is description-driven.',
     MARKER_END,
@@ -257,6 +282,11 @@ function emit() {
     path.join(out, 'skills', 'stfu-agents', 'SKILL.md'),
     prepare(path.join(CONTENT, 'skills', 'stfu-agents', 'SKILL.md'))
   );
+
+  // References — installed to <base>/hydra/references/.
+  for (const f of listMd(path.join(CONTENT, 'references'))) {
+    write(path.join(out, 'references', f), prepare(path.join(CONTENT, 'references', f)));
+  }
 
   // Hooks — bundled self-contained from src/hooks/gemini/.
   const hookSrcDir = path.join(ROOT, 'src', 'hooks', 'gemini');
@@ -273,6 +303,7 @@ function emit() {
     const text = fs.readFileSync(file, 'utf8');
     if (/\{\{HYDRA_[A-Z0-9_]+\}\}/.test(text)) throw new Error(`Unresolved token in ${file}`);
     if (text.includes('.claude')) throw new Error(`Unrewritten .claude path in ${file}`);
+    if (text.includes('$ARGUMENTS')) throw new Error(`Unrewritten $ARGUMENTS (Gemini uses {{args}}) in ${file}`);
   }
   for (const file of ['GEMINI-fragment.md', 'SKILL.md']) {
     const text = fs.readFileSync(path.join(out, file), 'utf8');

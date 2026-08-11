@@ -146,7 +146,7 @@ Each agent file references this canonical block; the per-agent restatements were
 After hydra-sentinel-scan reports back (clean or issues found), the orchestrator (not the subagent) clears the sentinel-pending flag file used by the statusline indicator:
 
 ```bash
-node "{{HYDRA_HOOKS_DIR_SH}}/hydra-sentinel-done.js" 2>/dev/null || true
+{{HYDRA_SENTINEL_DONE_CMD}}
 ```
 
 The helper resolves the session id from the environment, clears the pending flag, and writes the scan marker — using the same temp-dir paths as the tracking hook on every platform (including Windows, where bash `/tmp` and Node's `os.tmpdir()` disagree). This clears the "⚠ Sentinel pending" warning from the status bar. Moved from `agents/hydra-sentinel-scan.md` in v2.3.2 — subagent's job is the scan, orchestrator's job is the state cleanup.
@@ -1083,14 +1083,13 @@ Hydra's heads live in `agents/`. Install them where Claude Code discovers subage
 
 ```bash
 # User-level (recommended — always on, every project)
-./scripts/install.sh --user
+npx hail-hydra-cc --global
 
 # Project-level only
-./scripts/install.sh --project
-
-# Both
-./scripts/install.sh --both
+npx hail-hydra-cc --local
 ```
+
+Pick a host explicitly with `--agent=claude|gemini|codex` (interactive prompt otherwise).
 
 ## Configuration
 

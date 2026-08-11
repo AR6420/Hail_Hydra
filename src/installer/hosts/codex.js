@@ -118,6 +118,15 @@ function buildManifest(base, version) {
       display: `agents/${f}`,
     });
   }
+  let refFiles = [];
+  try { refFiles = fs.readdirSync(path.join(DIST, 'references')).sort(); } catch {}
+  for (const f of refFiles) {
+    entries.push({
+      absPath: path.join(DIST, 'references', f),
+      dest: path.join(base, 'hydra', 'references', f),
+      display: `hydra/references/${f}`,
+    });
+  }
   entries.push({
     content: version,
     dest: path.join(base, 'hydra', 'VERSION'),
@@ -631,7 +640,7 @@ module.exports = {
       try { fs.rmdirSync(path.join(root, n)); } catch {}
     }
     const hydraDir = path.join(configDir(configDirOverride), 'hydra');
-    for (const owned of ['hooks', 'cache', 'VERSION', 'manifest.json', 'notify-prev.json']) {
+    for (const owned of ['hooks', 'cache', 'references', 'VERSION', 'manifest.json', 'notify-prev.json']) {
       try { fs.rmSync(path.join(hydraDir, owned), { recursive: true, force: true }); } catch {}
     }
     try { fs.rmdirSync(hydraDir); } catch {}

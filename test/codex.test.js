@@ -92,7 +92,23 @@ for (const dir of skillDirs) {
   assert.ok(!text.includes('.claude'), `${dir}: no .claude paths`);
   assert.ok(!/\{\{HYDRA_/.test(text), `${dir}: no unresolved tokens`);
   assert.ok(!/\/hydra:/.test(text), `${dir}: no /hydra: invocations left`);
+  assert.ok(!text.includes('$ARGUMENTS'), `${dir}: no Claude-only $ARGUMENTS token`);
+  assert.ok(!text.includes('~/~'), `${dir}: no corrupted ~/~ paths`);
 }
+// Status/report skills must glob what the installer actually writes: skills
+// live at ~/.agents/skills/hydra-*/SKILL.md and agents install as .toml.
+const statusSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-status', 'SKILL.md'), 'utf8');
+assert.ok(statusSkill.includes('ls -1 ~/.agents/skills/hydra-*/SKILL.md'), 'status globs the real skills location');
+assert.ok(statusSkill.includes('~/.codex/agents/hydra-*.toml'), 'status globs .toml agents (global)');
+assert.ok(statusSkill.includes('.codex/agents/hydra-*.toml'), 'status globs .toml agents (local)');
+assert.ok(!statusSkill.includes('agents/hydra-*.md'), 'status has no dead .md agent glob');
+const reportSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-report', 'SKILL.md'), 'utf8');
+assert.ok(reportSkill.includes('~/.codex/agents/hydra-*.toml'), 'report counts .toml agents');
+// Help screen: host-neutral tier labels, all 10 agents, no Anthropic models.
+const helpSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-help', 'SKILL.md'), 'utf8');
+assert.strictEqual((helpSkill.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');
+assert.ok(helpSkill.includes('(cheap tier)') && helpSkill.includes('(mid tier)'), 'help uses tier labels');
+assert.ok(!/Haiku|Sonnet|Opus/.test(helpSkill), 'help hardcodes no Anthropic model names');
 for (const c of COMMANDS) {
   const text = fs.readFileSync(path.join(DIST, 'skills', `hydra-${c}`, 'SKILL.md'), 'utf8');
   assert.ok(new RegExp(`^name: hydra-${c}$`, 'm').test(text), `hydra-${c}: skill name matches dir`);
@@ -105,6 +121,31 @@ assert.ok(updateSkill.includes('--agent=codex --global --yes'), 'update reinstal
 assert.ok(/^name: stfu-agents\r?$/m.test(fs.readFileSync(path.join(DIST, 'skills', 'stfu-agents', 'SKILL.md'), 'utf8')), 'stfu skill name slugified');
 const fullSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra', 'SKILL.md'), 'utf8');
 for (const t of TRIGGERS) assert.ok(fullSkill.includes(t), `full skill carries trigger ${t} byte-exact`);
+
+// Sentinel-done cleanup is shell-agnostic (bash ${VAR:-...}/redirects break in
+// PowerShell/cmd on Windows) — node -e form, no redirects.
+const SENTINEL_DONE = `node -e "require(require('os').homedir()+'/.codex/hydra/hooks/hydra-sentinel-done.js')"`;
+assert.ok(fullSkill.includes(SENTINEL_DONE), 'full skill sentinel-done uses the shell-agnostic node -e form');
+assert.ok(!fullSkill.includes('2>/dev/null') && !fullSkill.includes('|| true'), 'full skill has no bash-only redirects');
+assert.ok(
+  fs.readFileSync(path.join(DIST, 'agents', 'hydra-sentinel-scan.toml'), 'utf8').includes(SENTINEL_DONE),
+  'sentinel-scan agent cleanup uses the shell-agnostic form'
+);
+assert.ok(
+  !fs.readFileSync(path.join(DIST, 'agents', 'hydra-sentinel.toml'), 'utf8').includes('hydra-sentinel-done'),
+  'hydra-sentinel (shell forbidden) carries no cleanup command'
+);
+
+// No statusline on Codex: SKILL prose rewritten to the tracking-state /
+// session-message reality; references/ ship to <base>/hydra/references/.
+assert.ok(!/statusline|status bar/i.test(fullSkill), 'full skill has no statusline mentions');
+assert.ok(fullSkill.includes('hydra/cache/hydra-update-check.json'), 'full skill describes the cache-file update surfacing');
+assert.ok(fullSkill.includes('causing the model to respond'), 'bare-Claude leftover rewritten');
+assert.ok(fullSkill.includes('~/.codex/hydra/references/routing-guide.md'), 'full skill points at the installed references');
+assert.ok(!fullSkill.includes('install.sh'), 'full skill documents the npx flow, not the deleted install.sh');
+for (const f of ['routing-guide.md', 'model-capabilities.md']) {
+  assert.ok(fs.existsSync(path.join(DIST, 'references', f)), `references/${f} emitted`);
+}
 
 // AGENTS.md fragment: markers, budget, triggers, vocabulary.
 const fragment = fs.readFileSync(path.join(DIST, 'AGENTS-fragment.md'), 'utf8');
@@ -458,6 +499,7 @@ assert.strictEqual(res1.statusLineConfigured, false, 'codex has no statusline');
 
 // Files.
 assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 10, '10 agent TOMLs installed');
+assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'references', 'routing-guide.md')), 'references installed');
 assert.strictEqual(fs.readFileSync(path.join(cfg, 'hydra', 'VERSION'), 'utf8'), V, 'VERSION written');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'manifest.json')), 'manifest written');
 for (const n of skillDirs) {

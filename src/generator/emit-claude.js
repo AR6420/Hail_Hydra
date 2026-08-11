@@ -18,6 +18,10 @@ const TOKENS = {
   // Shell expression for the installed hooks dir, used inside bash blocks in
   // agent markdown. Honors CLAUDE_CONFIG_DIR like the JS hooks do.
   HYDRA_HOOKS_DIR_SH: '${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks',
+  // Full sentinel-done invocation. Claude's Bash tool is bash on every
+  // platform, so the bash form is safe here. The hook is silent and always
+  // exits 0 — no redirects or `|| true` needed.
+  HYDRA_SENTINEL_DONE_CMD: 'node "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/hydra-sentinel-done.js"',
 };
 
 function emit() {

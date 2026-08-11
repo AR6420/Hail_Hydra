@@ -209,11 +209,11 @@ After scan completes, orchestrator handles sentinel-pending flag cleanup per SKI
 ### End-of-Scan Tracking Cleanup (REQUIRED)
 
 After producing your final report — clean OR issues_found OR error —
-ALWAYS clear the sentinel pending flag and write a scan marker so the
-statusline can show `✅ Sentinel clean` briefly:
+ALWAYS clear the sentinel pending flag and write a scan marker
+(so the statusline can briefly show `✅ Sentinel clean`):
 
 ```bash
-node "{{HYDRA_HOOKS_DIR_SH}}/hydra-sentinel-done.js" 2>/dev/null || true
+{{HYDRA_SENTINEL_DONE_CMD}}
 ```
 
 The helper resolves the session id from the environment and uses the same

@@ -80,6 +80,9 @@ function buildManifest(base, version) {
   }
   add('SKILL.md', path.join(base, 'hydra', 'SKILL.md'), 'hydra/SKILL.md');
   add('skills/stfu-agents/SKILL.md', path.join(base, 'hydra', 'skills', 'stfu-agents', 'SKILL.md'), 'hydra/skills/stfu-agents/SKILL.md');
+  for (const f of distFiles('references')) {
+    add(`references/${f}`, path.join(base, 'hydra', 'references', f), `hydra/references/${f}`);
+  }
   entries.push({
     content: version,
     dest: path.join(base, 'hydra', 'VERSION'),
@@ -361,7 +364,7 @@ module.exports = {
     // (e.g. hydra/config/hydra.config.md) must survive; the trailing rmdir
     // removes the dir when nothing else remains.
     const hydraDir = path.join(configDir(configDirOverride), 'hydra');
-    for (const owned of ['hooks', 'cache', 'skills', 'SKILL.md', 'VERSION', 'manifest.json']) {
+    for (const owned of ['hooks', 'cache', 'skills', 'references', 'SKILL.md', 'VERSION', 'manifest.json']) {
       try { fs.rmSync(path.join(hydraDir, owned), { recursive: true, force: true }); } catch {}
     }
     try { fs.rmdirSync(hydraDir); } catch {}
