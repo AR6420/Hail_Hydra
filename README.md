@@ -53,15 +53,9 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
 >
 > Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
 
-**New in v2.0.0:** Every agent has **persistent memory** — they learn your codebase patterns, conventions, and architectural decisions across sessions. The orchestrator (Opus) also maintains its own memory of fragile zones and routing decisions. The **hydra-sentinel** workflow catches integration breakage after substantial code changes — and code isn't presented to you until verification completes.
-
-**New in v2.1.0:** The **Codebase Map** gives every agent instant access to file dependencies, blast radius, risk scores, and test coverage — replacing slow grep-based scanning with instant JSON lookups. Sentinel is now 3–5× faster and 3–5× cheaper per scan.
-
-**New in v2.3.2 — Internal Compression:** Subagents now run with compressed **INTERNAL thinking**, not just compressed final output. The intermediate prose ("Let me check…", "I'll examine…", "Now I'll trace…") that no one ever reads is drastically reduced — ~40–60% fewer billed tokens per subagent dispatch, with no change to the final output Opus receives. The new `/hydra:stfu` skill extends this compression to ALL subagents in a session — Hydra's own, third-party, and Claude Code's built-in agents. Session-scoped, runtime-only, no file modifications. Activate via `/hydra:stfu`; deactivate via `/skills`.
-
-**New in v2.4.0 — Toolkit Repositioning:** SKILL.md refocused to the toolkit-with-touchpoints model. The hydra-auto-guard hook now injects a sentinel verification directive after substantial code changes (new files, MultiEdit batches, or edits affecting more than ~5 lines). Trivial edits stay silent. `/hydra:stats` shows actionable guidance when no Hydra dispatches occurred in the session instead of empty zeros.
-
 **New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 12 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
+
+Everything else Hydra is known for is still here: persistent agent memory, the codebase map with blast-radius lookups, the sentinel verification touchpoint after substantial edits, internal-thinking compression (`/hydra:stfu`), and real token tracking with `/hydra:stats`. Full version history lives in the [CHANGELOG](CHANGELOG.md).
 
 ## When to Use Hydra Explicitly
 
@@ -206,7 +200,7 @@ Hooks (AfterTool, SessionStart, Notification) are registered in `~/.gemini/setti
 | `/hydra:stfu` | Compress internal thinking for every subagent in the session |
 | `/hydra:map` | View codebase dependency map, query blast radius, rebuild |
 | `/hydra:preflight` | Two-phase environment and compatibility check before starting a new project build |
-| `/hydra:stats` | Show real token usage, delegation rate, and actual savings (parses Claude Code session JSONL — no AI estimation) |
+| `/hydra:stats` | Show real token usage, delegation rate, and actual savings (parses the host CLI's own session logs — no AI estimation) |
 
 ### `/hydra:preflight` — Environment Validation
 
@@ -267,8 +261,8 @@ After installation, your Claude Code status bar shows real-time framework info:
 Hydra plays a short notification sound when Claude Code finishes a substantial task — so you know it's done even if you've tabbed away.
 
 - **Cross-platform** — macOS (`afplay`), Windows (PowerShell), Linux (`paplay`/`aplay`)
-- **Non-blocking** — the sound plays detached; it never delays Claude's response
-- **Smart triggers** — only fires on substantial tasks (>~10 seconds), not quick replies
+- **Non-blocking** — the sound plays detached; it never delays the response
+- **Host-native** — wired to each CLI's notification event (Claude Code and Gemini `Notification` hooks; Codex `notify` chain that preserves your existing notifier)
 - **Controllable** — `/hydra:quiet` suppresses it, `/hydra:verbose` re-enables it
 
 The notification hook is registered automatically during installation.
@@ -281,7 +275,7 @@ Hydra checks for updates once per session in the background (never blocks startu
 When a new version is available, you'll see it in the status bar:
 
 ```
-🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v1.1.0 available
+🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v2.6.0 available
 ```
 
 Update with:
@@ -304,8 +298,8 @@ After updating, restart Claude Code to load the new files.
 - **Sentinel integration integrity** — Two-tier verification (fast scan + deep analysis) catches ~72% of integration bugs before runtime
 - **Persistent agent memory** — Every agent remembers your codebase patterns, conventions, and past decisions across sessions
 - **Orchestrator memory** — Opus maintains its own notes on fragile zones, routing patterns, and known issues via CLAUDE.md
-- **Quality-first pipeline** — Code changes block until sentinel + guard verification completes; nothing reaches you unchecked
-- **Auto-Guard** — hydra-guard (Haiku) automatically scans code changes for security issues after every hydra-coder run
+- **Verification touchpoint** — after substantial code changes, the auto-guard hook injects a directive recommending a sentinel + guard verification wave before results are presented; trivial edits stay silent
+- **Auto-Guard** — a PostToolUse hook tracks every file edit; hydra-guard (Haiku) scans the tracked files for security issues on demand (`/hydra:guard`) or as part of the sentinel wave
 - **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
 - **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:config`, `/hydra:guard`, `/hydra:quiet`, `/hydra:verbose`, `/hydra:report` for full session control
 - **Task completion sound** — plays a notification when Claude finishes substantial tasks
@@ -326,7 +320,7 @@ After updating, restart Claude Code to load the new files.
 
 Most bugs don't come from bad code — they come from good code that **doesn't fit together**. A renamed export, a changed return type, a missing dependency after a refactor. These integration issues slip past linters, type-checkers, and even code review because no single file looks wrong.
 
-**hydra-sentinel** catches them automatically.
+**hydra-sentinel** catches them — the auto-guard touchpoint recommends a scan after every substantial edit, and the scan escalates to deep analysis only when it finds something.
 
 ### How It Works
 
@@ -389,19 +383,10 @@ Code change lands (hydra-coder finishes)
 ──────────────────────────────────────
 ```
 
-### Expected Detection Rates
-
-| Category | Estimated Detection Rate | Notes |
-|:---------|:------------------------|:------|
-| Import/export mismatches | ~95% | Direct string matching |
-| Signature mismatches | ~80% | Requires type inference |
-| Type contract violations | ~60% | Limited without full type system |
-| Missing dependencies | ~90% | Package.json diffing |
-| Cross-file rename gaps | ~70% | Heuristic-based |
-| Circular dependencies | ~85% | Import graph traversal |
-| Dead code | ~50% | Conservative — flags only obvious cases |
-| Config mismatches | ~40% | Pattern matching on env references |
-| **Weighted average** | **~72%** | Based on typical issue distribution |
+Across the check types above, the estimated weighted detection rate is **~72%**
+of integration bugs caught before runtime — highest for import/export and
+dependency mismatches (direct matching), lower for type contracts and config
+drift (heuristic).
 
 > **Memory makes it better over time.** Sentinel remembers past false positives and known fragile
 > integration points in your project. The more you use it, the more accurate it gets.
@@ -410,7 +395,7 @@ Code change lands (hydra-coder finishes)
 
 ## 🗺️ Codebase Map
 
-**New in v2.1.0** — Hydra builds a persistent dependency map of your codebase,
+Hydra builds a persistent dependency map of your codebase,
 giving every agent instant access to file relationships without scanning.
 
 ### How It Works
@@ -483,9 +468,9 @@ This means Hydra spends more verification effort where it matters most
 
 ## 📊 Real Token Tracking
 
-**New in v2.3.0** — `/hydra:stats` shows actual token usage and savings for
-your session. No AI estimation. The numbers are pulled directly from Claude
-Code's session log.
+`/hydra:stats` shows actual token usage and savings for your session. No AI
+estimation. The numbers are pulled directly from the host CLI's own session
+logs — Claude Code JSONL, Gemini CLI chat records, or Codex CLI rollout files.
 
 ```
 🐉 Hydra Stats
@@ -506,7 +491,7 @@ All-Opus baseline:  $1.502
 💰 Saved:           $0.773 (51.5%)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Reads Claude Code session JSONL directly.
+Reads the host CLI's session logs directly.
 No AI estimation. Numbers are real.
 ```
 
@@ -534,6 +519,9 @@ project structure, and repeat the same questions. With memory, knowledge compoun
 
 Every agent has `memory: project` in its frontmatter. Claude Code automatically manages a
 per-project memory directory (`.claude/memory/`) where agents store and retrieve learnings.
+
+> Agent memory is a **Claude Code** feature — Gemini CLI and Codex CLI have no
+> equivalent, so the generator drops the `memory` field on those hosts.
 
 | Agent | What It Remembers |
 |:------|:------------------|
@@ -617,6 +605,21 @@ Hydra applies this at the **task level**:
 
 The math is simple: if 70% of tasks can be handled by Haiku (10× faster, 5× cheaper) and 20% by Sonnet (3× faster, ~1.7× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
 
+How the concepts map:
+
+| Speculative Decoding Concept | Hydra Equivalent |
+|:-----------------------------|:-----------------|
+| Target model (large) | 🧠 The orchestrator (Opus / Gemini Pro / GPT-5.6 Sol) |
+| Draft model (small) | 🟢🔵 The cheap/mid-tier heads |
+| Draft K tokens | Heads draft the full task output |
+| Parallel verification | Orchestrator glances at the output |
+| Modified rejection sampling | Accept → ship it. Reject → orchestrator redoes it. |
+| Acceptance rate (~70-90%) | Target: 85%+ of delegated tasks accepted as-is |
+
+**Key papers:**
+- [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/abs/2302.01318) — Chen et al., 2023 (DeepMind)
+- [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — Leviathan et al., 2022 (Google)
+
 ---
 
 ## 🏗️ Architecture
@@ -653,13 +656,13 @@ User Request
          │
          ▼
    ┌─────────────────────────────────────────────────────┐
-   │  🛡️ QUALITY GATE (blocks until complete)            │
+   │  🛡️ VERIFICATION WAVE (recommended by auto-guard)   │
    │                                                     │
    │  🟢 sentinel-scan (Haiku) — fast integration sweep  │
    │       └── issues? → 🔵 sentinel (Sonnet) — deep     │
    │  🟢 guard (Haiku) — security/quality scan           │
    │                                                     │
-   │  Both must pass before result reaches user           │
+   │  Runs before results are presented to you            │
    └──────────────────────┬──────────────────────────────┘
                           │
                           ▼
@@ -837,12 +840,9 @@ When Hydra is actively invoked across a typical mix (50% Haiku, 30% Sonnet, 20% 
 - **Per-dispatch blended**: 40–60% cost reduction on Hydra-invoked work
 - **Speed**: 2–3× faster on delegated tasks
 
-Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your Claude Code session JSONL — no estimation.
+Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your session logs — no estimation.
 
-> Note: Savings calculated against Opus pricing ($5/$25 per MTok) as of February 2026.
-> Savings would be significantly higher compared to older Opus versions ($15/$75 per MTok).
-
-### Additional Savings from Codebase Map (v2.1.0+)
+### Additional Savings from Codebase Map
 
 The codebase map provides additional token savings on TOP of the model-routing
 savings above:
@@ -861,7 +861,7 @@ These savings compound with every code change in a session. In a session with
 ## 🎯 Design Principles
 
 ### 🫥 Invisibility
-> The user should **never** notice Hydra operating. No announcements, no permission requests, no process narration. If a head does the work, present the output as if Opus did it.
+> The user should **never** notice Hydra operating. No announcements, no permission requests, no process narration. If a head does the work, present the output as if the orchestrator did it.
 
 ### ⚡ Speed Over Ceremony
 > Don't overthink classification. Quick mental check: "Haiku? Sonnet? Me?" and go. If you spend 10 seconds classifying a 5-second task, you've defeated the purpose.
@@ -871,27 +871,6 @@ These savings compound with every code change in a session. In a session with
 
 ### ⬆️ Escalate, Never Downgrade
 > If a head's output isn't good enough, Opus does it directly. No retries at the same tier. This mirrors speculative decoding's rejection sampling — when a draft token is rejected, the target model samples directly.
-
----
-
-## 🔬 The Speculative Decoding Connection
-
-For those who want to go deeper, here's how Hydra maps to the original speculative decoding concepts:
-
-| Speculative Decoding Concept | Hydra Equivalent |
-|:-----------------------------|:-----------------|
-| Target model (large) | 🧠 Opus — the orchestrator |
-| Draft model (small) | 🟢 Haiku / 🔵 Sonnet heads |
-| Draft K tokens | Heads draft the full task output |
-| Parallel verification | Opus glances at the output |
-| Modified rejection sampling | Accept → ship it. Reject → Opus redoes it. |
-| Acceptance rate (~70-90%) | Target: 85%+ of delegated tasks accepted as-is |
-| Guaranteed ≥1 token per loop | Every task produces a result — Opus catches failures |
-| Temperature/nucleus compatibility | Works with any coding task type or domain |
-
-### Key Papers
-- [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/abs/2302.01318) — Chen et al., 2023 (DeepMind)
-- [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — Leviathan et al., 2022 (Google)
 
 ---
 
@@ -965,7 +944,7 @@ Only trivial fixes (like updating an import path after a rename). For medium-com
 <details>
 <summary><strong>Can I disable Sentinel?</strong></summary>
 <br/>
-Yes. Set <code>sentinel: off</code> in your <code>hydra.config.md</code>. You can also set <code>sentinel: scan-only</code> to keep the fast sweep but skip deep analysis. The default is <code>on</code> (both tiers).
+Yes. Set <code>auto_guard: off</code> in your <code>hydra.config.md</code> to stop the post-edit verification directive, or <code>mode: conservative</code> to make delegation (including verification dispatches) more sparing. The sentinel agents themselves stay installed — you can always invoke them explicitly.
 </details>
 
 <details>
