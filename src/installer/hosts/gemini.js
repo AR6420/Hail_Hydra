@@ -224,7 +224,12 @@ function removeContextBlock({ configDirOverride, log }) {
     if (!fs.existsSync(file)) return;
     const text = fs.readFileSync(file, 'utf8');
     const cleaned = text.replace(BLOCK_RE(), '').trimEnd();
-    fs.writeFileSync(file, cleaned ? cleaned + '\n' : '', 'utf8');
+    if (cleaned === '') {
+      // The file held only our block (install created it) — remove it.
+      fs.unlinkSync(file);
+    } else {
+      fs.writeFileSync(file, cleaned + '\n', 'utf8');
+    }
     log.ok('GEMINI.md hydra block removed');
   } catch (err) {
     log.warn(`Could not update GEMINI.md: ${err.message}`);

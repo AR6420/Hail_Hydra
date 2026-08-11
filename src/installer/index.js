@@ -102,6 +102,11 @@ async function runUninstall({ hostIds = null, configDirOverride = null, interact
   // Default: every registered host that has anything installed.
   const hosts = hostIds ? resolveHosts(hostIds) : availableHosts();
 
+  if (configDirOverride && hosts.length > 1) {
+    // Same contract as install: an override dir is host-specific.
+    throw new Error('--config-dir can only be used with a single --agent');
+  }
+
   const toRemove = [];
   for (const host of hosts) {
     for (const t of host.uninstallTargets(configDirOverride, VERSION)) {
@@ -135,17 +140,28 @@ async function runUninstall({ hostIds = null, configDirOverride = null, interact
     console.log();
   }
 
-  const fs = require('fs');
   let removed = 0;
   let failed = 0;
+  const parentDirs = new Set();
   for (const item of toRemove) {
     try {
       fs.unlinkSync(item.dest);
+      parentDirs.add(path.dirname(item.dest));
       console.log(chalk.green(`  ✔ Removed ${item.display}`));
       removed++;
     } catch (err) {
       console.log(chalk.red(`  ✖ Failed to remove ${item.display}: ${err.message}`));
       failed++;
+    }
+  }
+
+  // Best-effort cleanup of now-empty directories (deepest first; rmdir
+  // fails harmlessly on non-empty dirs, so user files are never at risk).
+  for (const dir of [...parentDirs].sort((a, b) => b.length - a.length)) {
+    let d = dir;
+    for (let i = 0; i < 4; i++) {
+      try { fs.rmdirSync(d); } catch { break; }
+      d = path.dirname(d);
     }
   }
 

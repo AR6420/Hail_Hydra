@@ -283,7 +283,12 @@ function removeContextBlock({ configDirOverride, log }) {
     if (!fs.existsSync(file)) return;
     const text = fs.readFileSync(file, 'utf8');
     const cleaned = text.replace(BLOCK_RE(), '').trimEnd();
-    fs.writeFileSync(file, cleaned ? cleaned + '\n' : '', 'utf8');
+    if (cleaned === '') {
+      // The file held only our block (install created it) — remove it.
+      fs.unlinkSync(file);
+    } else {
+      fs.writeFileSync(file, cleaned + '\n', 'utf8');
+    }
     log.ok('AGENTS.md hydra block removed');
   } catch (err) {
     log.warn(`Could not update AGENTS.md: ${err.message}`);
@@ -452,7 +457,13 @@ function cleanConfig({ configDirOverride, log }) {
     const cleaned = cleanConfigToml(fs.readFileSync(file, 'utf8'), {
       pruneStatePath: jsonGone ? hooksJsonPath(configDirOverride) : null,
     });
-    fs.writeFileSync(file, cleaned, 'utf8');
+    if (cleaned.trim() === '') {
+      // Everything in the file was ours (install created it) — remove it
+      // rather than leaving an empty config.toml behind.
+      fs.unlinkSync(file);
+    } else {
+      fs.writeFileSync(file, cleaned, 'utf8');
+    }
     log.ok('config.toml restored (hydra blocks removed, previous notify reinstated)');
   } catch (err) {
     log.warn(`Could not update config.toml: ${err.message}`);
