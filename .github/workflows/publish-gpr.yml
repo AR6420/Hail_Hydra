@@ -29,7 +29,15 @@ jobs:
       # prepack runs `npm run build && npm test` — dist/ is generated fresh
       # and gated by the test suite before anything is published.
       - name: Publish to npm
-        run: npm publish || echo "Version already published to npm — skipping."
+        run: |
+          if npm publish; then
+            echo 'Published.'
+          elif npm view "hail-hydra-cc@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
+            echo 'Version already published to npm — skipping.'
+          else
+            echo 'PUBLISH FAILED (auth? check NPM_TOKEN secret)' >&2
+            exit 1
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -64,6 +72,14 @@ jobs:
           "
 
       - name: Publish to GitHub Packages
-        run: npm publish || echo "Version already published to GitHub Packages — skipping."
+        run: |
+          if npm publish; then
+            echo 'Published.'
+          elif npm view "@ar6420/hail-hydra-cc@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
+            echo 'Version already published to GitHub Packages — skipping.'
+          else
+            echo 'PUBLISH FAILED (auth? check GITHUB_TOKEN permissions)' >&2
+            exit 1
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
