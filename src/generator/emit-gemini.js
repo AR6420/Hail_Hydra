@@ -119,6 +119,7 @@ function transformAgent(text, fileName) {
 
   let name = null;
   let model = null;
+  let maxTurns = null;
   let tools = [];
   const descLines = [];
 
@@ -135,6 +136,7 @@ function transformAgent(text, fileName) {
       }
     } else if (key === 'tools') tools = val.split(',').map((s) => s.trim()).filter(Boolean);
     else if (key === 'model') model = val;
+    else if (key === 'maxTurns') maxTurns = val;
     // color / memory / anything else: no Gemini equivalent — dropped.
   }
 
@@ -166,6 +168,8 @@ function transformAgent(text, fileName) {
     'tools:',
     ...mapped.map((t) => `  - ${t}`),
     `model: ${MODEL_MAP[model]}`,
+    // gemini-cli's native turn cap (default 30) — carried from maxTurns.
+    ...(maxTurns ? [`max_turns: ${maxTurns}`] : []),
     '---',
     '',
   ].join('\n') + body.replace(/\s*$/, '') + overlay;

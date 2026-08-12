@@ -7,6 +7,7 @@ description: >
   If issues are found, the orchestrator escalates to hydra-sentinel for
   deep analysis. If clean — done, zero additional cost.
 model: haiku
+maxTurns: 25
 tools: Read, Grep, Glob, Bash
 memory: project
 ---

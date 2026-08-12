@@ -7,6 +7,7 @@ description: >
   user runs /hydra:preflight or when starting work on a new or unfamiliar project.
 tools: Read, Bash, Glob
 model: haiku
+maxTurns: 25
 color: "#10B981"
 memory: project
 ---

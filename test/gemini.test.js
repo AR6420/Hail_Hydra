@@ -50,6 +50,7 @@ for (const f of agentFiles) {
 
   const tools = [...fm[1].matchAll(/^ {2}- (.+)$/gm)].map((m) => m[1]);
   assert.ok(tools.length > 0, `${f}: tools array non-empty`);
+  assert.ok(/^max_turns: \d+$/m.test(fm[1]), `${f}: max_turns cap carried from maxTurns`);
   for (const t of tools) assert.ok(GEMINI_TOOLS.has(t), `${f}: tool '${t}' is a Gemini built-in name`);
 
   assert.ok(!text.includes('.claude'), `${f}: no .claude paths`);

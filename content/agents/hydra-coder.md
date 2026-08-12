@@ -11,6 +11,7 @@ description: >
   output so the orchestrator can merge results from multiple simultaneous agents.
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: sonnet
+maxTurns: 50
 color: "#3B82F6"
 memory: project
 ---

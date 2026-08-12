@@ -6,6 +6,7 @@ description: >
   confirms or dismisses findings from the fast scan, and provides specific
   fix suggestions. Runs on the mid tier for accuracy.
 model: sonnet
+maxTurns: 50
 tools: Read, Grep, Glob
 memory: project
 ---

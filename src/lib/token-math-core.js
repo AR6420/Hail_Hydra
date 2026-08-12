@@ -7,14 +7,24 @@
 // Cache-read is billed at 10% of the tier's input price on every host we
 // support (Anthropic / Google / OpenAI all publish ~this ratio; per-host
 // tables may override via price.cacheRead when the ratio differs).
+// Cache-WRITE surcharges are per-host: Anthropic bills 5-min writes at 1.25x
+// and 1-hour writes at 2x input (price.cacheWrite / price.cacheWrite1h);
+// hosts without a write surcharge omit both and writes bill at input price.
 
 function tierCost(s, p) {
   if (!p) return 0;
-  const cacheReadRate = typeof p.cacheRead === 'number' ? p.cacheRead : p.input * 0.1;
-  const inputCost     = ((s.input + s.cache_create) * p.input) / 1_000_000;
-  const cacheReadCost = (s.cache_read * cacheReadRate) / 1_000_000;
-  const outputCost    = (s.output * p.output) / 1_000_000;
-  return inputCost + cacheReadCost + outputCost;
+  const cacheReadRate    = typeof p.cacheRead === 'number' ? p.cacheRead : p.input * 0.1;
+  const cacheWriteRate   = typeof p.cacheWrite === 'number' ? p.cacheWrite : p.input;
+  const cacheWrite1hRate = typeof p.cacheWrite1h === 'number' ? p.cacheWrite1h : cacheWriteRate;
+  // s.cache_create is the TOTAL written; s.cache_create_1h (optional, Claude
+  // adapter) is the 1-hour-TTL subset of that total.
+  const oneH  = s.cache_create_1h || 0;
+  const fiveM = Math.max(0, s.cache_create - oneH);
+  const inputCost      = (s.input * p.input) / 1_000_000;
+  const cacheWriteCost = (fiveM * cacheWriteRate + oneH * cacheWrite1hRate) / 1_000_000;
+  const cacheReadCost  = (s.cache_read * cacheReadRate) / 1_000_000;
+  const outputCost     = (s.output * p.output) / 1_000_000;
+  return inputCost + cacheWriteCost + cacheReadCost + outputCost;
 }
 
 function emptyStats(TIERS) {
