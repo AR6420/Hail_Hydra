@@ -11,16 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Opt-in GitHub Copilot CLI support** via `--agent=copilot` / `--copilot`,
   interactive selection and host detection. `/hail-hydra <task>` uses the
   current session's native subagents without a second CLI or API client.
-- **Manual-only skill with 10 canonical role prompts plus a Copilot-only
-  public-web researcher**. No automatic hooks, global instructions, discoverable
-  custom agents or persistent model switches are installed. Unprefixed
-  requests use the normal agent.
+- **Manual-only skill with 10 canonical role prompts plus Copilot-only
+  architecture/performance and public-web advisors**. No automatic hooks,
+  global instructions, discoverable custom agents or persistent model
+  switches are installed. Unprefixed requests use the normal agent.
 - **Copilot-specific scope and lifecycle support**: global
   `~/.copilot/skills/hail-hydra`, local `.github/skills/hail-hydra`, both,
   dry-run, status and bounded, manifest-aware uninstall.
 - **Goal-driven orchestration**: automatic relevant-head selection, a session
   task ledger, dependency-aware parallelism, public-source research with
   citations, stable-change review, and at most two improvement rounds.
+- **Code-aware design direction**: assess substantial backend/request-flow
+  changes before dependent coding, in parallel with relevant UI research.
+  Reconcile recommendations into shared contracts and measurement criteria;
+  pause and redirect affected work when evidence changes the design.
+  Performance choices require evidence and preserve correctness, not blanket
+  batching/caching or claims of an unmeasured "best" backend.
 - **Budget-aware routing**: two concurrent heads and six dispatches by default;
   broad independent work can use a four-head/twelve-dispatch ceiling.
   Available-model checks, explicit direct-execution fallback, and verification.

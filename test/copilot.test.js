@@ -33,6 +33,15 @@ assert.match(skill, /do not\s+require agent names, a swarm flag or repeated "con
 assert.match(skill, /task ledger with dependencies, file ownership/);
 assert.match(skill, /subagents have separate contexts/);
 assert.match(skill, /hydra-researcher/);
+assert.match(skill, /use `hydra-architect` even without an explicit performance request/);
+assert.match(skill, /Before dependent implementation/);
+assert.match(skill, /assess proposed flows and label assumptions/);
+assert.match(skill, /architecture\s+assessment and relevant UI research in parallel when independent/);
+assert.match(skill, /Send it to every affected writer before dependent edits/);
+assert.match(skill, /pause affected writers, update the brief and dependencies/);
+assert.match(skill, /writers have stopped or finished before reassigning files/);
+assert.match(skill, /Do not integrate stale-direction results/);
+assert.match(skill, /same dispatch and improvement budgets; they do not reset them/);
 assert.match(skill, /otherwise disclose the gap/);
 assert.match(skill, /private\s+code or confidential requirements to public searches/);
 assert.match(skill, /Re-review affected changes/);
@@ -49,11 +58,15 @@ assert.deepStrictEqual(fs.readdirSync(host.distDir), ['skills'], 'no automatic h
 
 const roles = JSON.parse(fs.readFileSync(path.join(source, 'references', 'roles.json'), 'utf8'));
 const canonical = fs.readdirSync(path.join(ROOT, 'content', 'agents')).filter((f) => f.endsWith('.md')).sort();
+const copilotOnly = ['hydra-architect', 'hydra-researcher'];
 assert.deepStrictEqual(roles.map((role) => role.name + '.md'),
-  [...canonical, 'hydra-researcher.md'].sort(), 'canonical heads plus Copilot-only researcher');
-assert.strictEqual(roles.length, 11);
-assert.ok(!fs.existsSync(path.join(ROOT, 'dist', 'claude', 'agents', 'hydra-researcher.md')),
-  'Copilot-only roles do not change the canonical Claude payload');
+  [...canonical, ...copilotOnly.map((name) => name + '.md')].sort(), 'canonical heads plus Copilot-only advisors');
+assert.strictEqual(roles.length, 12);
+for (const otherHost of ['claude', 'gemini', 'codex']) {
+  assert.deepStrictEqual(fs.readdirSync(path.join(ROOT, 'dist', otherHost, 'agents'))
+    .map((file) => path.parse(file).name).sort(), canonical.map((file) => path.parse(file).name).sort(),
+  `${otherHost}: canonical role catalogue unchanged`);
+}
 const payloadCount = roles.length + 3;
 for (const role of roles) {
   assert.ok(Object.values(MODEL_MAP).some((model) =>
@@ -95,7 +108,24 @@ assert.match(researcher, /exact public URLs/);
 assert.match(researcher, /Do not invent sources or measurements/);
 assert.match(researcher, /at most three credible options/);
 assert.match(researcher, /main agent owns the final\s+choice/);
+assert.match(researcher, /reconciles your advice with code-aware architecture findings/);
 assert.match(researcher, /HYDRA_NO_CODE_CHANGES/);
+const architect = fs.readFileSync(path.join(source, 'references', 'hydra-architect.md'), 'utf8');
+assert.match(architect, /Allowed capabilities \(use host-native tools\): read files, find files, search text\./);
+assert.match(architect, /Do not execute shell commands/);
+assert.match(architect, /Do not directly edit files/);
+assert.match(architect, /before dependent code is\s+written/);
+assert.match(architect, /even when the user did not ask for optimization/);
+assert.match(architect, /label assumptions\s+rather than inventing existing files/);
+assert.match(architect, /Separate code-backed observations from performance hypotheses/);
+assert.match(architect, /Fewer network\s+calls alone do not prove lower latency/);
+assert.match(architect, /batch limits, per-item authorization, ordering/);
+assert.match(architect, /partial failures, retries\/idempotency and transaction semantics/);
+assert.match(architect, /compare the same\s+workload before and after/);
+assert.match(architect, /Do not execute commands, edit files, run load tests or contact services/);
+assert.match(architect, /DIRECTION_REVIEW/);
+assert.match(architect, /no justified optimization exists, say so/);
+assert.match(architect, /HYDRA_NO_CODE_CHANGES/);
 assert.throws(() => transformRole('no frontmatter', 'x.md'), /No frontmatter/);
 assert.throws(() => transformRole('---\nname: x\nmodel: missing\n---\nbody', 'x.md'), /tier mapping/);
 assert.throws(() => transformRole('---\nname: wrong\nmodel: haiku\n---\nbody', 'x.md'), /mismatched name/);
@@ -160,13 +190,18 @@ try {
   const manifest = JSON.parse(manifestText);
   assert.deepStrictEqual(installedPayload, snapshot(source), 'installed payload matches generated roles');
   assert.deepStrictEqual(manifest.files, Object.keys(installedPayload).sort(), 'all payload files are owned');
-  fs.unlinkSync(path.join(installedSkill, 'references', 'hydra-researcher.md'));
-  fs.writeFileSync(path.join(installedSkill, 'references', 'roles.json'),
-    JSON.stringify(roles.filter((role) => role.name !== 'hydra-researcher')));
-  manifest.files = manifest.files.filter((file) => file !== 'references/hydra-researcher.md');
-  fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify(manifest));
-  install(cfg);
-  assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade adds and records the Copilot-only researcher');
+  for (const missingRoles of [copilotOnly, ['hydra-architect']]) {
+    for (const name of missingRoles) fs.unlinkSync(path.join(installedSkill, 'references', name + '.md'));
+    fs.writeFileSync(path.join(installedSkill, 'references', 'roles.json'),
+      JSON.stringify(roles.filter((role) => !missingRoles.includes(role.name))));
+    const previousManifest = {
+      ...manifest,
+      files: manifest.files.filter((file) => !missingRoles.some((name) => file === `references/${name}.md`)),
+    };
+    fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify(previousManifest));
+    install(cfg);
+    assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade from either previous catalogue restores every advisor');
+  }
   for (const [file, content] of Object.entries(userFiles)) {
     assert.strictEqual(fs.readFileSync(path.join(cfg, file), 'utf8'), content);
   }

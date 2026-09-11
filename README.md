@@ -45,7 +45,7 @@
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one manual-only `/hail-hydra` skill with the same 10 roles plus a read-only web researcher, routed through native subagents when available, without automatic hooks.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one manual-only `/hail-hydra` skill with the same 10 roles plus read-only architecture/performance and web research advisors, routed through native subagents when available, without automatic hooks.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -179,6 +179,22 @@ a swarm flag or repeated "continue" prompts. Small changes stay direct;
 independent substantial work can run in parallel. Writers own separate files,
 and reviewers examine stable changes rather than a moving worktree.
 
+For substantial changes to backend or request/data flows, `hydra-architect`
+assesses existing code or the proposed design **before dependent implementation**,
+even if the prompt does not mention performance. It considers relevant API,
+database, algorithm, caching, concurrency and resource-use tradeoffs. This is
+not limited to bulk calls: an optimization needs a code-backed reason, workload
+assumptions and a measurement plan. Batching is not automatically better, and
+correctness, authorization, partial failures and compatibility still matter.
+
+The bounded swarm can run this assessment alongside independent UI research.
+The main agent reconciles both into a decision brief covering shared contracts,
+accepted/rejected choices and measurement criteria, then briefs affected writers.
+If later evidence changes the direction, affected work pauses and is redirected;
+unaffected work can continue. Stale-direction results are not integrated.
+Replanning uses the existing dispatch and improvement budgets, not a new loop.
+Small or unrelated tasks avoid this overhead; the main agent can assess directly.
+
 When external evidence can materially affect a decision, the Copilot-only
 `hydra-researcher` compares public sources and returns options, tradeoffs and
 citations. This includes UI/accessibility, library, architecture and
@@ -202,7 +218,7 @@ hail-hydra/
 ├── .hydra-manifest.json
 └── references/
     ├── roles.json
-    └── hydra-*.md             # 10 core roles + Copilot researcher, loaded as needed
+    └── hydra-*.md             # 10 core roles + architect/researcher, loaded as needed
 ```
 
 `--local` installs only to `.github/skills/hail-hydra/` in the current project;
@@ -224,7 +240,7 @@ Model suggestions live in `references/roles.json`; they are not price claims.
 The default budget is two concurrent heads and six dispatches total. Broad
 goals spanning multiple substantial, independent subsystems can automatically
 use an expanded ceiling of four concurrent heads and twelve dispatches.
-Research, scans and retries all count; smaller host/user limits take precedence.
+Architecture, research, scans and retries all count; smaller host/user limits take precedence.
 These are prompt-level orchestration limits, not a separate runtime scheduler
 or a hard billing cap. Small work stays with the main agent.
 If subagents or per-dispatch model selection are unavailable,
