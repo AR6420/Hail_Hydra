@@ -1,6 +1,6 @@
 # Explicit Hydra utilities for Copilot
 
-These are arguments to the manual `/hail-hydra` skill, not registered
+These are arguments to the explicit-request `/hail-hydra` skill, not registered
 `/hydra:*` commands or replacements for native CLI commands. Use the
 loaded skill directory to resolve `scripts/` and `references/`; do not assume
 the working project is the Hydra source checkout.
@@ -30,12 +30,19 @@ Show supported utilities and native equivalents; do not start subagents.
 `/hail-hydra --status`
 
 Run `node <skill-root>/scripts/hydra-control.js status`. This checks the loaded
-installation's version, manual activation, catalogue and owned files. Report
+installation's version, activation policy, catalogue and owned files. Report
 errors or missing files explicitly. It does not prove the host loaded the
 latest copy or supports a particular model. Use native `/skills info hail-hydra`
 to inspect discovery and `/skills reload` after an update. Report local and
 personal copies separately if the user asks; never silently choose another
 copy to turn a failed status into success.
+
+Compatibility builds report `activationPolicy: explicit-request-instructions`,
+`activationManualOnly: false` and `modelInvocationAllowed: true`. This avoids
+hosts that exclude manual-only skills from their model-callable registry even
+for explicit requests. The current user input, not automatic skill selection
+or past context, must authorize Hydra work. This is not host-enforced prevention
+of automatic loading and does not change the main session model.
 
 ## Statistics, comparison and context
 

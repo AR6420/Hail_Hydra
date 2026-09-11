@@ -233,11 +233,15 @@ function validateActivationBoundary(skillText) {
   if (frontmatter.name !== SKILL_NAME) {
     fail(`Invalid SKILL.md: expected name ${SKILL_NAME}.`);
   }
-  if (!parseBooleanField(frontmatter, 'user-invocable') ||
-      !parseBooleanField(frontmatter, 'disable-model-invocation')) {
-    fail('Invalid SKILL.md: expected manual-only activation for hail-hydra.');
+  if (!parseBooleanField(frontmatter, 'user-invocable')) {
+    fail('Invalid SKILL.md: hail-hydra must be user-invocable.');
   }
-  return true;
+  const disabled = parseBooleanField(frontmatter, 'disable-model-invocation');
+  return {
+    activationManualOnly: disabled,
+    modelInvocationAllowed: !disabled,
+    activationPolicy: disabled ? 'host-manual-only' : 'explicit-request-instructions',
+  };
 }
 
 function validateRolesCatalog(root, ownedFiles) {
@@ -283,7 +287,7 @@ function inspectStatus(root) {
   if (manifestVersion !== version) {
     fail(`Hydra installation is incomplete: ${MANIFEST_FILE} version does not match VERSION.`);
   }
-  validateActivationBoundary(readManagedText(resolvedRoot, 'SKILL.md', 'SKILL.md'));
+  const activation = validateActivationBoundary(readManagedText(resolvedRoot, 'SKILL.md', 'SKILL.md'));
   const roles = validateRolesCatalog(resolvedRoot, fileSet);
   return {
     command: 'status',
@@ -291,7 +295,7 @@ function inspectStatus(root) {
     version,
     roleCount: roles.length,
     ownedFileCount: files.length,
-    activationManualOnly: true,
+    ...activation,
     hooksInstalledByThisIntegration: false,
   };
 }
@@ -681,11 +685,12 @@ async function checkUpdate(root, fetchLatest) {
 function getHelp() {
   return {
     command: 'help',
-    manualOnly: true,
+    explicitRequestOnly: true,
     supportedHelperCommands: ['help', 'status', 'map', 'check-update', 'report', 'notify'],
     flags: HELP_FLAGS,
     notes: [
       'These are explicit /hail-hydra management routes, not native /hydra:* slash commands.',
+      'Compatibility mode allows model skill loading; the current user request gates work through instructions.',
       'No modes persist beyond the invoked task.',
     ],
   };

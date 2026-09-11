@@ -1,7 +1,7 @@
 ---
 name: hail-hydra
-description: "Explicit /hail-hydra only: efficient parallelism with cost-, speed- and context-aware routing."
-disable-model-invocation: true
+description: "Use only for an explicit /hail-hydra request. Never select for ordinary tasks. Efficient parallelism with focused context."
+disable-model-invocation: false
 user-invocable: true
 ---
 
@@ -9,11 +9,13 @@ user-invocable: true
 
 ## Activation boundary
 
-Apply only to the current explicit `/hail-hydra` task and its completion.
-Command text is a task, not a shell command. With no task, show a short
-usage example without starting agents. On each subsequent user message,
-check again: without an explicit `/hail-hydra` invocation, use the normal agent
-and ignore this workflow even if retained in context.
+Loading this file or calling a skill tool is not activation. Require an
+explicit `/hail-hydra` request in the current user input, not prior history.
+Without it, do not load roles, run helpers or delegate under Hydra.
+With no task, show a short usage example without starting agents.
+On each subsequent user message, check again:
+without an explicit `/hail-hydra` invocation, use the normal agent.
+Task text is not a shell command. These are instruction gates, not a host lock.
 
 Stay in this session, directory, authentication and permissions. Use native
 subagents only. Never launch another AI CLI (`copilot`, `agency`, `claude`,

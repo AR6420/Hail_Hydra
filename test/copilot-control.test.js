@@ -171,7 +171,9 @@ async function main() {
     version: '2.5.2',
     roleCount: 12,
     ownedFileCount: 19,
-    activationManualOnly: true,
+    activationManualOnly: false,
+    modelInvocationAllowed: true,
+    activationPolicy: 'explicit-request-instructions',
     hooksInstalledByThisIntegration: false,
   });
 
@@ -219,9 +221,26 @@ async function main() {
 
   {
     const root = createInstalledRoot({
-      skillText: SKILL_TEXT.replace('disable-model-invocation: true', 'disable-model-invocation: false'),
+      skillText: SKILL_TEXT.replace('disable-model-invocation: false', 'disable-model-invocation: true'),
     });
-    assert.throws(() => control.inspectStatus(root), /manual-only activation/i);
+    const strict = control.inspectStatus(root);
+    assert.strictEqual(strict.activationManualOnly, true);
+    assert.strictEqual(strict.modelInvocationAllowed, false);
+    assert.strictEqual(strict.activationPolicy, 'host-manual-only');
+  }
+
+  {
+    const root = createInstalledRoot({
+      skillText: SKILL_TEXT.replace('user-invocable: true', 'user-invocable: false'),
+    });
+    assert.throws(() => control.inspectStatus(root), /must be user-invocable/i);
+  }
+
+  {
+    const root = createInstalledRoot({
+      skillText: SKILL_TEXT.replace('disable-model-invocation: false', 'disable-model-invocation: invalid'),
+    });
+    assert.throws(() => control.inspectStatus(root), /must be true or false/i);
   }
 
   {

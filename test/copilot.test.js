@@ -19,12 +19,16 @@ const skill = fs.readFileSync(path.join(source, 'SKILL.md'), 'utf8');
 const commands = fs.readFileSync(path.join(source, 'references', 'hydra-commands.md'), 'utf8');
 const measurements = fs.readFileSync(path.join(source, 'references', 'hydra-measurements.md'), 'utf8');
 assert.match(skill, /^name: hail-hydra$/m);
-assert.match(skill, /^disable-model-invocation: true$/m);
+assert.match(skill, /^disable-model-invocation: false$/m);
 assert.match(skill, /^user-invocable: true$/m);
 assert.ok(!/^allowed-tools:/m.test(skill), 'no permission pre-approval');
 assert.match(skill, /On each subsequent user message/);
 assert.match(skill, /without an explicit `\/hail-hydra` invocation, use the normal agent/);
 assert.match(skill, /With no task, show a short/);
+assert.match(skill, /Loading this file or calling a skill tool is not activation/);
+assert.match(skill, /current user input, not prior history/);
+assert.match(skill, /Without it, do not load roles, run helpers or delegate under Hydra/);
+assert.match(skill, /instruction gates, not a host lock/);
 assert.match(skill, /2 concurrent subagents/);
 assert.match(skill, /6 total\s+dispatches/);
 assert.match(skill, /4 concurrent subagents/);
@@ -228,6 +232,8 @@ try {
   const installedControl = spawnSync(process.execPath,
     [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'status'], { encoding: 'utf8' });
   assert.strictEqual(installedControl.status, 0, installedControl.stderr);
+  assert.strictEqual(JSON.parse(installedControl.stdout).activationPolicy, 'explicit-request-instructions');
+  assert.strictEqual(JSON.parse(installedControl.stdout).activationManualOnly, false);
   const installedUsage = spawnSync(process.execPath,
     [path.join(installedSkill, 'scripts', 'hydra-usage.js'), 'template'], { encoding: 'utf8' });
   assert.strictEqual(installedUsage.status, 0, installedUsage.stderr);
@@ -265,8 +271,9 @@ try {
   assert.match(output, /\/skills reload/);
   assert.match(output, /\/hail-hydra <task>/);
   assert.match(output, /One goal selects relevant heads automatically/);
+  assert.match(output, /explicit-request-only routing relies on instructions/);
   assert.ok(!/Hooks registered|Sentinel pipeline active|StatusLine configured/.test(output),
-    'manual-only completion is truthful');
+    'instruction-gated completion does not claim automatic hooks');
   assert.match(cli(['--agent=copilot', '--status', '--config-dir', cliCfg]), new RegExp(`v${VERSION.replace(/\./g, '\\.')}`));
   cli(['--agent=copilot,claude', '--global', '--config-dir', fresh()], scratch, 1);
   assert.match(cli(['--version']), new RegExp(VERSION.replace(/\./g, '\\.')));

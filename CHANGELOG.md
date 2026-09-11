@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Copilot skill-tool compatibility**: allow model-mediated skill loading to
+  avoid `Skill not found` on hosts that exclude `disable-model-invocation: true`
+  skills even for explicit requests. Current-input instruction guards preserve
+  the intended opt-in workflow, but automatic-selection prevention is no longer
+  host-enforced. Status/help and installer output expose that distinction.
+
 ### Added
 - **Copilot feature-parity follow-up** with explicit help, status, statistics,
   map, preflight, guard, quiet, concise-worker, update and issue-report routes

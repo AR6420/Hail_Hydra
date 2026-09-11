@@ -45,7 +45,7 @@
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one manual-only `/hail-hydra` skill with the same 10 roles plus read-only architecture/performance and web research advisors, routed through native subagents when available, without automatic hooks.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one explicit-request `/hail-hydra` skill with the same 10 roles plus read-only architecture/performance and web research advisors, routed through native subagents when available, without automatic hooks.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -139,12 +139,12 @@ All flags: `--agent=<list>` (`claude,gemini,codex,copilot`) or the aliases `--cl
 | **Claude Code** | `/hydra:help`, `/hydra:stats`, … | StatusLine + hooks registered in `~/.claude/settings.json` |
 | **Gemini CLI** | `/hydra:help`, `/hydra:stats`, … | Restart Gemini CLI (or run `/commands reload`) to pick up the new commands |
 | **Codex CLI** | `$hydra-help`, `$hydra-stats`, … (skills with a `$` trigger) | **Required once:** run `/hooks` inside Codex to review and trust the Hydra hooks — they stay inert until then |
-| **GitHub Copilot CLI** | `/hail-hydra <task>` | Run `/skills reload`; manual-only, current request, no hooks or persistent agent switch |
+| **GitHub Copilot CLI** | `/hail-hydra <task>` | Run `/skills reload`; instruction-gated explicit requests, no hooks or persistent agent switch |
 
 ### GitHub Copilot CLI (opt-in)
 
-Requires a Copilot CLI version that supports skills, slash invocation and
-`disable-model-invocation`. Install once for all projects:
+Requires a Copilot CLI version that supports skills and explicit invocation.
+Install once for all projects:
 
 ```bash
 npx hail-hydra-cc@latest --copilot --global --yes
@@ -183,6 +183,18 @@ To prevent future loading, use native `/skills`, select `hail-hydra`, and choose
 Disable. Already injected instructions remain in conversation history; explicitly
 request normal routing for subsequent work, or use `/new` for a clean conversation.
 Hydra does not change the main session model and has no sticky on/off model mode.
+
+**Compatibility mode:** this follow-up sets `disable-model-invocation: false`.
+Some Copilot versions return `Skill not found` from the model's skill tool for
+`disable-model-invocation: true`, even when the user names an installed, enabled
+skill. See [upstream issue #4438](https://github.com/github/copilot-cli/issues/4438).
+Reloading cannot overcome that filtering. The compatibility setting permits
+model-mediated loading; explicit-request-only behavior now relies on the skill's
+description and current-input guard, **not a host-enforced automatic-selection
+block**. Accidental loading must not trigger Hydra helpers or delegation.
+Status exposes `activationPolicy: explicit-request-instructions`,
+`activationManualOnly: false` and `modelInvocationAllowed: true` so this tradeoff
+is visible. These describe installed configuration, not proof of a live invocation.
 
 Give the outcome, not a roster of agents. Hydra selects relevant specialists,
 tracks dependencies and decisions, and coordinates the task without requiring
@@ -254,7 +266,8 @@ Reload skills after installing, updating or removing a copy.
 
 No always-on instructions, discoverable custom agents, automatic hooks, MCP
 servers, session model settings or global subagent defaults are installed.
-This keeps ordinary prompts outside Hydra. If another host has already
+The explicit-request instruction guard keeps ordinary work outside the Hydra
+workflow; it is not a host-enforced selection block. If another host has already
 installed Hydra instructions/skills into locations Copilot also reads (such as
 `AGENTS.md` or `~/.agents/skills`), those remain independent; this installer does
 not remove or disable them.
@@ -353,9 +366,9 @@ causes an explicit error instead of trusting arbitrary deletion paths.
 See GitHub's [skill setup and reload documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
 for supported discovery locations and invocation, and the
 [skills reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skills-reference)
-for manual-only frontmatter. Use the leading slash at the interactive prompt;
-headless `copilot -p` and model-driven skill-tool lookup are not equivalent
-to interactive slash expansion.
+for frontmatter semantics. Interactive skill expansion and model-driven
+skill-tool lookup are distinct paths; compatibility mode addresses the latter
+without claiming a hard per-task runtime boundary.
 
 Generator and lifecycle tests cover the shipped instruction contracts and
 payloads; utility tests exercise local status/graph/report calculations.
