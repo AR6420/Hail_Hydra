@@ -33,6 +33,14 @@ assert.match(skill, /do not\s+require agent names, a swarm flag or repeated "con
 assert.match(skill, /task ledger with dependencies, file ownership/);
 assert.match(skill, /subagents have separate contexts/);
 assert.match(skill, /hydra-researcher/);
+assert.match(skill, /reducing cost, elapsed time and context overhead/);
+assert.match(skill, /Every dispatch must plausibly repay overhead/);
+assert.match(skill, /Group tiny related steps/);
+assert.match(skill, /only its relevant\s+context slice, not the full conversation/);
+assert.match(skill, /Reuse verified findings and decisions/);
+assert.match(skill, /Architecture and research are optional, not mandatory stages/);
+assert.match(skill, /Reuse settled decisions; do not launch both advisors for every feature/);
+assert.match(skill, /ceilings, not targets/);
 assert.match(skill, /use `hydra-architect` even without an explicit performance request/);
 assert.match(skill, /Before dependent implementation/);
 assert.match(skill, /assess proposed flows and label assumptions/);
@@ -53,7 +61,7 @@ assert.match(skill, /Ask if the\s+target or authority is unclear/);
 assert.match(skill, /Do not claim success from an exit code alone/);
 assert.match(skill, /or assume API prices equal Copilot charges/i);
 assert.match(skill, /per-dispatch model selection are unavailable/);
-assert.ok(Buffer.byteLength(skill, 'utf8') < 9000, 'bounded on-demand context');
+assert.ok(Buffer.byteLength(skill, 'utf8') < 8000, 'bounded on-demand context');
 assert.deepStrictEqual(fs.readdirSync(host.distDir), ['skills'], 'no automatic host payload');
 
 const roles = JSON.parse(fs.readFileSync(path.join(source, 'references', 'roles.json'), 'utf8'));

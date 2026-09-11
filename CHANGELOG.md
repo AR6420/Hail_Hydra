@@ -21,8 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Goal-driven orchestration**: automatic relevant-head selection, a session
   task ledger, dependency-aware parallelism, public-source research with
   citations, stable-change review, and at most two improvement rounds.
-- **Code-aware design direction**: assess substantial backend/request-flow
-  changes before dependent coding, in parallel with relevant UI research.
+- **Cost/speed/context-first routing**: parallelize useful independent work,
+  group tiny steps, reuse verified findings, load only selected prompts and
+  hand off focused context. Extra heads must justify dispatch overhead.
+- **On-demand code-aware design direction**: assess unresolved, high-impact
+  backend/request-flow choices before dependent coding, alongside useful UI research.
   Reconcile recommendations into shared contracts and measurement criteria;
   pause and redirect affected work when evidence changes the design.
   Performance choices require evidence and preserve correctness, not blanket

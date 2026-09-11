@@ -179,9 +179,18 @@ a swarm flag or repeated "continue" prompts. Small changes stay direct;
 independent substantial work can run in parallel. Writers own separate files,
 and reviewers examine stable changes rather than a moving worktree.
 
-For substantial changes to backend or request/data flows, `hydra-architect`
-assesses existing code or the proposed design **before dependent implementation**,
-even if the prompt does not mention performance. It considers relevant API,
+**Same Hydra priorities: cost, speed and context.** Dispatch must plausibly
+repay its overhead through parallel progress, a cheaper capable model or
+context isolation. Group tiny steps, reuse current findings and decisions,
+load only selected role prompts, and pass each worker a focused context slice.
+More agents are not automatically faster or cheaper.
+
+Architecture and web research are optional capabilities, not mandatory
+pipeline stages. When an unresolved backend/request-flow choice could avoid
+substantial rework, `hydra-architect` assesses the code or proposed design
+**before dependent implementation**, even without a performance-specific prompt.
+Reuse settled decisions and skip an extra advisor when direct handling suffices.
+The role considers relevant API,
 database, algorithm, caching, concurrency and resource-use tradeoffs. This is
 not limited to bulk calls: an optimization needs a code-backed reason, workload
 assumptions and a measurement plan. Batching is not automatically better, and
@@ -239,7 +248,8 @@ Substantial tasks can use native subagent dispatch with suggested `gpt-5-mini`
 Model suggestions live in `references/roles.json`; they are not price claims.
 The default budget is two concurrent heads and six dispatches total. Broad
 goals spanning multiple substantial, independent subsystems can automatically
-use an expanded ceiling of four concurrent heads and twelve dispatches.
+use an expanded ceiling of four concurrent heads and twelve dispatches only
+when useful parallel progress justifies the overhead. Ceilings are not targets.
 Architecture, research, scans and retries all count; smaller host/user limits take precedence.
 These are prompt-level orchestration limits, not a separate runtime scheduler
 or a hard billing cap. Small work stays with the main agent.
