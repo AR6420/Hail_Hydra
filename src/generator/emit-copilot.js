@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { CONTENT, DIST, VERSION, write, listMd } = require('./shared');
+const { ROOT, CONTENT, DIST, VERSION, write, listMd } = require('./shared');
 
 const MODEL_MAP = {
   haiku: { tier: 'cheap', preferredModel: 'gpt-5-mini' },
@@ -107,6 +107,14 @@ function emit() {
   }
   write(path.join(out, 'references', 'roles.json'),
     JSON.stringify(definitions.map(({ role }) => role), null, 2) + '\n');
+  for (const name of ['commands', 'measurements']) {
+    write(path.join(out, 'references', `hydra-${name}.md`),
+      fs.readFileSync(path.join(CONTENT, 'copilot', `${name}.md`), 'utf8'));
+  }
+  for (const name of ['control', 'usage']) {
+    write(path.join(out, 'scripts', `hydra-${name}.js`),
+      fs.readFileSync(path.join(ROOT, 'src', 'copilot', `hydra-${name}.js`), 'utf8'));
+  }
   write(path.join(out, 'SKILL.md'), fs.readFileSync(path.join(CONTENT, 'copilot', 'SKILL.md'), 'utf8'));
   write(path.join(out, 'VERSION'), VERSION + '\n');
 }

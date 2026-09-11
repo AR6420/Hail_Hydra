@@ -16,6 +16,8 @@ const MANIFEST = '.hydra-manifest.json';
 buildAll();
 const source = path.join(host.distDir, SKILL);
 const skill = fs.readFileSync(path.join(source, 'SKILL.md'), 'utf8');
+const commands = fs.readFileSync(path.join(source, 'references', 'hydra-commands.md'), 'utf8');
+const measurements = fs.readFileSync(path.join(source, 'references', 'hydra-measurements.md'), 'utf8');
 assert.match(skill, /^name: hail-hydra$/m);
 assert.match(skill, /^disable-model-invocation: true$/m);
 assert.match(skill, /^user-invocable: true$/m);
@@ -56,9 +58,26 @@ assert.match(skill, /Re-review affected changes/);
 assert.match(skill, /2 improvement rounds/);
 assert.match(skill, /Stop when criteria are met/);
 assert.match(skill, /unresolved required outcome is a blocker/);
-assert.match(skill, /generic "deploy" is not permission to guess production/);
-assert.match(skill, /Ask if the\s+target or authority is unclear/);
-assert.match(skill, /Do not claim success from an exit code alone/);
+assert.match(commands, /generic "deploy" is not permission to guess production/);
+assert.match(commands, /Ask if the\s+target or authority is unclear/);
+assert.match(commands, /Do not claim success from an exit code alone/);
+assert.match(skill, /read the command guide's deployment section/);
+assert.match(skill, /references\/hydra-commands\.md/);
+assert.match(commands, /\(hydra-measurements\.md\)/);
+assert.match(commands, /Unknown flags, missing required/);
+assert.match(commands, /their effects end\s+with that invocation/);
+assert.match(commands, /No global post-edit hook is installed/);
+assert.match(commands, /never `\.env` contents or values/);
+assert.match(commands, /No player process/);
+assert.match(measurements, /not automatic task instrumentation/);
+assert.match(measurements, /does not scrape private session logs/);
+assert.match(commands, /Never downgrade an unreleased preview/);
+assert.match(commands, /Matching HEAD alone is not proof/);
+assert.match(commands, /do not claim to control\s+hidden reasoning tokens/i);
+for (const flag of ['help', 'status', 'stats', 'compare', 'context', 'memory', 'map',
+  'preflight', 'guard', 'quiet', 'stfu', 'notify', 'update', 'report']) {
+  assert.ok(commands.includes(`/hail-hydra --${flag}`), `${flag}: command documented`);
+}
 assert.match(skill, /or assume API prices equal Copilot charges/i);
 assert.match(skill, /per-dispatch model selection are unavailable/);
 assert.ok(Buffer.byteLength(skill, 'utf8') < 8000, 'bounded on-demand context');
@@ -75,7 +94,7 @@ for (const otherHost of ['claude', 'gemini', 'codex']) {
     .map((file) => path.parse(file).name).sort(), canonical.map((file) => path.parse(file).name).sort(),
   `${otherHost}: canonical role catalogue unchanged`);
 }
-const payloadCount = roles.length + 3;
+const payloadCount = roles.length + 7;
 for (const role of roles) {
   assert.ok(Object.values(MODEL_MAP).some((model) =>
     role.tier === model.tier && role.preferredModel === model.preferredModel));
@@ -198,6 +217,21 @@ try {
   const manifest = JSON.parse(manifestText);
   assert.deepStrictEqual(installedPayload, snapshot(source), 'installed payload matches generated roles');
   assert.deepStrictEqual(manifest.files, Object.keys(installedPayload).sort(), 'all payload files are owned');
+  const utilities = ['references/hydra-commands.md', 'references/hydra-measurements.md',
+    'scripts/hydra-control.js', 'scripts/hydra-usage.js'];
+  for (const file of utilities) fs.unlinkSync(path.join(installedSkill, file));
+  fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify({
+    ...manifest, files: manifest.files.filter((file) => !utilities.includes(file)),
+  }));
+  install(cfg);
+  assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade adds and owns utility scripts and guides');
+  const installedControl = spawnSync(process.execPath,
+    [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'status'], { encoding: 'utf8' });
+  assert.strictEqual(installedControl.status, 0, installedControl.stderr);
+  const installedUsage = spawnSync(process.execPath,
+    [path.join(installedSkill, 'scripts', 'hydra-usage.js'), 'template'], { encoding: 'utf8' });
+  assert.strictEqual(installedUsage.status, 0, installedUsage.stderr);
+  assert.doesNotThrow(() => JSON.parse(installedUsage.stdout), 'installed helper runs without source tree dependencies');
   for (const missingRoles of [copilotOnly, ['hydra-architect']]) {
     for (const name of missingRoles) fs.unlinkSync(path.join(installedSkill, 'references', name + '.md'));
     fs.writeFileSync(path.join(installedSkill, 'references', 'roles.json'),
@@ -213,6 +247,7 @@ try {
   for (const [file, content] of Object.entries(userFiles)) {
     assert.strictEqual(fs.readFileSync(path.join(cfg, file), 'utf8'), content);
   }
+  assert.strictEqual(fs.existsSync(path.join(cfg, 'hooks')), false, 'utilities do not add global hooks');
   assert.deepStrictEqual(fs.readdirSync(cfg).sort(), [...Object.keys(userFiles), 'skills'].sort());
   assert.strictEqual(fs.readFileSync(path.join(cfg, SKILL, 'VERSION'), 'utf8').trim(), VERSION);
   assert.strictEqual(host.status(cfg)['Global Copilot'].installed, payloadCount);
@@ -278,6 +313,8 @@ try {
     JSON.stringify({ host: 'copilot', files: ['references\\..\\..\\config.json'] }),
     JSON.stringify({ host: 'copilot', files: ['/absolute.md'] }),
     JSON.stringify({ host: 'copilot', files: ['my-notes.txt'] }),
+    JSON.stringify({ host: 'copilot', files: ['scripts/other.js'] }),
+    JSON.stringify({ host: 'copilot', files: ['scripts/../../config.json'] }),
   ]) {
     fs.writeFileSync(manifestPath, bad);
     assert.throws(() => host.uninstallTargets(owned), /manifest/);

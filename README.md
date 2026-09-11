@@ -165,6 +165,7 @@ Then, **inside the same Copilot session**:
 /skills info hail-hydra
 /hail-hydra Implement pagination for this API and update the tests
 /hail-hydra Build the dashboard and deploy it to the staging target documented in this repository
+/hail-hydra --help
 ```
 
 A later message such as `Explain this function` uses the normal agent.
@@ -172,6 +173,16 @@ A later message such as `Explain this function` uses the normal agent.
 Its instructions apply to the invoked task only, even while they remain in
 conversation history. An empty invocation shows usage rather than spawning
 agents. The skill does not pre-approve tools or bypass existing permissions.
+
+Some interactive clients may display skill selection separately from the next
+input. Do not infer an active mode or a model change from that display alone.
+For an unambiguous task-level request, include the skill reference and goal in
+one input: `Use the /hail-hydra skill to implement pagination and run tests.`
+The routing boundary is instruction-driven, not a host-enforced context reset.
+To prevent future loading, use native `/skills`, select `hail-hydra`, and choose
+Disable. Already injected instructions remain in conversation history; explicitly
+request normal routing for subsequent work, or use `/new` for a clean conversation.
+Hydra does not change the main session model and has no sticky on/off model mode.
 
 Give the outcome, not a roster of agents. Hydra selects relevant specialists,
 tracks dependencies and decisions, and coordinates the task without requiring
@@ -230,6 +241,11 @@ hail-hydra/
     └── hydra-*.md             # 10 core roles + architect/researcher, loaded as needed
 ```
 
+The feature-parity follow-up also includes two on-demand utility guides under
+`references/` and dependency-free `scripts/hydra-control.js` and
+`scripts/hydra-usage.js`. These run only for explicitly requested utilities;
+installing them does not enable hooks or telemetry.
+
 `--local` installs only to `.github/skills/hail-hydra/` in the current project;
 it does not write personal configuration. `--both` installs both copies.
 `--config-dir <path>` replaces the personal `.copilot` directory, not the
@@ -270,10 +286,60 @@ authorize guessing production, billable provisioning or destructive changes.
 If deployment is blocked, completed build work and the blocked release are
 reported separately. Iteration does not repeatedly deploy speculative changes.
 
-The other hosts' `/hydra:*` commands, automatic sentinel hooks, persistent
-agent memory, sound, statusline and `/hydra:stats` billing parser are **not
-ported to Copilot**. Request a role through `/hail-hydra` instead; use Copilot's
-`/usage` for host-reported usage.
+### Explicit utilities and native feature equivalents
+
+The feature-parity follow-up uses `/hail-hydra --<utility>` rather than
+installing native `/hydra:*` aliases. Existing Copilot features and permissions
+remain available in compatible Copilot-backed shells. No command replaces
+native memory, billing, model selection or session management.
+
+| Hydra feature | Copilot entry point | Behavior and boundary |
+|---|---|---|
+| Help | `/hail-hydra --help` | Lists supported routes; no agents needed. |
+| Status | `/hail-hydra --status` | Inspects installed version, catalogue and owned files. Native `/skills info hail-hydra` checks discovery. |
+| Statistics | `/hail-hydra --stats` | Directs to native `/usage` and `/context`; never invents values when the host UI is not callable. |
+| Run comparison | `/hail-hydra --compare normal.json hydra.json` | Validates and compares explicit local receipts, not automatically captured logs. |
+| Map | `/hail-hydra --map [rebuild\|file]` | Explicit scout rebuild or local graph summary/blast radius, with freshness and coverage caveats. |
+| Preflight | `/hail-hydra --preflight` | Sequential environment inventory and compatibility analysis, without installing or exposing secrets. |
+| Guard/sentinel | `/hail-hydra --guard [files]` | Explicit stable-change review and in-task integration verification, not global post-edit hooks. |
+| Quiet | `/hail-hydra --quiet <goal>` | Suppresses Hydra's dispatch roster for this task, never failures or host tool output. |
+| Concise workers | `/hail-hydra --stfu <goal>` | Requests concise worker reports for this task; no claim to control hidden reasoning or guarantee savings. |
+| Update | `/hail-hydra --update` | Explicit registry check and normal installer workflow for a verified newer release; never downgrade a preview. |
+| Issue reporting | `/hail-hydra --report [bug\|feature\|feedback]` | Shows official issue-template links without submitting or uploading private data. |
+| Memory/context | `/hail-hydra --memory` / `--context` | Reuses native controls and consent rules; no automatic Hydra memory files or session compaction. |
+| Notification | `/hail-hydra --notify <goal>` | One terminal bell on completion, subject to terminal settings; no watcher or background player. |
+
+Utility flags are explicit and mutually exclusive. `--quiet`, `--stfu` and
+`--notify` can combine before a goal and end with that invocation. `--` ends
+flag parsing. Normal text such as `update the README` remains a coding task.
+Unknown flags or missing arguments show usage rather than performing actions.
+
+**Honest measurement:** `/usage` is the native source for reported tokens and
+AI credits (or legacy premium requests). `/context` measures current window
+occupancy, not cumulative tokens or every worker's context. Native statusline
+options remain user-controlled. The receipt helper can calculate reductions
+only from supplied compatible normal/Hydra runs that passed the same criteria
+and declare complete worker coverage. Missing metrics stay unavailable.
+It cannot independently prove the recorded measurements or verification claims.
+
+To see the receipt schema in PowerShell, run:
+
+```powershell
+node "$HOME\.copilot\skills\hail-hydra\scripts\hydra-usage.js" template
+```
+
+Fill the template from actual native counter deltas and wall-clock timing,
+using a separate clean run for each mode; leave unmeasured fields null. Store
+only at an explicitly chosen local path, without secrets or source content.
+Then use `/hail-hydra --stats <receipt.json>` or `--compare` above.
+
+This is **not full automatic hook parity**: the integration does not install
+always-on edit tracking, sentinel state indicators, persistent agent-memory
+hooks, update polling, a custom live billing dashboard or raw session-log
+scraping. Native host features cover part of that surface; manual/in-task
+equivalents cover others. Automatic instrumentation needs separately verified
+host contracts and explicit opt-in. Claude's provider-price/all-frontier
+estimate is not observed Copilot savings and is not reused.
 
 ```bash
 npx hail-hydra-cc --copilot --status
@@ -292,7 +358,8 @@ headless `copilot -p` and model-driven skill-tool lookup are not equivalent
 to interactive slash expansion.
 
 Generator and lifecycle tests cover the shipped instruction contracts and
-payloads, not live model behavior, end-to-end deployment or savings benchmarks.
+payloads; utility tests exercise local status/graph/report calculations.
+They do not prove live model behavior, end-to-end deployment or savings.
 
 ### What Gets Installed
 

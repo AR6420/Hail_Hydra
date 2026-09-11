@@ -21,6 +21,13 @@ subagents only. Never launch another AI CLI (`copilot`, `agency`, `claude`,
 Do not bypass permissions, send code to another provider, install hooks or
 global instructions, select a persistent agent/model, or enable autopilot.
 
+## Explicit utilities
+
+For a leading management flag, read [the command guide](references/hydra-commands.md)
+and follow its route. `--quiet`, `--stfu` and `--notify` modify only this task;
+other supported flags perform explicit utilities. Unknown flags get usage,
+not execution. Normal goal text is never a management or shell command.
+
 ## Cost, speed and context first
 
 Preserve correctness while reducing cost, elapsed time and context overhead.
@@ -123,17 +130,9 @@ an unresolved required outcome is a blocker.
 
 ## Build and deploy when requested
 
-Use documented build/release commands; finish local work and required gates
-before an explicitly requested deployment, not every speculative candidate.
-Establish the authorized account, target, artifact and recovery procedure.
-A generic "deploy" is not permission to guess production, provision billable
-infrastructure or run destructive migrations. Ask if the target or authority is unclear.
-Existing permissions/approvals still apply; never change authentication.
-
-Serialize releases under the main agent. Confirm the artifact reached its
-target and run the documented health/smoke check. Use only authorized recovery.
-Report failures and completed builds separately from blocked releases.
-Do not claim success from an exit code alone or loop deployments.
+For an explicit build/deploy goal, read the command guide's deployment section.
+Use the project's existing process with an authorized target and verify the
+released artifact/health. Stop at unclear authority; never infer production.
 
 Preserve user changes. Never commit, push, publish, delete data or operate on
 live services without task authorization. Use host-native shell syntax
@@ -144,5 +143,6 @@ memories/whole-project maps only when explicitly requested.
 
 Report outcome, meaningful changes, actual checks and blockers concisely.
 Include any deployment target/result and heads/models used, budget and fallback.
+Honor task-local quiet/concise-output modifiers without hiding failures.
 Never invent usage, savings, speedups or quality guarantees. Copilot's `/usage`
-reports host usage; Hydra has no Copilot billing parser.
+reports host usage; the receipt helper compares supplied measurements, not billing logs.

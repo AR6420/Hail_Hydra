@@ -8,7 +8,7 @@ const { writeFileAtomic } = require('../fsutil');
 const DIST = path.resolve(__dirname, '..', '..', '..', 'dist', 'copilot');
 const SKILL = path.join('skills', 'hail-hydra');
 const MANIFEST = '.hydra-manifest.json';
-const OWNED_FILE = /^(?:SKILL\.md|VERSION|references\/(?:roles\.json|hydra-[a-z-]+\.md))$/;
+const OWNED_FILE = /^(?:SKILL\.md|VERSION|references\/(?:roles\.json|hydra-[a-z-]+\.md)|scripts\/hydra-(?:control|usage)\.js)$/;
 
 function checkPath(base, relative) {
   let current = path.resolve(base);
@@ -174,6 +174,7 @@ module.exports = {
     'Run /skills reload in the current Copilot session, then /skills info hail-hydra.',
     'Use /hail-hydra <task> for this request only; unprefixed messages use the normal agent.',
     'One goal selects relevant heads automatically; deployment requires a clear, authorized target.',
+    'Use /hail-hydra --help for explicit utilities and native usage/context guidance.',
     'No automatic hooks, global instructions or persistent agent/model changes are installed.',
     'Model routing depends on native subagent support; cost and speed savings are not guaranteed.',
   ],

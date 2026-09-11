@@ -5,6 +5,21 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Copilot feature-parity follow-up** with explicit help, status, statistics,
+  map, preflight, guard, quiet, concise-worker, update and issue-report routes
+  under `/hail-hydra`. Native memory/context controls remain native.
+- **Local utility helpers** for installation status, graph summaries and
+  transitive dependents, explicit update checks, issue links and an opt-in
+  terminal bell. No new dependency, hook, watcher or telemetry opt-in.
+- **Validated run receipts** for supplied native usage and measured elapsed
+  time, with compatible-run comparisons, unavailable-data handling and separate
+  context snapshots. This is not automatic capture or a billing-log parser.
+- **Parity documentation and lifecycle coverage** distinguish manual/native
+  equivalents from still-unported automatic hook/state features.
+
 ## [2.5.2] - 2026-09-11
 
 ### Added
