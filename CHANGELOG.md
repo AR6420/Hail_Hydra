@@ -5,42 +5,16 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-- **Current model selection instead of stale pins**: Copilot role metadata
-  keeps task tiers but no fixed model IDs. Routing instructions prefer newer
-  suitable host-available models within cost constraints and user pins/exclusions;
-  actual IDs are selected per dispatch, not by a new pricing/model-discovery service.
-- **Copilot skill-tool compatibility**: allow model-mediated skill loading to
-  avoid `Skill not found` on hosts that exclude `disable-model-invocation: true`
-  skills even for explicit requests. Current-input instruction guards preserve
-  the intended opt-in workflow, but automatic-selection prevention is no longer
-  host-enforced. Status/help and installer output expose that distinction.
-
-### Added
-- **Copilot feature-parity follow-up** with explicit help, status, statistics,
-  map, preflight, guard, quiet, concise-worker, update and issue-report routes
-  under `/hail-hydra`. Native memory/context controls remain native.
-- **Local utility helpers** for installation status, graph summaries and
-  transitive dependents, explicit update checks, issue links and an opt-in
-  terminal bell. No new dependency, hook, watcher or telemetry opt-in.
-- **Validated run receipts** for supplied native usage and measured elapsed
-  time, with compatible-run comparisons, unavailable-data handling and separate
-  context snapshots. This is not automatic capture or a billing-log parser.
-- **Parity documentation and lifecycle coverage** distinguish manual/native
-  equivalents from still-unported automatic hook/state features.
-
 ## [2.5.2] - 2026-09-11
 
 ### Added
 - **Opt-in GitHub Copilot CLI support** via `--agent=copilot` / `--copilot`,
   interactive selection and host detection. `/hail-hydra <task>` uses the
   current session's native subagents without a second CLI or API client.
-- **Manual-only skill with 10 canonical role prompts plus Copilot-only
+- **Explicit-request skill with 10 canonical role prompts plus Copilot-only
   architecture/performance and public-web advisors**. No automatic hooks,
   global instructions, discoverable custom agents or persistent model
-  switches are installed. Unprefixed requests use the normal agent.
+  switches are installed. Instruction guards keep unprefixed work outside Hydra.
 - **Copilot-specific scope and lifecycle support**: global
   `~/.copilot/skills/hail-hydra`, local `.github/skills/hail-hydra`, both,
   dry-run, status and bounded, manifest-aware uninstall.
@@ -59,15 +33,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Budget-aware routing**: two concurrent heads and six dispatches by default;
   broad independent work can use a four-head/twelve-dispatch ceiling.
   Available-model checks, explicit direct-execution fallback, and verification.
-  No Copilot billing/savings estimates or parity claims for unported hooks.
+  No hardcoded Copilot pricing or parity claims for unported hooks.
 - **Build/deploy workflow**: follow the existing release process only for a
   clear authorized target, verify artifact and health, and report blocked
   releases separately. No guessed production targets or perpetual deploy loop.
 - **Cross-platform preflight instructions** and Copilot generator/installer
   regression coverage.
+- **Explicit utilities** for help, status, statistics, map, preflight, guard,
+  quiet, concise workers, updates and issue reports under `/hail-hydra`.
+  Native memory/context controls remain native.
+- **Local utility helpers** for installation status, graph summaries and
+  transitive dependents, explicit update checks, issue links and an opt-in
+  terminal bell. No new dependency, hook, watcher or telemetry opt-in.
+- **Validated run receipts** for supplied native usage and measured elapsed
+  time, with compatible-run comparisons, unavailable-data handling and separate
+  context snapshots. This is not automatic capture or a billing-log parser.
+- **Parity documentation and lifecycle coverage** distinguish manual/native
+  equivalents from still-unported automatic hook/state features.
 
 ### Changed
-- Installer output distinguishes manual-only Copilot installs from hosts
+- **Current model selection instead of stale pins**: Copilot role metadata
+  keeps task tiers but no fixed model IDs. Routing instructions prefer newer
+  suitable host-available models within cost constraints and user pins/exclusions;
+  actual IDs are selected per dispatch, not by a new pricing/model-discovery service.
+- **Copilot skill-tool compatibility**: allow model-mediated skill loading to
+  avoid `Skill not found` on hosts that exclude `disable-model-invocation: true`
+  skills even for explicit requests. Current-input instruction guards preserve
+  the intended opt-in workflow, but automatic-selection prevention is not
+  host-enforced. Status/help and installer output expose that distinction.
+- Installer output distinguishes instruction-gated Copilot installs from hosts
   with automatic hooks. Existing host defaults and payloads are unchanged.
 
 ## [2.5.1] - 2026-08-11

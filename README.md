@@ -184,7 +184,7 @@ Disable. Already injected instructions remain in conversation history; explicitl
 request normal routing for subsequent work, or use `/new` for a clean conversation.
 Hydra does not change the main session model and has no sticky on/off model mode.
 
-**Compatibility mode:** this follow-up sets `disable-model-invocation: false`.
+**Compatibility mode:** the Copilot integration sets `disable-model-invocation: false`.
 Some Copilot versions return `Skill not found` from the model's skill tool for
 `disable-model-invocation: true`, even when the user names an installed, enabled
 skill. See [upstream issue #4438](https://github.com/github/copilot-cli/issues/4438).
@@ -253,7 +253,7 @@ hail-hydra/
     └── hydra-*.md             # 10 core roles + architect/researcher, loaded as needed
 ```
 
-The feature-parity follow-up also includes two on-demand utility guides under
+The Copilot integration also includes two on-demand utility guides under
 `references/` and dependency-free `scripts/hydra-control.js` and
 `scripts/hydra-usage.js`. These run only for explicitly requested utilities;
 installing them does not enable hooks or telemetry.
@@ -306,7 +306,7 @@ reported separately. Iteration does not repeatedly deploy speculative changes.
 
 ### Explicit utilities and native feature equivalents
 
-The feature-parity follow-up uses `/hail-hydra --<utility>` rather than
+The Copilot integration uses `/hail-hydra --<utility>` rather than
 installing native `/hydra:*` aliases. Existing Copilot features and permissions
 remain available in compatible Copilot-backed shells. No command replaces
 native memory, billing, model selection or session management.
