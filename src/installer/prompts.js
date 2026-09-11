@@ -44,7 +44,10 @@ async function runPrompts(availableHosts) {
 
   console.log();
   const chosen = availableHosts.filter((h) => hostIds.includes(h.id)).map((h) => h.label).join(', ');
-  console.log(chalk.bold(`  This will install the 10 Hydra agents + orchestration skill for: ${chosen}.`));
+  console.log(chalk.bold(`  This will install the 10 Hydra agent instructions + orchestration skill for: ${chosen}.`));
+  if (hostIds.includes('copilot')) {
+    console.log('  Copilot: manual-only /hail-hydra skill; no automatic hooks or agent selection.');
+  }
   console.log();
   console.log('  Agents:');
 

@@ -1,0 +1,224 @@
+#!/usr/bin/env node
+'use strict';
+
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const { buildAll, VERSION } = require('../src/generator/build');
+const { transformRole, MODEL_MAP } = require('../src/generator/emit-copilot');
+const host = require('../src/installer/hosts/copilot');
+
+const ROOT = path.resolve(__dirname, '..');
+const SKILL = path.join('skills', 'hail-hydra');
+const MANIFEST = '.hydra-manifest.json';
+buildAll();
+const source = path.join(host.distDir, SKILL);
+const skill = fs.readFileSync(path.join(source, 'SKILL.md'), 'utf8');
+assert.match(skill, /^name: hail-hydra$/m);
+assert.match(skill, /^disable-model-invocation: true$/m);
+assert.match(skill, /^user-invocable: true$/m);
+assert.ok(!/^allowed-tools:/m.test(skill), 'no permission pre-approval');
+assert.match(skill, /On each subsequent user message/);
+assert.match(skill, /without an explicit `\/hail-hydra` invocation, use the normal agent/);
+assert.match(skill, /With no task, show a short/);
+assert.match(skill, /2 concurrent subagents/);
+assert.match(skill, /6 total\s+dispatches/);
+assert.match(skill, /or assume API prices equal Copilot charges/i);
+assert.match(skill, /per-dispatch model selection are unavailable/);
+assert.ok(Buffer.byteLength(skill, 'utf8') < 9000, 'bounded on-demand context');
+assert.deepStrictEqual(fs.readdirSync(host.distDir), ['skills'], 'no automatic host payload');
+
+const roles = JSON.parse(fs.readFileSync(path.join(source, 'references', 'roles.json'), 'utf8'));
+const canonical = fs.readdirSync(path.join(ROOT, 'content', 'agents')).filter((f) => f.endsWith('.md')).sort();
+assert.deepStrictEqual(roles.map((role) => role.name + '.md'), canonical, 'all canonical heads covered');
+assert.strictEqual(roles.length, 10);
+for (const role of roles) {
+  assert.ok(Object.values(MODEL_MAP).some((model) =>
+    role.tier === model.tier && role.preferredModel === model.preferredModel));
+  const body = fs.readFileSync(path.join(source, role.instructions), 'utf8');
+  assert.ok(!/\.claude|Claude Code|\{\{HYDRA_|^## (Your Memory|Cleanup|Collaboration)$/m.test(body),
+    `${role.name}: no unported host hooks, memory or paths`);
+  assert.match(body, /Do not delegate again/);
+  assert.match(body, /PowerShell|never assume Bash on Windows/i);
+  assert.ok(!/^name:|^model:|^memory:/m.test(body), 'roles are not registered agents');
+}
+const sentinel = fs.readFileSync(path.join(source, 'references', 'hydra-sentinel-scan.md'), 'utf8');
+assert.match(sentinel, /## Checks/);
+assert.match(sentinel, /## Output Format/);
+assert.ok(!sentinel.includes('hydra-sentinel-done'));
+assert.match(sentinel, /Do not directly edit files/);
+assert.match(fs.readFileSync(path.join(source, 'references', 'hydra-sentinel.md'), 'utf8'),
+  /Do not execute shell commands/);
+const scout = fs.readFileSync(path.join(source, 'references', 'hydra-scout.md'), 'utf8');
+assert.ok(!scout.includes('If no map exists, do a full build'));
+assert.ok(!scout.includes('Note in your memory'));
+const preflight = fs.readFileSync(path.join(source, 'references', 'hydra-preflight.md'), 'utf8');
+assert.ok(!/2>\/dev\/null|\|\| echo|```bash/.test(preflight), 'preflight is shell-native');
+assert.match(preflight, /PREFLIGHT_INVENTORY_COMPLETE/);
+const coder = fs.readFileSync(path.join(source, 'references', 'hydra-coder.md'), 'utf8');
+assert.match(coder, /HYDRA_SENTINEL_REQUIRED/);
+assert.match(coder, /HYDRA_NO_CODE_CHANGES/);
+assert.throws(() => transformRole('no frontmatter', 'x.md'), /No frontmatter/);
+assert.throws(() => transformRole('---\nname: x\nmodel: missing\n---\nbody', 'x.md'), /tier mapping/);
+assert.throws(() => transformRole('---\nname: wrong\nmodel: haiku\n---\nbody', 'x.md'), /mismatched name/);
+assert.throws(() => transformRole('---\nname: x\nmodel: haiku\ntools: Unknown\n---\nbody', 'x.md'), /tool capability/);
+
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'hydra-copilot-'));
+const originalCwd = process.cwd();
+const quiet = { header() {}, file() {}, ok() {}, warn() {}, blank() {} };
+const cliFile = path.join(ROOT, 'bin', 'cli.js');
+let sequence = 0;
+function fresh() {
+  const dir = path.join(scratch, `case-${sequence++}`);
+  fs.mkdirSync(dir);
+  return dir;
+}
+function cli(args, cwd = scratch, expectedStatus = 0) {
+  const result = spawnSync(process.execPath, [cliFile, ...args], {
+    cwd,
+    encoding: 'utf8',
+    timeout: 30000,
+    env: { ...process.env, HOME: scratch, USERPROFILE: scratch },
+  });
+  assert.strictEqual(result.status, expectedStatus, result.stdout + result.stderr);
+  return result.stdout + result.stderr;
+}
+function install(base, scope = 'global') {
+  return host.install({ scope, configDirOverride: base, version: VERSION, log: quiet });
+}
+function snapshot(dir, prefix = '') {
+  return Object.fromEntries(fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const key = prefix + entry.name;
+    return entry.isDirectory()
+      ? Object.entries(snapshot(path.join(dir, entry.name), key + '/'))
+      : [[key, fs.readFileSync(path.join(dir, entry.name), 'utf8')]];
+  }));
+}
+
+try {
+  process.chdir(scratch);
+  const cfg = fresh();
+  const userFiles = {
+    'config.json': '{"model":"user-model","custom_agents":[]}\n',
+    'copilot-instructions.md': 'Keep ordinary requests normal.\n',
+    'hooks.json': '{"hooks":{"userHook":[]}}\n',
+  };
+  for (const [file, content] of Object.entries(userFiles)) fs.writeFileSync(path.join(cfg, file), content);
+  assert.strictEqual(install(cfg).anyFailed, false);
+  const initial = snapshot(cfg);
+  install(cfg);
+  assert.deepStrictEqual(snapshot(cfg), initial, 'reinstall is byte-stable');
+  for (const [file, content] of Object.entries(userFiles)) {
+    assert.strictEqual(fs.readFileSync(path.join(cfg, file), 'utf8'), content);
+  }
+  assert.deepStrictEqual(fs.readdirSync(cfg).sort(), [...Object.keys(userFiles), 'skills'].sort());
+  assert.strictEqual(fs.readFileSync(path.join(cfg, SKILL, 'VERSION'), 'utf8').trim(), VERSION);
+  assert.strictEqual(host.status(cfg)['Global Copilot'].installed, 13);
+  assert.ok(host.hasAnyInstalled('global', cfg));
+  assert.strictEqual(host.plan('global', cfg, VERSION).length, 14);
+  assert.throws(() => host.plan('bad-scope', cfg, VERSION), /Unsupported Copilot scope/);
+
+  const dryCfg = path.join(fresh(), 'not-created');
+  const preview = cli(['--copilot', '--global', '--dry-run', '--config-dir', dryCfg]);
+  assert.match(preview, /hail-hydra/);
+  assert.ok(!fs.existsSync(dryCfg), 'dry-run writes nothing');
+
+  const cliCfg = fresh();
+  const output = cli(['--copilot', '--global', '--yes', '--config-dir', cliCfg]);
+  assert.match(output, /\/skills reload/);
+  assert.match(output, /\/hail-hydra <task>/);
+  assert.ok(!/Hooks registered|Sentinel pipeline active|StatusLine configured/.test(output),
+    'manual-only completion is truthful');
+  assert.match(cli(['--agent=copilot', '--status', '--config-dir', cliCfg]), new RegExp(`v${VERSION.replace(/\./g, '\\.')}`));
+  cli(['--agent=copilot,claude', '--global', '--config-dir', fresh()], scratch, 1);
+  assert.match(cli(['--version']), new RegExp(VERSION.replace(/\./g, '\\.')));
+
+  const project = fresh();
+  process.chdir(project);
+  const untouchedGlobal = fresh();
+  fs.writeFileSync(path.join(untouchedGlobal, 'config.json'), 'user-owned');
+  install(untouchedGlobal, 'local');
+  assert.deepStrictEqual(snapshot(untouchedGlobal), { 'config.json': 'user-owned' },
+    '--local never writes user-level files');
+  const localSkill = path.join(project, '.github', SKILL);
+  assert.ok(fs.existsSync(path.join(localSkill, 'SKILL.md')));
+  assert.ok(!fs.existsSync(path.join(project, '.copilot')), 'uses the supported project skill location');
+  install(untouchedGlobal, 'both');
+  assert.ok(fs.existsSync(path.join(untouchedGlobal, SKILL, 'SKILL.md')));
+  fs.writeFileSync(path.join(project, '.github', 'copilot-instructions.md'), 'project instructions');
+  fs.writeFileSync(path.join(localSkill, 'my-notes.txt'), 'keep me');
+  const removed = cli(['--copilot', '--uninstall', '--yes', '--config-dir', untouchedGlobal], project);
+  assert.match(removed, /All heads severed/);
+  assert.ok(!fs.existsSync(path.join(localSkill, 'SKILL.md')));
+  assert.ok(!fs.existsSync(path.join(untouchedGlobal, SKILL, 'SKILL.md')));
+  assert.strictEqual(fs.readFileSync(path.join(localSkill, 'my-notes.txt'), 'utf8'), 'keep me');
+  assert.strictEqual(fs.readFileSync(path.join(project, '.github', 'copilot-instructions.md'), 'utf8'), 'project instructions');
+  assert.strictEqual(fs.readFileSync(path.join(untouchedGlobal, 'config.json'), 'utf8'), 'user-owned');
+  assert.ok(fs.existsSync(path.join(project, '.github')), 'cleanup never removes project base');
+  assert.match(cli(['--copilot', '--uninstall', '--yes', '--config-dir', untouchedGlobal], project), /Nothing to remove/);
+  const sameBase = host.localDir();
+  assert.strictEqual(host.plan('both', sameBase, VERSION).length, 14, 'same scope base is deduplicated');
+  if (process.platform === 'win32') {
+    assert.strictEqual(host.plan('both', sameBase.toUpperCase(), VERSION).length, 14,
+      'Windows scope comparison is case-insensitive');
+  }
+
+  process.chdir(scratch);
+  const owned = fresh();
+  install(owned);
+  const manifestPath = path.join(owned, SKILL, MANIFEST);
+  const originalManifest = fs.readFileSync(manifestPath, 'utf8');
+  for (const bad of [
+    '{broken',
+    'null',
+    JSON.stringify({ host: 'copilot', files: ['../../config.json'] }),
+    JSON.stringify({ host: 'copilot', files: ['references\\..\\..\\config.json'] }),
+    JSON.stringify({ host: 'copilot', files: ['/absolute.md'] }),
+    JSON.stringify({ host: 'copilot', files: ['my-notes.txt'] }),
+  ]) {
+    fs.writeFileSync(manifestPath, bad);
+    assert.throws(() => host.uninstallTargets(owned), /manifest/);
+    assert.ok(fs.existsSync(path.join(owned, SKILL, 'SKILL.md')));
+  }
+  fs.writeFileSync(manifestPath, originalManifest);
+  fs.unlinkSync(path.join(owned, SKILL, 'references', 'hydra-coder.md'));
+  assert.strictEqual(host.uninstallTargets(owned).length, 13, 'interrupted payload remains removable');
+  install(owned);
+
+  const unowned = fresh();
+  fs.mkdirSync(path.join(unowned, SKILL), { recursive: true });
+  fs.writeFileSync(path.join(unowned, SKILL, 'SKILL.md'), 'not installed by Hydra');
+  assert.deepStrictEqual(host.uninstallTargets(unowned), [], 'uninstall requires ownership manifest');
+
+  const linkCfg = fresh();
+  fs.mkdirSync(path.join(linkCfg, 'skills'));
+  const linkTarget = fresh();
+  fs.symlinkSync(linkTarget, path.join(linkCfg, SKILL), process.platform === 'win32' ? 'junction' : 'dir');
+  assert.throws(() => install(linkCfg), /symlink/);
+  assert.throws(() => host.uninstallTargets(linkCfg), /symlink/);
+  assert.deepStrictEqual(fs.readdirSync(linkTarget), [], 'linked directory is untouched');
+  fs.unlinkSync(path.join(linkCfg, SKILL));
+
+  const distBackup = host.distDir + '.copilot-test-backup';
+  fs.renameSync(host.distDir, distBackup);
+  try {
+    assert.strictEqual(host.status(owned)['Global Copilot'].installed, 13,
+      'status works from the installed manifest without dist');
+    assert.strictEqual(host.uninstallTargets(owned).length, 14);
+    assert.match(cli(['--copilot', '--global', '--yes', '--config-dir', fresh()], scratch, 1), /npm run build/);
+    cli(['--copilot', '--uninstall', '--yes', '--config-dir', owned]);
+    assert.ok(!fs.existsSync(path.join(owned, SKILL, 'SKILL.md')), 'uninstall works without dist');
+  } finally {
+    fs.renameSync(distBackup, host.distDir);
+  }
+
+  const blocked = fresh();
+  fs.writeFileSync(path.join(blocked, 'skills'), 'not a directory');
+  assert.match(cli(['--copilot', '--global', '--yes', '--config-dir', blocked], scratch, 1), /Error:/);
+  console.log('copilot: generator, activation contracts, installer and lifecycle checks passed');
+} finally {
+  process.chdir(originalCwd);
+  fs.rmSync(scratch, { recursive: true, force: true });
+}

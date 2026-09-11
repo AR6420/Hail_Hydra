@@ -22,10 +22,11 @@ program
   .name('hail-hydra-cc')
   .description('Multi-headed speculative execution framework for AI coding CLIs')
   .version(VERSION, '-v, --version', 'Output the current version')
-  .option('--agent <list>', 'Comma-separated target agents: claude,gemini,codex')
+  .option('--agent <list>', 'Comma-separated target agents: claude,gemini,codex,copilot')
   .option('--claude', 'Target Claude Code (alias for --agent=claude)')
   .option('--gemini', 'Target Gemini CLI (alias for --agent=gemini)')
   .option('--codex', 'Target Codex CLI (alias for --agent=codex)')
+  .option('--copilot', 'Target GitHub Copilot CLI (alias for --agent=copilot)')
   .option('--all', 'Target every detected agent')
   .option('--global', 'Skip prompts, install for all projects')
   .option('--local', 'Skip prompts, install for this project only')
@@ -40,6 +41,7 @@ Examples:
   npx hail-hydra-cc                          Interactive installation (recommended)
   npx hail-hydra-cc --global                 Install for Claude Code — no prompts
   npx hail-hydra-cc --agent=claude --global  Same, explicit agent
+  npx hail-hydra-cc --copilot --global      Opt-in /hail-hydra skill for Copilot
   npx hail-hydra-cc --all --global --yes     Every detected agent, non-interactive
   npx hail-hydra-cc --dry-run --all          Preview what would be written
   npx hail-hydra-cc --status                 Check installation status
@@ -56,7 +58,7 @@ function resolveAgentFlags(options) {
       if (id) ids.push(id);
     }
   }
-  for (const id of ['claude', 'gemini', 'codex']) {
+  for (const id of ['claude', 'gemini', 'codex', 'copilot']) {
     if (options[id] && !ids.includes(id)) ids.push(id);
   }
   if (options.all) {
@@ -107,7 +109,7 @@ program.action(async (options) => {
     if (scopeFlag || options.yes) {
       if (options.yes && !scopeFlag && !agentIds) {
         // BMAD-style contract: --yes alone on a fresh install is ambiguous.
-        throw new Error('--yes requires an agent selection (--agent=..., --claude/--gemini/--codex, or --all)');
+        throw new Error('--yes requires an agent selection (--agent=..., --claude/--gemini/--codex/--copilot, or --all)');
       }
       await installer.runInstall({
         hostIds: agentIds || ['claude'], // v2 compatibility: bare --global targets Claude Code

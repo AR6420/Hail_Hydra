@@ -5,6 +5,29 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2026-09-11
+
+### Added
+- **Opt-in GitHub Copilot CLI support** via `--agent=copilot` / `--copilot`,
+  interactive selection and host detection. `/hail-hydra <task>` uses the
+  current session's native subagents without a second CLI or API client.
+- **Manual-only skill with 10 private role prompts**, generated from the
+  canonical agents. No automatic hooks, global instructions, discoverable
+  custom agents or persistent model switches are installed. Unprefixed
+  requests use the normal agent.
+- **Copilot-specific scope and lifecycle support**: global
+  `~/.copilot/skills/hail-hydra`, local `.github/skills/hail-hydra`, both,
+  dry-run, status and bounded, manifest-aware uninstall.
+- **Budget-aware routing**: two concurrent heads and six dispatches by default,
+  available-model checks, explicit direct-execution fallback, and verification.
+  No Copilot billing/savings estimates or parity claims for unported hooks.
+- **Cross-platform preflight instructions** and Copilot generator/installer
+  regression coverage.
+
+### Changed
+- Installer output distinguishes manual-only Copilot installs from hosts
+  with automatic hooks. Existing host defaults and payloads are unchanged.
+
 ## [2.5.1] - 2026-08-11
 
 ### Removed

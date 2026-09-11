@@ -53,7 +53,7 @@ async function runInstall({ hostIds = ['claude'], scope = 'global', configDirOve
   // dist/ is generated (npm run build / prepack) and absent in a fresh dev
   // checkout — fail fast with a clear message instead of a raw ENOENT.
   for (const host of hosts) {
-    if (!fs.existsSync(path.join(host.distDir, 'agents'))) {
+    if (!fs.existsSync(path.join(host.distDir, host.payloadEntry || 'agents'))) {
       throw new Error(
         `${host.label} payload missing (${host.distDir}). ` +
         `Run 'npm run build' first — dist/ is generated, not committed (dev checkout).`
@@ -103,7 +103,8 @@ async function runInstall({ hostIds = ['claude'], scope = 'global', configDirOve
   }
 
   if (!anyFailed) {
-    showInstallComplete(statusLineConfigured, notes.length ? notes : null);
+    showInstallComplete(statusLineConfigured, notes.length ? notes : null,
+      hosts.some((host) => host.automaticHooks !== false));
   } else {
     console.log(chalk.yellow('  ⚠ Some files failed to install. Check errors above.\n'));
     // Partial installs still need the per-host follow-ups (e.g. Codex /hooks trust).
@@ -181,7 +182,7 @@ async function runUninstall({ hostIds = null, configDirOverride = null, interact
   const roots = [];
   for (const host of hosts) {
     roots.push(norm(host.configDir(configDirOverride)));
-    roots.push(norm(path.join(process.cwd(), '.' + host.id)));
+    roots.push(norm(host.localDir ? host.localDir() : path.join(process.cwd(), '.' + host.id)));
   }
   const inBounds = (d) => roots.some((r) => norm(d).startsWith(r + path.sep));
   for (const dir of [...parentDirs].sort((a, b) => b.length - a.length)) {
