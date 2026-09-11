@@ -16,6 +16,8 @@ const CAPABILITIES = {
   Bash: 'run shell commands',
   Glob: 'find files',
   Grep: 'search text',
+  WebSearch: 'search the public web',
+  WebFetch: 'fetch public web pages',
 };
 
 function transformRole(text, fileName) {
@@ -33,6 +35,7 @@ function transformRole(text, fileName) {
   if (!tools.length || tools.some((tool) => !CAPABILITIES[tool])) {
     throw new Error(`Missing or unsupported tool capability in ${fileName}`);
   }
+  const canResearch = tools.includes('WebSearch') || tools.includes('WebFetch');
 
   let body = text.slice(match[0].length);
   // These sections assume Claude's memory, hooks or always-on protocol.
@@ -64,7 +67,9 @@ function transformRole(text, fileName) {
     'Do not delegate again, start another CLI, or create persistent memories.',
     'Use the host-native shell and tools; never assume Bash on Windows.',
     'Only build a codebase map when explicitly requested. Verify cached data.',
-    'Do not mutate git state or contact live services without user authorization.',
+    canResearch
+      ? 'Do not mutate git state or operate on private or deployment services without user authorization.'
+      : 'Do not mutate git state or contact live services without user authorization.',
     'Never expose secret values. Report failures and incomplete checks explicitly.',
     '',
   ].join('\n');
@@ -74,18 +79,36 @@ function transformRole(text, fileName) {
   };
 }
 
+function loadRoles(directories) {
+  const definitions = [];
+  const names = new Set();
+  for (const directory of directories) {
+    for (const file of listMd(directory)) {
+      const definition = transformRole(fs.readFileSync(path.join(directory, file), 'utf8'), file);
+      if (names.has(definition.role.name)) {
+        throw new Error(`Duplicate Copilot role '${definition.role.name}'`);
+      }
+      names.add(definition.role.name);
+      definitions.push(definition);
+    }
+  }
+  return definitions.sort((a, b) =>
+    a.role.instructions < b.role.instructions ? -1 : a.role.instructions > b.role.instructions ? 1 : 0);
+}
+
 function emit() {
   const out = path.join(DIST, 'copilot', 'skills', 'hail-hydra');
-  const roles = [];
-  for (const file of listMd(path.join(CONTENT, 'agents'))) {
-    const { role, body } = transformRole(
-      fs.readFileSync(path.join(CONTENT, 'agents', file), 'utf8'), file);
-    roles.push(role);
+  const definitions = loadRoles([
+    path.join(CONTENT, 'agents'),
+    path.join(CONTENT, 'copilot', 'agents'),
+  ]);
+  for (const { role, body } of definitions) {
     write(path.join(out, role.instructions), body);
   }
-  write(path.join(out, 'references', 'roles.json'), JSON.stringify(roles, null, 2) + '\n');
+  write(path.join(out, 'references', 'roles.json'),
+    JSON.stringify(definitions.map(({ role }) => role), null, 2) + '\n');
   write(path.join(out, 'SKILL.md'), fs.readFileSync(path.join(CONTENT, 'copilot', 'SKILL.md'), 'utf8'));
   write(path.join(out, 'VERSION'), VERSION + '\n');
 }
 
-module.exports = { id: 'copilot', emit, transformRole, MODEL_MAP };
+module.exports = { id: 'copilot', emit, transformRole, loadRoles, MODEL_MAP };

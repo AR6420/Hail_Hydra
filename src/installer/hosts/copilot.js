@@ -173,6 +173,7 @@ module.exports = {
   postInstallNotes: () => [
     'Run /skills reload in the current Copilot session, then /skills info hail-hydra.',
     'Use /hail-hydra <task> for this request only; unprefixed messages use the normal agent.',
+    'One goal selects relevant heads automatically; deployment requires a clear, authorized target.',
     'No automatic hooks, global instructions or persistent agent/model changes are installed.',
     'Model routing depends on native subagent support; cost and speed savings are not guaranteed.',
   ],

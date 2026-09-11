@@ -38,14 +38,14 @@
 </p>
 
 <p align="center">
-  <strong>10 agent roles &nbsp;·&nbsp; 4 host CLIs &nbsp;·&nbsp; Host-specific commands and hooks &nbsp;·&nbsp; Opt-in Copilot orchestration</strong>
+  <strong>10 core agent roles &nbsp;·&nbsp; 4 host CLIs &nbsp;·&nbsp; Host-specific commands and hooks &nbsp;·&nbsp; Opt-in Copilot orchestration and research</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one manual-only `/hail-hydra` skill with the same 10 roles, routed through native subagents when available, without automatic hooks.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one manual-only `/hail-hydra` skill with the same 10 roles plus a read-only web researcher, routed through native subagents when available, without automatic hooks.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
 
@@ -164,6 +164,7 @@ Then, **inside the same Copilot session**:
 /skills reload
 /skills info hail-hydra
 /hail-hydra Implement pagination for this API and update the tests
+/hail-hydra Build the dashboard and deploy it to the staging target documented in this repository
 ```
 
 A later message such as `Explain this function` uses the normal agent.
@@ -171,6 +172,26 @@ A later message such as `Explain this function` uses the normal agent.
 Its instructions apply to the invoked task only, even while they remain in
 conversation history. An empty invocation shows usage rather than spawning
 agents. The skill does not pre-approve tools or bypass existing permissions.
+
+Give the outcome, not a roster of agents. Hydra selects relevant specialists,
+tracks dependencies and decisions, and coordinates the task without requiring
+a swarm flag or repeated "continue" prompts. Small changes stay direct;
+independent substantial work can run in parallel. Writers own separate files,
+and reviewers examine stable changes rather than a moving worktree.
+
+When external evidence can materially affect a decision, the Copilot-only
+`hydra-researcher` compares public sources and returns options, tradeoffs and
+citations. This includes UI/accessibility, library, architecture and
+compatibility questions, not just visual design. The main agent chooses
+against project requirements and constraints. Web research needs native host
+tools; unavailable capabilities are reported, not replaced with another
+provider. Private code and confidential requirements must not be sent to
+public searches.
+
+The main conversation keeps its available context when alternating between
+Hydra and ordinary prompts. Workers have separate contexts; the main agent
+briefs them and reconciles results in a session task ledger. This is not
+shared live subagent memory or a separate cross-session memory service.
 
 The installer places everything under `~/.copilot/skills/hail-hydra/`:
 
@@ -181,7 +202,7 @@ hail-hydra/
 ├── .hydra-manifest.json
 └── references/
     ├── roles.json
-    └── hydra-*.md             # 10 role prompts, loaded only as needed
+    └── hydra-*.md             # 10 core roles + Copilot researcher, loaded as needed
 ```
 
 `--local` installs only to `.github/skills/hail-hydra/` in the current project;
@@ -200,10 +221,28 @@ not remove or disable them.
 Substantial tasks can use native subagent dispatch with suggested `gpt-5-mini`
 (cheap) and `gpt-5.4` (mid) models **only if offered by the current host**.
 Model suggestions live in `references/roles.json`; they are not price claims.
-The default budget is two concurrent heads and six dispatches total, with
-disjoint write ownership and verification before completion. Small work stays
-with the main agent. If subagents or per-dispatch model selection are unavailable,
+The default budget is two concurrent heads and six dispatches total. Broad
+goals spanning multiple substantial, independent subsystems can automatically
+use an expanded ceiling of four concurrent heads and twelve dispatches.
+Research, scans and retries all count; smaller host/user limits take precedence.
+These are prompt-level orchestration limits, not a separate runtime scheduler
+or a hard billing cap. Small work stays with the main agent.
+If subagents or per-dispatch model selection are unavailable,
 Hydra explains the limitation and works directly, without claiming savings.
+
+Improvement is bounded: at most two rounds after the first candidate, within
+the same dispatch budget, to address concrete findings or unmet acceptance
+criteria. Stop when the criteria are met, progress stalls or the budget is
+exhausted; unresolved required work is reported as blocked. Hydra does not
+start an infinite optimization loop or enable autopilot.
+
+For an explicit build/deploy goal, Hydra follows the existing project release
+process, completes local work before releasing, and verifies the deployed
+artifact and health. Deployment still requires a clear authorized account,
+target and artifact, plus any existing approvals. A vague "deploy" does not
+authorize guessing production, billable provisioning or destructive changes.
+If deployment is blocked, completed build work and the blocked release are
+reported separately. Iteration does not repeatedly deploy speculative changes.
 
 The other hosts' `/hydra:*` commands, automatic sentinel hooks, persistent
 agent memory, sound, statusline and `/hydra:stats` billing parser are **not
@@ -225,6 +264,9 @@ for supported discovery locations and invocation, and the
 for manual-only frontmatter. Use the leading slash at the interactive prompt;
 headless `copilot -p` and model-driven skill-tool lookup are not equivalent
 to interactive slash expansion.
+
+Generator and lifecycle tests cover the shipped instruction contracts and
+payloads, not live model behavior, end-to-end deployment or savings benchmarks.
 
 ### What Gets Installed
 
