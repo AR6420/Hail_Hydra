@@ -12,6 +12,7 @@ const ROLES_FILE = 'references/roles.json';
 const UTILITY_GUIDE_FILES = [
   'references/hydra-commands.md',
   'references/hydra-measurements.md',
+  'references/hydra-quality.md',
 ];
 const UTILITY_GUIDE_SET = new Set(UTILITY_GUIDE_FILES);
 const REQUIRED_MANIFEST_FILES = [

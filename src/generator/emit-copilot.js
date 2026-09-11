@@ -52,6 +52,22 @@ function transformRole(text, fileName) {
       'Build or refresh a map only when explicitly requested. A cached map is a hint, ' +
       'not proof: check current files and uncommitted changes before relying on it.\n\n');
   }
+  if (name[1] === 'hydra-guard') {
+    const advisoryRule = /- \*\*Never block delivery\.\*\*[\s\S]*?(?=\r?\n- |\r?\n## |$)/;
+    if (!advisoryRule.test(body)) {
+      throw new Error('Copilot guard delivery rule needs review after canonical prompt changes');
+    }
+    body = body.replace(advisoryRule,
+      '- **Flag delivery blockers.** Report confirmed serious findings to the main agent. ' +
+      'It must resolve them or report blocked work before completion/deployment; ' +
+      'a quick scan does not approve release. Mark partial or timed-out scans incomplete, ' +
+      'not clean, and identify the unchecked scope.\n');
+    const resultContract = 'result: clean|issues_found';
+    if (!body.includes(resultContract)) {
+      throw new Error('Copilot guard result contract needs review after canonical prompt changes');
+    }
+    body = body.replace(resultContract, resultContract + '|incomplete');
+  }
   if (/\{\{HYDRA_[A-Z0-9_]+\}\}/.test(body)) {
     throw new Error(`Unresolved host-specific token in ${fileName}`);
   }
@@ -107,7 +123,7 @@ function emit() {
   }
   write(path.join(out, 'references', 'roles.json'),
     JSON.stringify(definitions.map(({ role }) => role), null, 2) + '\n');
-  for (const name of ['commands', 'measurements']) {
+  for (const name of ['commands', 'measurements', 'quality']) {
     write(path.join(out, 'references', `hydra-${name}.md`),
       fs.readFileSync(path.join(CONTENT, 'copilot', `${name}.md`), 'utf8'));
   }

@@ -24,7 +24,7 @@ const ROLE_NAMES = [
   'hydra-sentinel',
   'hydra-sentinel-scan',
 ];
-const UTILITY_GUIDE_FILES = ['hydra-commands.md', 'hydra-measurements.md'];
+const UTILITY_GUIDE_FILES = ['hydra-commands.md', 'hydra-measurements.md', 'hydra-quality.md'];
 const SKILL_TEXT = fs.readFileSync(path.join(ROOT, 'content', 'copilot', 'SKILL.md'), 'utf8');
 const SCRATCH = path.join(ROOT, 'test', `.tmp-copilot-control-${process.pid}-${Date.now()}`);
 
@@ -170,7 +170,7 @@ async function main() {
     installed: true,
     version: '2.5.2',
     roleCount: 12,
-    ownedFileCount: 19,
+    ownedFileCount: 20,
     activationManualOnly: false,
     modelInvocationAllowed: true,
     activationPolicy: 'explicit-request-instructions',
@@ -181,7 +181,7 @@ async function main() {
   const installedStatusJson = JSON.parse(installedStatus.stdout);
   assert.strictEqual(installedStatusJson.version, '2.5.2');
   assert.strictEqual(installedStatusJson.roleCount, 12);
-  assert.strictEqual(installedStatusJson.ownedFileCount, 19);
+  assert.strictEqual(installedStatusJson.ownedFileCount, 20);
 
   const installedHelp = runCli(path.join(installedRoot, 'scripts', 'hydra-control.js'), ['help'], 0);
   assert.strictEqual(JSON.parse(installedHelp.stdout).command, 'help');

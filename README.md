@@ -202,6 +202,15 @@ a swarm flag or repeated "continue" prompts. Small changes stay direct;
 independent substantial work can run in parallel. Writers own separate files,
 and reviewers examine stable changes rather than a moving worktree.
 
+**Quality review is automatic for Hydra coding tasks.** The main agent plans
+acceptance checks, reserves review capacity and requests independent review
+for substantial changes without needing another prompt. Trivial edits stay
+direct; unavailable independent review gets a disclosed main-agent fallback.
+Required check failures, unverified required behavior and confirmed serious
+findings block completion/deployment. Every coding result includes concise
+review/check evidence and remaining gaps, even with quiet output. This is an
+in-task instruction policy, not an always-on monitor or defect-free guarantee.
+
 **Same Hydra priorities: cost, speed and context.** Dispatch must plausibly
 repay its overhead through parallel progress, a cheaper capable model or
 context isolation. Group tiny steps, reuse current findings and decisions,
@@ -253,7 +262,7 @@ hail-hydra/
     └── hydra-*.md             # 10 core roles + architect/researcher, loaded as needed
 ```
 
-The Copilot integration also includes two on-demand utility guides under
+The Copilot integration also includes on-demand command, measurement and quality guides under
 `references/` and dependency-free `scripts/hydra-control.js` and
 `scripts/hydra-usage.js`. These run only for explicitly requested utilities;
 installing them does not enable hooks or telemetry.

@@ -84,6 +84,9 @@ code changes also need integration checks; use `hydra-sentinel-scan`, escalating
 concrete findings to `hydra-sentinel` only if useful. This explicit review does
 not authorize edits. No global post-edit hook is installed: ordinary prompts
 retain native behavior, while invoked Hydra tasks follow in-task verification.
+Hydra coding tasks already apply [automatic quality review](hydra-quality.md)
+without this utility. The flag is for a separate explicitly requested review,
+not a prerequisite for reviewing implementation work.
 
 ## Codebase map
 

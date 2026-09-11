@@ -39,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   releases separately. No guessed production targets or perpetual deploy loop.
 - **Cross-platform preflight instructions** and Copilot generator/installer
   regression coverage.
+- **Automatic in-task quality review**: reserve review capacity, select
+  independent review for substantial code with a disclosed direct fallback,
+  require relevant checks and report quality evidence without another prompt.
+  Required failures and unresolved serious findings block completion/deployment;
+  trivial edits avoid unnecessary reviewers. This is instruction-driven, not a hook.
 - **Explicit utilities** for help, status, statistics, map, preflight, guard,
   quiet, concise workers, updates and issue reports under `/hail-hydra`.
   Native memory/context controls remain native.

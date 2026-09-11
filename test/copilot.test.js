@@ -18,6 +18,7 @@ const source = path.join(host.distDir, SKILL);
 const skill = fs.readFileSync(path.join(source, 'SKILL.md'), 'utf8');
 const commands = fs.readFileSync(path.join(source, 'references', 'hydra-commands.md'), 'utf8');
 const measurements = fs.readFileSync(path.join(source, 'references', 'hydra-measurements.md'), 'utf8');
+const quality = fs.readFileSync(path.join(source, 'references', 'hydra-quality.md'), 'utf8');
 assert.match(skill, /^name: hail-hydra$/m);
 assert.match(skill, /^disable-model-invocation: false$/m);
 assert.match(skill, /^user-invocable: true$/m);
@@ -67,6 +68,15 @@ assert.match(commands, /Ask if the\s+target or authority is unclear/);
 assert.match(commands, /Do not claim success from an exit code alone/);
 assert.match(skill, /read the command guide's deployment section/);
 assert.match(skill, /references\/hydra-commands\.md/);
+assert.match(skill, /references\/hydra-quality\.md/);
+assert.match(skill, /Do not wait for a review request/);
+assert.match(skill, /quality outcome and evidence automatically, even with quiet output/);
+assert.match(quality, /automatically obtain an independent review/);
+assert.match(quality, /Reserve review capacity inside the existing dispatch budget/);
+assert.match(quality, /Never describe self-review as independent review/);
+assert.match(quality, /Do not declare the task complete or deploy while required checks fail/);
+assert.match(quality, /must not suppress failures, missing checks or the quality outcome/);
+assert.match(commands, /\(hydra-quality\.md\)/);
 assert.match(commands, /\(hydra-measurements\.md\)/);
 assert.match(commands, /Unknown flags, missing required/);
 assert.match(commands, /their effects end\s+with that invocation/);
@@ -102,7 +112,7 @@ for (const otherHost of ['claude', 'gemini', 'codex']) {
     .map((file) => path.parse(file).name).sort(), canonical.map((file) => path.parse(file).name).sort(),
   `${otherHost}: canonical role catalogue unchanged`);
 }
-const payloadCount = roles.length + 7;
+const payloadCount = roles.length + 8;
 for (const role of roles) {
   assert.ok(Object.values(MODEL_MAP).some((model) =>
     role.tier === model.tier && role.modelSelection === model.modelSelection));
@@ -134,6 +144,19 @@ assert.match(preflight, /PREFLIGHT_INVENTORY_COMPLETE/);
 const coder = fs.readFileSync(path.join(source, 'references', 'hydra-coder.md'), 'utf8');
 assert.match(coder, /HYDRA_SENTINEL_REQUIRED/);
 assert.match(coder, /HYDRA_NO_CODE_CHANGES/);
+const guard = fs.readFileSync(path.join(source, 'references', 'hydra-guard.md'), 'utf8');
+assert.ok(!guard.includes('Never block delivery'));
+assert.match(guard, /Flag delivery blockers/);
+assert.match(guard, /partial or timed-out scans incomplete/);
+assert.match(guard, /result: clean\|issues_found\|incomplete/);
+assert.match(fs.readFileSync(path.join(ROOT, 'dist', 'claude', 'agents', 'hydra-guard.md'), 'utf8'),
+  /Never block delivery/, 'existing canonical host guard is unchanged');
+assert.throws(() => transformRole(
+  '---\nname: hydra-guard\nmodel: haiku\ntools: Read\n---\nChanged canonical guard\n',
+  'hydra-guard.md'), /guard delivery rule needs review/);
+assert.throws(() => transformRole(
+  '---\nname: hydra-guard\nmodel: haiku\ntools: Read\n---\n- **Never block delivery.** Advisory only.\n',
+  'hydra-guard.md'), /guard result contract needs review/);
 const researcher = fs.readFileSync(path.join(source, 'references', 'hydra-researcher.md'), 'utf8');
 assert.match(researcher, /search the public web, fetch public web pages/);
 assert.match(researcher, /Do not execute shell commands/);
@@ -227,7 +250,7 @@ try {
   const manifest = JSON.parse(manifestText);
   assert.deepStrictEqual(installedPayload, snapshot(source), 'installed payload matches generated roles');
   assert.deepStrictEqual(manifest.files, Object.keys(installedPayload).sort(), 'all payload files are owned');
-  const utilities = ['references/hydra-commands.md', 'references/hydra-measurements.md',
+  const utilities = ['references/hydra-commands.md', 'references/hydra-measurements.md', 'references/hydra-quality.md',
     'scripts/hydra-control.js', 'scripts/hydra-usage.js'];
   for (const file of utilities) fs.unlinkSync(path.join(installedSkill, file));
   fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify({
@@ -235,6 +258,12 @@ try {
   }));
   install(cfg);
   assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade adds and owns utility scripts and guides');
+  fs.unlinkSync(path.join(installedSkill, 'references', 'hydra-quality.md'));
+  fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify({
+    ...manifest, files: manifest.files.filter((file) => file !== 'references/hydra-quality.md'),
+  }));
+  install(cfg);
+  assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade from 19-file payload adds automatic quality guide');
   const installedControl = spawnSync(process.execPath,
     [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'status'], { encoding: 'utf8' });
   assert.strictEqual(installedControl.status, 0, installedControl.stderr);

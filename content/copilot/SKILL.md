@@ -115,11 +115,11 @@ accessibility, performance and maintenance, not appearance alone.
 
 ## Integration and verification
 
-Inspect actual changes and run the smallest relevant existing tests/build/type
-checks. For substantial code, check imports, exports, signatures and consumers
-with `hydra-sentinel-scan` and `hydra-guard` when useful, or directly.
-Independent checks can run together after writers finish. Escalate concrete
-integration findings to `hydra-sentinel` only as needed within budget.
+For coding tasks, automatically apply [the quality policy](references/hydra-quality.md).
+Do not wait for a review request. Reserve review capacity within the budget;
+use independent review for substantial code, or disclose a direct-review fallback.
+Required failures, unverified behavior and serious findings block completion
+and deployment. Recheck affected work after fixes; trivial edits stay direct.
 
 `HYDRA_SENTINEL_REQUIRED` reminds you to verify the diff, not exceed budgets.
 Recommendations are not edits. Skip extra scans for trivial or docs-only work.
@@ -145,6 +145,6 @@ memories/whole-project maps only when explicitly requested.
 
 Report outcome, meaningful changes, actual checks and blockers concisely.
 Include any deployment target/result and heads/models used, budget and fallback.
-Honor task-local quiet/concise-output modifiers without hiding failures.
+Include the quality outcome and evidence automatically, even with quiet output.
 Never invent usage, savings, speedups or quality guarantees. Copilot's `/usage`
 reports host usage; the receipt helper compares supplied measurements, not billing logs.
