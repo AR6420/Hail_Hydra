@@ -50,7 +50,7 @@ function defaultRoles() {
   return ROLE_NAMES.map((name) => ({
     name,
     tier: name === 'hydra-architect' || name === 'hydra-researcher' ? 'mid' : 'cheap',
-    preferredModel: name === 'hydra-architect' || name === 'hydra-researcher' ? 'gpt-5.4' : 'gpt-5-mini',
+    modelSelection: 'latest-suitable-available',
     instructions: `references/${name}.md`,
   }));
 }
@@ -260,7 +260,7 @@ async function main() {
       roles: [{
         name: 'hydra-commands',
         tier: 'cheap',
-        preferredModel: 'gpt-5-mini',
+        modelSelection: 'latest-suitable-available',
         instructions: 'references/hydra-commands.md',
       }],
     });

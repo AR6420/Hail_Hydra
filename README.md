@@ -272,9 +272,14 @@ installed Hydra instructions/skills into locations Copilot also reads (such as
 `AGENTS.md` or `~/.agents/skills`), those remain independent; this installer does
 not remove or disable them.
 
-Substantial tasks can use native subagent dispatch with suggested `gpt-5-mini`
-(cheap) and `gpt-5.4` (mid) models **only if offered by the current host**.
-Model suggestions live in `references/roles.json`; they are not price claims.
+The role catalogue records `cheap`/`mid` tiers and
+`modelSelection: latest-suitable-available`, **not fixed model IDs**.
+At dispatch, routing instructions prefer newer suitable models from those the
+host actually exposes, within the task's cost constraints and explicit user
+pins/exclusions. The main agent selects the real ID; this metadata is not an
+automatic model-discovery or pricing service. Newer models do not guarantee
+equal token usage, latency or plan charges. Actual selected models and any
+fallback belong in the task report; the main session model remains unchanged.
 The default budget is two concurrent heads and six dispatches total. Broad
 goals spanning multiple substantial, independent subsystems can automatically
 use an expanded ceiling of four concurrent heads and twelve dispatches only

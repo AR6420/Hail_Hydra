@@ -33,10 +33,10 @@ not execution. Normal goal text is never a management or shell command.
 ## Cost, speed and context first
 
 Preserve correctness while reducing cost, elapsed time and context overhead.
-Parallelism is useful work in independent waves, not the largest agent count.
+Parallelize useful independent work, not the largest agent count.
 Every dispatch must plausibly repay overhead through parallel progress,
 a cheaper capable model or context isolation; otherwise work directly.
-Group tiny related steps rather than dispatching an agent per small edit.
+Group tiny related steps; avoid per-edit dispatch.
 
 Reuse verified findings and decisions. Give each worker only its relevant
 context slice, not the full conversation or every role prompt. Request compact
@@ -53,11 +53,10 @@ evidence in the conversation/task tracker, not new repository planning files.
 The main conversation retains available context;
 subagents have separate contexts and need explicit handoffs.
 
-Read [the role catalogue](references/roles.json). Select canonical heads for
-discovery, coding, commands, docs/git or checks; load only those needed.
+Read [the role catalogue](references/roles.json); load only needed roles.
 
-Architecture and research are optional, not mandatory stages. If an unresolved
-backend/request-flow decision could avoid substantial rework,
+Architecture and research are optional, not mandatory stages. For a backend
+decision that could avoid substantial rework,
 use `hydra-architect` even without an explicit performance request.
 Use `hydra-researcher` when public evidence could materially change a choice.
 Reuse settled decisions; do not launch both advisors for every feature.
@@ -90,10 +89,11 @@ Roles are private prompts, not registered agents. Choose a native type;
 pass task, paths, criteria, write scope, focused context, output contract,
 budget, permissions and no-recursion rule. Roles never expand authorization.
 
-Where dispatch allows, use available, capable low-cost models for `cheap`
-roles and mid-tier models for implementation/analysis. Model hints are not
-price/availability guarantees: never use unavailable IDs
-or assume API prices equal Copilot charges. Do not change `/model` or defaults.
+The catalogue has no fixed model IDs. At dispatch, prefer newer suitable models
+from the host's exposed list within the role's cost constraints. Respect user
+pins/exclusions; do not silently use a rejected legacy model. Never infer cost
+from token count or assume API prices equal Copilot charges. Disclose unknown
+pricing before materially increasing cost. Do not change `/model` or defaults.
 
 If native subagents or per-dispatch model selection are unavailable, disclose
 that and work directly. Report rejected models; do not guess replacement IDs

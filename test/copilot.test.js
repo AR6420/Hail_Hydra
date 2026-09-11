@@ -83,6 +83,10 @@ for (const flag of ['help', 'status', 'stats', 'compare', 'context', 'memory', '
   assert.ok(commands.includes(`/hail-hydra --${flag}`), `${flag}: command documented`);
 }
 assert.match(skill, /or assume API prices equal Copilot charges/i);
+assert.match(skill, /The catalogue has no fixed model IDs/);
+assert.match(skill, /prefer newer suitable models/);
+assert.match(skill, /Respect user\s+pins\/exclusions/);
+assert.match(skill, /do not silently use a rejected legacy model/);
 assert.match(skill, /per-dispatch model selection are unavailable/);
 assert.ok(Buffer.byteLength(skill, 'utf8') < 8000, 'bounded on-demand context');
 assert.deepStrictEqual(fs.readdirSync(host.distDir), ['skills'], 'no automatic host payload');
@@ -101,7 +105,9 @@ for (const otherHost of ['claude', 'gemini', 'codex']) {
 const payloadCount = roles.length + 7;
 for (const role of roles) {
   assert.ok(Object.values(MODEL_MAP).some((model) =>
-    role.tier === model.tier && role.preferredModel === model.preferredModel));
+    role.tier === model.tier && role.modelSelection === model.modelSelection));
+  assert.ok(!Object.prototype.hasOwnProperty.call(role, 'preferredModel'), 'no stale model pin');
+  assert.strictEqual(role.modelSelection, 'latest-suitable-available');
   const body = fs.readFileSync(path.join(source, role.instructions), 'utf8');
   assert.ok(!/\.claude|Claude Code|\{\{HYDRA_|^## (Your Memory|Cleanup|Collaboration)$/m.test(body),
     `${role.name}: no unported host hooks, memory or paths`);

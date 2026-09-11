@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Current model selection instead of stale pins**: Copilot role metadata
+  keeps task tiers but no fixed model IDs. Routing instructions prefer newer
+  suitable host-available models within cost constraints and user pins/exclusions;
+  actual IDs are selected per dispatch, not by a new pricing/model-discovery service.
 - **Copilot skill-tool compatibility**: allow model-mediated skill loading to
   avoid `Skill not found` on hosts that exclude `disable-model-invocation: true`
   skills even for explicit requests. Current-input instruction guards preserve

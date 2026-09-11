@@ -5,8 +5,8 @@ const path = require('path');
 const { ROOT, CONTENT, DIST, VERSION, write, listMd } = require('./shared');
 
 const MODEL_MAP = {
-  haiku: { tier: 'cheap', preferredModel: 'gpt-5-mini' },
-  sonnet: { tier: 'mid', preferredModel: 'gpt-5.4' },
+  haiku: { tier: 'cheap', modelSelection: 'latest-suitable-available' },
+  sonnet: { tier: 'mid', modelSelection: 'latest-suitable-available' },
 };
 
 const CAPABILITIES = {
