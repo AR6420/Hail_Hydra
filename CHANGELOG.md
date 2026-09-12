@@ -57,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   equivalents from still-unported automatic hook/state features.
 
 ### Changed
+- **Selected-main-model responsibility**: keep substantive reasoning, unresolved
+  high-risk logic and final acceptance with the user's main model. Worker tiers
+  are hints, not capability ceilings; complex delegated review needs a capable
+  model or a disclosed main-agent fallback. Report main and worker models
+  separately without inferring identities from roles.
 - **Current model selection instead of stale pins**: Copilot role metadata
   keeps task tiers but no fixed model IDs. Routing instructions prefer newer
   suitable host-available models within cost constraints and user pins/exclusions;

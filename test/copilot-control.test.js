@@ -50,6 +50,7 @@ function defaultRoles() {
   return ROLE_NAMES.map((name) => ({
     name,
     tier: name === 'hydra-architect' || name === 'hydra-researcher' ? 'mid' : 'cheap',
+    tierIsHint: true,
     modelSelection: 'latest-suitable-available',
     instructions: `references/${name}.md`,
   }));

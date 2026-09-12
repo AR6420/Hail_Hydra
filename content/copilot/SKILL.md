@@ -25,10 +25,9 @@ global instructions, select a persistent agent/model, or enable autopilot.
 
 ## Explicit utilities
 
-For a leading management flag, read [the command guide](references/hydra-commands.md)
-and follow its route. `--quiet`, `--stfu` and `--notify` modify only this task;
-other supported flags perform explicit utilities. Unknown flags get usage,
-not execution. Normal goal text is never a management or shell command.
+For management flags, read [the command guide](references/hydra-commands.md).
+Modifiers apply only to this task. Unknown flags get usage, not execution;
+ordinary goals are not management commands.
 
 ## Cost, speed and context first
 
@@ -50,8 +49,7 @@ do not require agent names, a swarm flag or repeated "continue" prompts.
 Resolve routine choices; ask only for blocking requirements or authority.
 Keep a compact task ledger with dependencies, file ownership, decisions and
 evidence in the conversation/task tracker, not new repository planning files.
-The main conversation retains available context;
-subagents have separate contexts and need explicit handoffs.
+Subagents have separate contexts; pass relevant main-conversation facts.
 
 Read [the role catalogue](references/roles.json); load only needed roles.
 
@@ -64,8 +62,7 @@ For new code, assess proposed flows and label assumptions. Run architecture
 assessment and relevant UI research in parallel when independent and useful.
 Do not add speculative features.
 
-Before dependent implementation, form a decision brief with choices,
-UI/API/data contracts and measurements.
+Before dependent implementation, record choices, contracts and measurements.
 Send it to every affected writer before dependent edits. When evidence
 changes direction, pause affected writers, update the brief and dependencies,
 then redirect and recheck affected work; unaffected work can continue.
@@ -78,10 +75,11 @@ changes consume the same dispatch and improvement budgets; they do not reset the
 Default: **2 concurrent subagents**, **6 total dispatches**.
 For multiple substantial, independent subsystems, allow **4 concurrent subagents**
 and **12 total dispatches** only when parallel progress repays overhead.
-These are ceilings, not targets; all advisors, scans and retries count.
+These are ceilings, not targets; every dispatch counts.
 Respect smaller host/user limits; exceeding the ceiling needs approval.
 No factories/recursive delegation. At the limit, work directly or report a
-blocker. The main agent owns decisions, integration and final verification.
+blocker. The selected main model owns reasoning, design, complex debugging and
+final acceptance; never reduce it to a dispatcher or rubber-stamp worker reports.
 
 ## Dispatch
 
@@ -89,20 +87,23 @@ Roles are private prompts, not registered agents. Choose a native type;
 pass task, paths, criteria, write scope, focused context, output contract,
 budget, permissions and no-recursion rule. Roles never expand authorization.
 
-The catalogue has no fixed model IDs. At dispatch, prefer newer suitable models
-from the host's exposed list within the role's cost constraints. Respect user
-pins/exclusions; do not silently use a rejected legacy model. Never infer cost
-from token count or assume API prices equal Copilot charges. Disclose unknown
-pricing before materially increasing cost. Do not change `/model` or defaults.
+The catalogue has no fixed model IDs. Role tiers are hints, not capability caps.
+Use smaller workers for bounded searches, mechanical edits and checks.
+Keep unresolved high-risk logic in the main agent; delegate hard units only to
+an explicitly chosen capable model, not a cheap default. Reclaim inadequate work.
+At dispatch, prefer newer suitable models the host exposes. Respect user
+pins/exclusions; do not silently use a rejected legacy model
+or assume API prices equal Copilot charges. Disclose material cost uncertainty.
+Do not change `/model` or defaults.
 
 If native subagents or per-dispatch model selection are unavailable, disclose
 that and work directly. Report rejected models; do not guess replacement IDs
 or claim savings without evidence.
 
-Dispatch independent units together with disjoint write ownership. Serialize
-git mutations, shared edits and dependencies. Background dispatch requires
-independent work; otherwise wait synchronously. Collect every result before
-integration. Insufficient results get one capable escalation or direct handling.
+Dispatch independent units with disjoint write ownership. Serialize git/shared
+edits and dependencies. Background dispatch requires independent work; otherwise
+wait synchronously. Collect results before integration. Escalate once or handle
+inadequate work directly within budget.
 
 Review stable changes. Re-review affected changes after later edits; reviews
 and builds of a moving worktree are not final evidence.
@@ -133,8 +134,7 @@ an unresolved required outcome is a blocker.
 ## Build and deploy when requested
 
 For an explicit build/deploy goal, read the command guide's deployment section.
-Use the project's existing process with an authorized target and verify the
-released artifact/health. Stop at unclear authority; never infer production.
+Verify the authorized release and health; never infer production.
 
 Preserve user changes. Never commit, push, publish, delete data or operate on
 live services without task authorization. Use host-native shell syntax
@@ -143,8 +143,9 @@ memories/whole-project maps only when explicitly requested.
 
 ## Finish
 
-Report outcome, meaningful changes, actual checks and blockers concisely.
-Include any deployment target/result and heads/models used, budget and fallback.
+Report outcome, checks, blockers and any deployment result concisely.
+Identify the main model and actual worker models separately when exposed;
+otherwise mark unknown. Include budget and fallback, not inferred model IDs.
 Include the quality outcome and evidence automatically, even with quiet output.
 Never invent usage, savings, speedups or quality guarantees. Copilot's `/usage`
 reports host usage; the receipt helper compares supplied measurements, not billing logs.

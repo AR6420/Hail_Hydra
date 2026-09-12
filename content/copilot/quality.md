@@ -6,6 +6,30 @@ agent owns the outcome; inexpensive implementation is not proof of correctness.
 This is an instruction-driven gate inside an invoked task, not a background
 monitor, host hook or guarantee that every defect will be found.
 
+## Selected main model stays responsible
+
+The user's selected main model performs the substantive task reasoning and
+final acceptance, not just delegation and a summary of worker claims. Keep
+architecture decisions, unresolved root-cause analysis and high-risk logic
+with that agent. Advisors may gather evidence or propose options, but they do
+not replace the main agent's judgment. Routine implementation with a clear
+contract can be delegated; ambiguous work is not made safe by naming a coder.
+
+Role tiers describe typical workload cost, not a maximum model capability.
+Match each worker to the actual scope and risk. For a complex delegated review,
+explicitly select a capable host-available model; prefer the selected main
+model when it is appropriate and supported, rather than silently using a
+smaller default. Respect explicit user budgets and host restrictions. If a
+suitable worker cannot be selected, review directly in the main agent and
+disclose the loss of independent review. Do not change session model defaults,
+claim model equivalence from names, or use extra paid dispatches just to test
+model IDs. Simple factual searches, command execution and mechanical edits
+can still use smaller workers; parallelism remains useful for independent work.
+
+If a worker encounters uncertainty beyond its scope, the main agent takes
+back that reasoning or escalates once within the existing budget. Do not keep
+redispatching the same unresolved problem to small models to save on each call.
+
 ## Plan the checks with the work
 
 Derive acceptance criteria, affected interfaces and required checks from the
@@ -57,6 +81,10 @@ required behavior is unverified, or confirmed serious findings remain
 unresolved. Confirm and address critical/high-severity correctness, security,
 data-loss and integration issues. A quick guard's advisory report is input
 to this gate, never permission to ignore a delivery blocker.
+The main agent personally reviews the relevant implementation and supporting
+evidence against the acceptance criteria before accepting it. Identify which
+findings were resolved and what remains unverified; a worker's "passed" summary
+alone is insufficient. Reuse verified evidence without repeating every search.
 
 Distinguish introduced failures from demonstrated pre-existing or unrelated
 failures; explain their scope instead of hiding them or changing unrelated
@@ -71,10 +99,11 @@ lowering criteria, disabling checks or running indefinitely.
 
 Include a concise quality summary without a separate user request:
 
-`Quality: <reviewer role/model or direct review>; <actual checks/results>;
+`Quality: <main-model acceptance review>; <worker reviewer/model or direct review>; <actual checks/results>;
 <remaining findings or unverified scope>; <passed/blocked/incomplete>.`
 
 Reference actual tool results and the reviewed scope. State that no serious
 findings were identified within that scope only when supported; do not promise
-zero defects. Quiet/concise-output modifiers may shorten this summary but
+zero defects. Identify main and worker models separately from host evidence,
+not role tiers; use unknown if unavailable. Quiet/concise-output modifiers may shorten this summary but
 must not suppress failures, missing checks or the quality outcome.

@@ -38,7 +38,7 @@ assert.match(skill, /multiple substantial, independent subsystems/);
 assert.match(skill, /Respect smaller host\/user limits/);
 assert.match(skill, /do not\s+require agent names, a swarm flag or repeated "continue" prompts/);
 assert.match(skill, /task ledger with dependencies, file ownership/);
-assert.match(skill, /subagents have separate contexts/);
+assert.match(skill, /subagents have separate contexts/i);
 assert.match(skill, /hydra-researcher/);
 assert.match(skill, /reducing cost, elapsed time and context overhead/);
 assert.match(skill, /Every dispatch must plausibly repay overhead/);
@@ -74,6 +74,16 @@ assert.match(skill, /quality outcome and evidence automatically, even with quiet
 assert.match(quality, /automatically obtain an independent review/);
 assert.match(quality, /Reserve review capacity inside the existing dispatch budget/);
 assert.match(quality, /Never describe self-review as independent review/);
+assert.match(skill, /selected main model owns reasoning, design, complex debugging/);
+assert.match(skill, /never reduce it to a dispatcher or rubber-stamp worker reports/);
+assert.match(skill, /Role tiers are hints, not capability caps/);
+assert.match(skill, /Keep unresolved high-risk logic in the main agent/);
+assert.match(skill, /explicitly chosen capable model, not a cheap default/);
+assert.match(skill, /main model and actual worker models separately/);
+assert.match(quality, /main agent personally reviews the relevant implementation/);
+assert.match(quality, /a worker's "passed" summary\s+alone is insufficient/);
+assert.match(quality, /prefer the selected main\s+model when it is appropriate and supported/);
+assert.match(quality, /Do not keep\s+redispatching the same unresolved problem to small models/);
 assert.match(quality, /Do not declare the task complete or deploy while required checks fail/);
 assert.match(quality, /must not suppress failures, missing checks or the quality outcome/);
 assert.match(commands, /\(hydra-quality\.md\)/);
@@ -117,11 +127,13 @@ for (const role of roles) {
   assert.ok(Object.values(MODEL_MAP).some((model) =>
     role.tier === model.tier && role.modelSelection === model.modelSelection));
   assert.ok(!Object.prototype.hasOwnProperty.call(role, 'preferredModel'), 'no stale model pin');
+  assert.strictEqual(role.tierIsHint, true, 'role tier must not cap worker capability');
   assert.strictEqual(role.modelSelection, 'latest-suitable-available');
   const body = fs.readFileSync(path.join(source, role.instructions), 'utf8');
   assert.ok(!/\.claude|Claude Code|\{\{HYDRA_|^## (Your Memory|Cleanup|Collaboration)$/m.test(body),
     `${role.name}: no unported host hooks, memory or paths`);
   assert.match(body, /Do not delegate again/);
+  assert.match(body, /Report work beyond your assigned capability to the main agent/);
   if (role.name !== 'hydra-researcher') {
     assert.match(body, /Do not mutate git state or contact live services without user authorization/);
   }

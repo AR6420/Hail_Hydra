@@ -5,8 +5,8 @@ const path = require('path');
 const { ROOT, CONTENT, DIST, VERSION, write, listMd } = require('./shared');
 
 const MODEL_MAP = {
-  haiku: { tier: 'cheap', modelSelection: 'latest-suitable-available' },
-  sonnet: { tier: 'mid', modelSelection: 'latest-suitable-available' },
+  haiku: { tier: 'cheap', tierIsHint: true, modelSelection: 'latest-suitable-available' },
+  sonnet: { tier: 'mid', tierIsHint: true, modelSelection: 'latest-suitable-available' },
 };
 
 const CAPABILITIES = {
@@ -80,6 +80,7 @@ function transformRole(text, fileName) {
       ['Do not directly edit files. Any shell mutation must be explicitly authorized by the task.']),
     'These are role instructions, not extra permissions or a sandbox.',
     'Follow the parent /hail-hydra invocation scope, budget and permissions.',
+    'Report work beyond your assigned capability to the main agent; do not guess or approve release.',
     'Do not delegate again, start another CLI, or create persistent memories.',
     'Use the host-native shell and tools; never assume Bash on Windows.',
     'Only build a codebase map when explicitly requested. Verify cached data.',

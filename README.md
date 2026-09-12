@@ -211,6 +211,15 @@ findings block completion/deployment. Every coding result includes concise
 review/check evidence and remaining gaps, even with quiet output. This is an
 in-task instruction policy, not an always-on monitor or defect-free guarantee.
 
+**Your selected main model does the substantive reasoning and final acceptance.**
+Hydra must not reduce it to a dispatcher for smaller models. Keep unresolved
+architecture, difficult debugging and high-risk logic with the main agent;
+workers gather evidence, execute checks or implement bounded, well-specified
+changes. A complex delegated review needs an explicitly chosen capable model
+(the selected main model when appropriate and available), or a disclosed
+main-agent fallback. The main agent reviews the actual result and evidence
+instead of simply accepting a worker's "passed" report.
+
 **Same Hydra priorities: cost, speed and context.** Dispatch must plausibly
 repay its overhead through parallel progress, a cheaper capable model or
 context isolation. Group tiny steps, reuse current findings and decisions,
@@ -281,14 +290,19 @@ installed Hydra instructions/skills into locations Copilot also reads (such as
 `AGENTS.md` or `~/.agents/skills`), those remain independent; this installer does
 not remove or disable them.
 
-The role catalogue records `cheap`/`mid` tiers and
+The role catalogue records `cheap`/`mid` hints (`tierIsHint: true`) and
 `modelSelection: latest-suitable-available`, **not fixed model IDs**.
 At dispatch, routing instructions prefer newer suitable models from those the
 host actually exposes, within the task's cost constraints and explicit user
-pins/exclusions. The main agent selects the real ID; this metadata is not an
+pins/exclusions. Role tiers are not capability ceilings; select for the actual
+scope/risk and reclaim inadequate worker results rather than always choosing
+small models. The main agent selects the real ID; this metadata is not an
 automatic model-discovery or pricing service. Newer models do not guarantee
 equal token usage, latency or plan charges. Actual selected models and any
-fallback belong in the task report; the main session model remains unchanged.
+fallback belong in the task report, with the main model identified separately
+from workers when the host exposes it; unknown is not inferred. Selecting a
+main model does not force every worker to use that same model. Hydra leaves
+the main selection unchanged, including native Auto behavior when selected.
 The default budget is two concurrent heads and six dispatches total. Broad
 goals spanning multiple substantial, independent subsystems can automatically
 use an expanded ceiling of four concurrent heads and twelve dispatches only
