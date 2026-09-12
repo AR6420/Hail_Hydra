@@ -25,13 +25,13 @@ global instructions, select a persistent agent/model, or enable autopilot.
 
 ## Explicit utilities
 
-For management flags, read [the command guide](references/hydra-commands.md).
+For leading flags, read [the command guide](references/hydra-commands.md).
 Modifiers apply only to this task. Unknown flags get usage, not execution;
 ordinary goals are not management commands.
 
 ## Cost, speed and context first
 
-Preserve correctness while reducing cost, elapsed time and context overhead.
+Preserve correctness while balancing mode priorities: cost, elapsed time and context.
 Parallelize useful independent work, not the largest agent count.
 Every dispatch must plausibly repay overhead through parallel progress,
 a cheaper capable model or context isolation; otherwise work directly.
@@ -49,6 +49,8 @@ do not require agent names, a swarm flag or repeated "continue" prompts.
 Resolve routine choices; ask only for blocking requirements or authority.
 Keep a compact task ledger with dependencies, file ownership, decisions and
 evidence in the conversation/task tracker, not new repository planning files.
+For substantial work, follow [context continuity](references/hydra-continuity.md):
+save session-local checkpoints and restore verified decisions after compaction.
 Subagents have separate contexts; pass relevant main-conversation facts.
 
 Read [the role catalogue](references/roles.json); load only needed roles.
@@ -72,10 +74,9 @@ changes consume the same dispatch and improvement budgets; they do not reset the
 
 ## Plan and budget
 
-Default: **2 concurrent subagents**, **6 total dispatches**.
-For multiple substantial, independent subsystems, allow **4 concurrent subagents**
-and **12 total dispatches** only when parallel progress repays overhead.
-These are ceilings, not targets; every dispatch counts.
+Use [task-local modes](references/hydra-modes.md); default `balanced`.
+Resolve mode and explicit limits with `hydra-control.js mode` before dispatch.
+Modes are ceilings, not targets; every dispatch counts and quality gates remain.
 Respect smaller host/user limits; exceeding the ceiling needs approval.
 No factories/recursive delegation. At the limit, work directly or report a
 blocker. The selected main model owns reasoning, design, complex debugging and
@@ -122,14 +123,10 @@ use independent review for substantial code, or disclose a direct-review fallbac
 Required failures, unverified behavior and serious findings block completion
 and deployment. Recheck affected work after fixes; trivial edits stay direct.
 
-`HYDRA_SENTINEL_REQUIRED` reminds you to verify the diff, not exceed budgets.
-Recommendations are not edits. Skip extra scans for trivial or docs-only work.
-After the first candidate, allow at most **2 improvement rounds** within the
-same budget for unmet criteria/concrete findings; recheck affected behavior.
-Measure relevant performance against a real baseline, never invented metrics.
-Stop when criteria are met, progress stalls or the budget is exhausted.
-No endless polishing or unrelated benchmark tooling. Fix introduced regressions;
-an unresolved required outcome is a blocker.
+`HYDRA_SENTINEL_REQUIRED` reminds you to verify, not exceed budgets.
+Allow at most **2 improvement rounds** for concrete findings within mode limits.
+Stop when criteria are met or progress stalls. At budget exhaustion,
+an unresolved required outcome is a blocker. Recheck fixes; never invent metrics.
 
 ## Build and deploy when requested
 
@@ -145,7 +142,7 @@ memories/whole-project maps only when explicitly requested.
 
 Report outcome, checks, blockers and any deployment result concisely.
 Identify the main model and actual worker models separately when exposed;
-otherwise mark unknown. Include budget and fallback, not inferred model IDs.
+otherwise mark unknown. Include mode, budget and fallback, not inferred model IDs.
 Include the quality outcome and evidence automatically, even with quiet output.
 Never invent usage, savings, speedups or quality guarantees. Copilot's `/usage`
 reports host usage; the receipt helper compares supplied measurements, not billing logs.

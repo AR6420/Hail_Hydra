@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.5.2] - 2026-09-11
 
 ### Added
+- **Task-local Turbo, Balanced and Economy modes** with an inspectable policy
+  resolver and explicit worker/dispatch ceiling overrides. Balanced preserves
+  existing defaults; Turbo favors quality/speed and Economy reduces optional
+  work without waiving required checks. Native capacity limits always apply.
+- **Context continuity guidance** for session-local ledgers, milestone checkpoints
+  and revalidation after compaction/resume, plus appropriate supported context
+  allocation without changing the main model or promising unlimited recall.
 - **Opt-in GitHub Copilot CLI support** via `--agent=copilot` / `--copilot`,
   interactive selection and host detection. `/hail-hydra <task>` uses the
   current session's native subagents without a second CLI or API client.

@@ -175,6 +175,7 @@ module.exports = {
     'Use /hail-hydra <task> for this request only; unprefixed messages use the normal agent.',
     'One goal selects relevant heads automatically; deployment requires a clear, authorized target.',
     'Use /hail-hydra --help for explicit utilities and native usage/context guidance.',
+    'Task modes: --mode turbo, balanced (default), or economy; your main model stays selected.',
     'Compatibility mode: skill loading is allowed; explicit-request-only routing relies on instructions.',
     'No automatic hooks, global instructions or persistent agent/model changes are installed.',
     'Model routing depends on native subagent support; cost and speed savings are not guaranteed.',

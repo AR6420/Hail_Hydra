@@ -6,6 +6,17 @@ agent owns the outcome; inexpensive implementation is not proof of correctness.
 This is an instruction-driven gate inside an invoked task, not a background
 monitor, host hook or guarantee that every defect will be found.
 
+## Mode changes effort, not the quality floor
+
+Use the resolved [task mode](hydra-modes.md) to choose optional research,
+polishing and additional review depth. Turbo favors strong workers and broader
+relevant validation; Balanced selects by risk and value; Economy favors existing
+designs and targeted checks. Every mode retains required checks, serious-finding
+blockers, native permissions and the selected main agent's acceptance review.
+Economy may reduce optional scrutiny, not silently waive a required check.
+Do not promote to a more expensive mode without user authorization. If a
+necessary check cannot fit the budget, handle it directly or report blocked work.
+
 ## Selected main model stays responsible
 
 The user's selected main model performs the substantive task reasoning and
@@ -101,6 +112,9 @@ Include a concise quality summary without a separate user request:
 
 `Quality: <main-model acceptance review>; <worker reviewer/model or direct review>; <actual checks/results>;
 <remaining findings or unverified scope>; <passed/blocked/incomplete>.`
+
+Include the mode and any narrower optional coverage, not a claim that all
+modes performed identical research or review.
 
 Reference actual tool results and the reviewed scope. State that no serious
 findings were identified within that scope only when supported; do not promise

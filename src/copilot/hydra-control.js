@@ -11,7 +11,9 @@ const MANIFEST_FILE = '.hydra-manifest.json';
 const ROLES_FILE = 'references/roles.json';
 const UTILITY_GUIDE_FILES = [
   'references/hydra-commands.md',
+  'references/hydra-continuity.md',
   'references/hydra-measurements.md',
+  'references/hydra-modes.md',
   'references/hydra-quality.md',
 ];
 const UTILITY_GUIDE_SET = new Set(UTILITY_GUIDE_FILES);
@@ -35,9 +37,40 @@ const ROLE_NAME_RE = /^hydra-[a-z-]+$/;
 const MANIFEST_ENTRY_RE = /^(?:SKILL\.md|VERSION|references\/roles\.json|references\/hydra-[a-z-]+\.md|scripts\/hydra-control\.js|scripts\/hydra-usage\.js)$/;
 const BASIC_SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 const ENV_VAR_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const MODE_POLICIES = Object.freeze({
+  economy: Object.freeze({
+    limits: Object.freeze({ maxConcurrentAgents: 1, maxTotalDispatches: 3, maxImprovementRounds: 2 }),
+    workerPolicy: 'inexpensive-support-for-established-work',
+    researchPolicy: 'required-evidence-minimal-optional-research',
+    reviewPolicy: 'required-review-minimal-optional-polish',
+    contextPolicy: 'compact-briefs-and-checkpoints',
+  }),
+  balanced: Object.freeze({
+    limits: Object.freeze({ maxConcurrentAgents: 2, maxTotalDispatches: 6, maxImprovementRounds: 2 }),
+    workerPolicy: 'latest-suitable-with-role-tier-hints',
+    researchPolicy: 'targeted-evidence-for-material-uncertainty',
+    reviewPolicy: 'risk-based-review-and-bounded-improvement',
+    contextPolicy: 'focused-briefs-and-checkpoints',
+  }),
+  turbo: Object.freeze({
+    limits: Object.freeze({ maxConcurrentAgents: 8, maxTotalDispatches: 32, maxImprovementRounds: 2 }),
+    workerPolicy: 'quality-and-wall-clock-speed-over-cost',
+    researchPolicy: 'broader-independent-evidence-when-useful',
+    reviewPolicy: 'parallel-review-and-bounded-improvement',
+    contextPolicy: 'largest-appropriate-supported-context-with-focused-briefs',
+  }),
+});
+const BALANCED_EXPANDED_LIMITS = Object.freeze({
+  maxConcurrentAgents: 4,
+  maxTotalDispatches: 12,
+  maxImprovementRounds: 2,
+});
 const HELP_FLAGS = [
   { flag: '--help', usage: '--help', helperCommand: 'help', nativeHelper: true, description: 'Show explicit /hail-hydra management routes.' },
   { flag: '--status', usage: '--status', helperCommand: 'status', nativeHelper: true, description: 'Inspect the installed Copilot Hydra skill payload.' },
+  { flag: '--mode', usage: '--mode <turbo|balanced|economy> <goal>', helperCommand: 'mode [turbo|balanced|economy] [--expanded] [--max-agents N] [--max-dispatches N]', nativeHelper: true, description: 'Resolve task-local policy; the helper accepts no goal and does not activate a mode.' },
+  { flag: '--max-agents', usage: '--max-agents <N>', nativeHelper: false, description: 'Task budget modifier for an explicit user-requested concurrent-agent ceiling; not a standalone helper command.' },
+  { flag: '--max-dispatches', usage: '--max-dispatches <N>', nativeHelper: false, description: 'Task budget modifier for an explicit user-requested total-dispatch ceiling; not a standalone helper command.' },
   { flag: '--stats', usage: '--stats [receipt]', nativeHelper: false, description: 'Instruction route for usage or receipt analysis.' },
   { flag: '--compare', usage: '--compare <normal> <hydra>', nativeHelper: false, description: 'Instruction route for before/after task comparison.' },
   { flag: '--map', usage: '--map [rebuild|file]', helperCommand: 'map <map-json> [project-relative-file]', nativeHelper: true, description: 'Inspect an explicit dependency map JSON file; rebuild is instruction-only.' },
@@ -80,6 +113,49 @@ function isPlainObject(value) {
 
 function fail(message) {
   throw new HydraControlError(message);
+}
+
+function resolveMode(name = 'balanced', options = {}) {
+  if (typeof name !== 'string' || !Object.prototype.hasOwnProperty.call(MODE_POLICIES, name)) {
+    fail('Invalid mode. Expected turbo, balanced, or economy.');
+  }
+  if (!isPlainObject(options)) fail('Invalid mode options: expected an object.');
+  if (Reflect.ownKeys(options).some((key) => !['expanded', 'maxAgents', 'maxDispatches'].includes(key))) {
+    fail('Invalid mode options: unknown option.');
+  }
+  const expanded = Object.prototype.hasOwnProperty.call(options, 'expanded') ? options.expanded : false;
+  if (typeof expanded !== 'boolean') fail('Invalid expanded option: expected a boolean.');
+  if (expanded && name !== 'balanced') fail('Expanded policy is only available for balanced mode.');
+
+  const policy = MODE_POLICIES[name];
+  const limits = { ...(expanded ? BALANCED_EXPANDED_LIMITS : policy.limits) };
+  let overridesApplied = false;
+  for (const [option, limit] of [['maxAgents', 'maxConcurrentAgents'], ['maxDispatches', 'maxTotalDispatches']]) {
+    if (!Object.prototype.hasOwnProperty.call(options, option)) continue;
+    const value = options[option];
+    if (!Number.isSafeInteger(value) || value <= 0) fail('Mode limits must be positive safe integers.');
+    limits[limit] = value;
+    overridesApplied = true;
+  }
+  if (limits.maxConcurrentAgents > limits.maxTotalDispatches) {
+    fail('The concurrent-agent ceiling must not exceed the total-dispatch ceiling.');
+  }
+  return {
+    command: 'mode',
+    mode: name,
+    taskLocal: true,
+    expanded,
+    limits,
+    overridesApplied,
+    mainModel: 'preserve-selection',
+    qualityFloor: 'required-checks-and-serious-findings-block',
+    contextContinuity: 'session-ledger-and-checkpoints',
+    enforcement: 'instruction-guided-host-limits-apply',
+    workerPolicy: policy.workerPolicy,
+    researchPolicy: policy.researchPolicy,
+    reviewPolicy: policy.reviewPolicy,
+    contextPolicy: policy.contextPolicy,
+  };
 }
 
 function splitRelativePath(relativePath) {
@@ -687,12 +763,16 @@ function getHelp() {
   return {
     command: 'help',
     explicitRequestOnly: true,
-    supportedHelperCommands: ['help', 'status', 'map', 'check-update', 'report', 'notify'],
+    supportedHelperCommands: ['help', 'status', 'mode', 'map', 'check-update', 'report', 'notify'],
     flags: HELP_FLAGS,
     notes: [
       'These are explicit /hail-hydra management routes, not native /hydra:* slash commands.',
       'Compatibility mode allows model skill loading; the current user request gates work through instructions.',
-      'No modes persist beyond the invoked task.',
+      'Balanced is the default; mode policies are task-local and never persisted. Only balanced supports --expanded.',
+      'Mode output does not mean a mode is active in the current shell; goals belong to skill instructions, not this helper.',
+      'Host and user hard limits still apply, including all required quality, security, correctness, and permission checks; serious findings block completion.',
+      'Ceiling overrides require an explicit user request and do not guarantee host capacity; beyond documented balanced expansion, complexity alone does not raise ceilings or promote modes.',
+      'Mode policies do not schedule agents, cap billing, change the selected main model, or write memory; context remains bounded.',
     ],
   };
 }
@@ -720,12 +800,52 @@ function buildNotification(goal) {
   };
 }
 
+function parseModeArgs(args) {
+  let mode = 'balanced';
+  let index = 0;
+  if (args.length && typeof args[0] === 'string' && !args[0].startsWith('--')) {
+    mode = args[0];
+    index++;
+  }
+  const options = {};
+  for (; index < args.length; index++) {
+    let option;
+    switch (args[index]) {
+      case '--expanded':
+        option = 'expanded';
+        break;
+      case '--max-agents':
+        option = 'maxAgents';
+        break;
+      case '--max-dispatches':
+        option = 'maxDispatches';
+        break;
+      default:
+        fail('Unknown mode option or unexpected argument. Use help.');
+    }
+    if (Object.prototype.hasOwnProperty.call(options, option)) fail('Duplicate mode option.');
+    if (option === 'expanded') {
+      options.expanded = true;
+    } else {
+      const raw = args[++index];
+      if (typeof raw !== 'string' || !/^[1-9][0-9]*$/.test(raw) || raw.trim() !== raw) {
+        fail('Mode limits require positive safe integers in decimal form.');
+      }
+      const limit = Number(raw);
+      if (!Number.isSafeInteger(limit)) fail('Mode limits require positive safe integers in decimal form.');
+      options[option] = limit;
+    }
+  }
+  resolveMode(mode, options);
+  return { command: 'mode', mode, options };
+}
+
 function parseArgs(argv) {
   const args = Array.isArray(argv) ? argv.slice() : [];
   if (!args.length) return { command: 'help' };
   const [command, ...rest] = args;
   if (INSTRUCTION_ONLY_FLAGS.has(command)) {
-    fail('This helper only supports help, status, map, check-update, report, and notify.');
+    fail('This helper only supports help, status, mode, map, check-update, report, and notify.');
   }
   switch (command) {
     case 'help':
@@ -736,6 +856,9 @@ function parseArgs(argv) {
     case '--status':
       if (rest.length) fail('status does not take arguments.');
       return { command: 'status' };
+    case 'mode':
+    case '--mode':
+      return parseModeArgs(rest);
     case 'map':
     case '--map':
       if (rest.length < 1 || rest.length > 2) fail('map requires <map-json> and an optional [project-relative-file].');
@@ -778,6 +901,9 @@ async function main(argv, io, deps) {
       case 'status':
         result = inspectStatus(root);
         break;
+      case 'mode':
+        result = resolveMode(parsed.mode, parsed.options);
+        break;
       case 'map':
         result = inspectMap(parsed.mapFile, parsed.selectedFile);
         break;
@@ -814,6 +940,7 @@ module.exports = {
   HydraControlError,
   parseArgs,
   getHelp,
+  resolveMode,
   parseSemver,
   inspectStatus,
   readMapFile,

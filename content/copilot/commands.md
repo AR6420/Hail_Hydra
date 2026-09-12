@@ -6,7 +6,8 @@ loaded skill directory to resolve `scripts/` and `references/`; do not assume
 the working project is the Hydra source checkout.
 
 Interpret only the leading flags below. Utilities are mutually exclusive.
-`--quiet`, `--stfu` and `--notify` may combine before a goal; their effects end
+Task modifiers `--mode`, `--max-agents`, `--max-dispatches`, `--quiet`, `--stfu`
+and `--notify` may combine before a goal; their effects end
 with that invocation. `--` ends flag parsing. Unknown flags, missing required
 arguments or an empty modifier-only invocation get usage, without side effects.
 Ordinary goals, including "update the README", remain tasks rather than
@@ -19,6 +20,34 @@ Native `/skills` can disable future loading; it does not erase injected history.
 Do not claim a bare skill selection proves that a separate task was routed
 through Hydra. Prefer the skill reference and goal in the same user input;
 use `/new` only if the user chooses a clean conversation boundary.
+
+## Execution mode and explicit limits
+
+`/hail-hydra --mode turbo <goal>`
+`/hail-hydra --mode balanced <goal>`
+`/hail-hydra --mode economy <goal>`
+
+Mode names are exactly `turbo`, `balanced` and `economy`. No mode means Balanced.
+Read [the mode policy](hydra-modes.md) and resolve it with the control helper
+before dispatch. A mode flag requires a goal; it does not set a persistent mode.
+For an inspection without a coding task, use the helper's `mode [name]` command.
+`/hail-hydra --help` also lists the available routes.
+
+`/hail-hydra --mode turbo --max-agents 16 --max-dispatches 64 <goal>`
+
+Limits are explicit requested ceilings, not evidence of host capacity.
+Pass them to `hydra-control.js mode turbo --max-agents 16 --max-dispatches 64`.
+Require positive safe integers with no signs, fractions or exponent notation;
+concurrency cannot exceed the total dispatch count. Do not truncate/coerce
+invalid values or turn them into unbounded work. Duplicate mode/limit flags,
+missing values or unsupported modes are errors before any task work starts.
+Modes/limits may combine with the other task modifiers, not management
+utilities such as `--status`. Parse only before the first goal word or `--`;
+flags mentioned inside the goal are ordinary task text.
+
+The helper resolves policy only; it never starts agents, persists the mode,
+changes models, enables factories or overrides native/user resource limits.
+Follow [context continuity](hydra-continuity.md) in every mode.
 
 ## Help and installation status
 
@@ -138,7 +167,7 @@ An explicit request to remember a project fact uses available host memory tools
 and their consent, scope and privacy rules. Store only supported durable facts,
 never secrets or sensitive personal data. If the host has no suitable memory
 mechanism, disclose it; do not silently write `CLAUDE.md`, global instructions
-or agent-memory files. Maps and session task ledgers are not persistent memory.
+or agent-memory files. Maps and session task ledgers are not a cross-session agent-memory service.
 
 ## Updates and issue reports
 

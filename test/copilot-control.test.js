@@ -24,7 +24,13 @@ const ROLE_NAMES = [
   'hydra-sentinel',
   'hydra-sentinel-scan',
 ];
-const UTILITY_GUIDE_FILES = ['hydra-commands.md', 'hydra-measurements.md', 'hydra-quality.md'];
+const UTILITY_GUIDE_FILES = [
+  'hydra-commands.md',
+  'hydra-continuity.md',
+  'hydra-measurements.md',
+  'hydra-modes.md',
+  'hydra-quality.md',
+];
 const SKILL_TEXT = fs.readFileSync(path.join(ROOT, 'content', 'copilot', 'SKILL.md'), 'utf8');
 const SCRATCH = path.join(ROOT, 'test', `.tmp-copilot-control-${process.pid}-${Date.now()}`);
 
@@ -152,9 +158,159 @@ async function main() {
 
   const help = control.getHelp();
   assert.strictEqual(help.command, 'help');
-  assert.deepStrictEqual(help.supportedHelperCommands, ['help', 'status', 'map', 'check-update', 'report', 'notify']);
+  assert.deepStrictEqual(help.supportedHelperCommands, ['help', 'status', 'mode', 'map', 'check-update', 'report', 'notify']);
   assert.strictEqual(help.flags.find((item) => item.flag === '--notify').usage, '--notify <goal>');
   assert.strictEqual(help.flags.find((item) => item.flag === '--update').helperCommand, 'check-update');
+  const modeHelp = help.flags.find((item) => item.flag === '--mode');
+  assert.strictEqual(modeHelp.usage, '--mode <turbo|balanced|economy> <goal>');
+  assert.strictEqual(modeHelp.helperCommand, 'mode [turbo|balanced|economy] [--expanded] [--max-agents N] [--max-dispatches N]');
+  assert.strictEqual(modeHelp.nativeHelper, true);
+  for (const flag of ['--max-agents', '--max-dispatches']) {
+    const modifier = help.flags.find((item) => item.flag === flag);
+    assert.strictEqual(modifier.usage, `${flag} <N>`);
+    assert.strictEqual(modifier.nativeHelper, false);
+    assert.strictEqual(modifier.helperCommand, undefined);
+  }
+  assert.match(help.notes.join('\n'), /balanced is the default.*task-local/i);
+  assert.match(help.notes.join('\n'), /does not mean a mode is active in the current shell/i);
+  assert.match(help.notes.join('\n'), /host and user hard limits still apply/i);
+  assert.match(help.notes.join('\n'), /quality, security, correctness, and permission checks/i);
+  assert.match(help.notes.join('\n'), /do not guarantee host capacity/i);
+  assert.match(help.notes.join('\n'), /beyond documented balanced expansion, complexity alone does not raise ceilings or promote modes/i);
+
+  const expectedPolicies = {
+    economy: {
+      limits: { maxConcurrentAgents: 1, maxTotalDispatches: 3, maxImprovementRounds: 2 },
+      workerPolicy: 'inexpensive-support-for-established-work',
+      researchPolicy: 'required-evidence-minimal-optional-research',
+      reviewPolicy: 'required-review-minimal-optional-polish',
+      contextPolicy: 'compact-briefs-and-checkpoints',
+    },
+    balanced: {
+      limits: { maxConcurrentAgents: 2, maxTotalDispatches: 6, maxImprovementRounds: 2 },
+      workerPolicy: 'latest-suitable-with-role-tier-hints',
+      researchPolicy: 'targeted-evidence-for-material-uncertainty',
+      reviewPolicy: 'risk-based-review-and-bounded-improvement',
+      contextPolicy: 'focused-briefs-and-checkpoints',
+    },
+    turbo: {
+      limits: { maxConcurrentAgents: 8, maxTotalDispatches: 32, maxImprovementRounds: 2 },
+      workerPolicy: 'quality-and-wall-clock-speed-over-cost',
+      researchPolicy: 'broader-independent-evidence-when-useful',
+      reviewPolicy: 'parallel-review-and-bounded-improvement',
+      contextPolicy: 'largest-appropriate-supported-context-with-focused-briefs',
+    },
+  };
+  function expectedMode(mode) {
+    return {
+      command: 'mode',
+      mode,
+      taskLocal: true,
+      expanded: false,
+      overridesApplied: false,
+      mainModel: 'preserve-selection',
+      qualityFloor: 'required-checks-and-serious-findings-block',
+      contextContinuity: 'session-ledger-and-checkpoints',
+      enforcement: 'instruction-guided-host-limits-apply',
+      ...expectedPolicies[mode],
+    };
+  }
+  for (const name of Object.keys(expectedPolicies)) {
+    const resolved = control.resolveMode(name);
+    assert.deepStrictEqual(resolved, expectedMode(name));
+    assert.deepStrictEqual(control.resolveMode(name, { expanded: false }), resolved);
+    const overridden = control.resolveMode(name, { maxAgents: 100, maxDispatches: 1000 });
+    assert.deepStrictEqual(overridden, {
+      ...expectedMode(name),
+      limits: { maxConcurrentAgents: 100, maxTotalDispatches: 1000, maxImprovementRounds: 2 },
+      overridesApplied: true,
+    }, 'user-requested ceilings do not promote modes or guarantee host capacity');
+    const repeated = control.resolveMode(name);
+    assert.notStrictEqual(repeated, resolved);
+    assert.notStrictEqual(repeated.limits, resolved.limits);
+    resolved.limits.maxConcurrentAgents = 999;
+    resolved.limits.maxImprovementRounds = 999;
+    resolved.workerPolicy = 'changed';
+    resolved.mainModel = 'changed';
+    assert.deepStrictEqual(control.resolveMode(name), expectedMode(name));
+    assert.deepStrictEqual(control.resolveMode(), expectedMode('balanced'), 'no mode persists into the next task');
+  }
+  const expanded = control.resolveMode('balanced', { expanded: true });
+  assert.deepStrictEqual(expanded, {
+    ...expectedMode('balanced'),
+    expanded: true,
+    limits: { maxConcurrentAgents: 4, maxTotalDispatches: 12, maxImprovementRounds: 2 },
+  });
+  expanded.limits.maxTotalDispatches = 999;
+  assert.strictEqual(control.resolveMode('balanced', { expanded: true }).limits.maxTotalDispatches, 12);
+  assert.deepStrictEqual(control.resolveMode(), expectedMode('balanced'));
+  assert.deepStrictEqual(control.resolveMode(undefined, undefined), expectedMode('balanced'));
+  for (const name of ['economy', 'turbo']) {
+    assert.throws(() => control.resolveMode(name, { expanded: true }), /only available for balanced/i);
+  }
+  assert.deepStrictEqual(control.resolveMode('balanced', { expanded: true, maxAgents: 3, maxDispatches: 5 }), {
+    ...expectedMode('balanced'),
+    expanded: true,
+    limits: { maxConcurrentAgents: 3, maxTotalDispatches: 5, maxImprovementRounds: 2 },
+    overridesApplied: true,
+  });
+  assert.deepStrictEqual(control.resolveMode(undefined, { maxAgents: 3, maxDispatches: 5 }), {
+    ...expectedMode('balanced'),
+    limits: { maxConcurrentAgents: 3, maxTotalDispatches: 5, maxImprovementRounds: 2 },
+    overridesApplied: true,
+  });
+  assert.strictEqual(control.resolveMode('balanced', { maxAgents: 2 }).overridesApplied, true);
+  assert.strictEqual(control.resolveMode('balanced', { maxAgents: 1 }).limits.maxTotalDispatches, 6);
+  assert.strictEqual(control.resolveMode('balanced', { maxDispatches: 1000 }).limits.maxConcurrentAgents, 2);
+  assert.deepStrictEqual(control.resolveMode('economy', {
+    maxAgents: Number.MAX_SAFE_INTEGER,
+    maxDispatches: Number.MAX_SAFE_INTEGER,
+  }).limits, {
+    maxConcurrentAgents: Number.MAX_SAFE_INTEGER,
+    maxTotalDispatches: Number.MAX_SAFE_INTEGER,
+    maxImprovementRounds: 2,
+  });
+  const options = { expanded: true, maxAgents: 3, maxDispatches: 5 };
+  const fromOptions = control.resolveMode('balanced', options);
+  assert.deepStrictEqual(options, { expanded: true, maxAgents: 3, maxDispatches: 5 });
+  options.maxAgents = 100;
+  assert.strictEqual(fromOptions.limits.maxConcurrentAgents, 3);
+
+  for (const name of ['', 'Turbo', 'balanced ', 'MODE_SECRET', '__proto__', 'constructor', 'toString', null, 1, true, {}, [], Symbol('MODE_SECRET')]) {
+    assert.throws(() => control.resolveMode(name), /Invalid mode\./);
+  }
+  for (const invalid of [null, [], 1, 'balanced', false, () => {}, new Date(), Object.create({ expanded: true })]) {
+    assert.throws(() => control.resolveMode('balanced', invalid), /expected an object/i);
+  }
+  for (const invalid of [undefined, null, 'true', 'false', 0, 1, {}, []]) {
+    assert.throws(() => control.resolveMode('balanced', { expanded: invalid }), /expected a boolean/i);
+  }
+  for (const invalid of [
+    { goal: 'MODE_SECRET' },
+    { MODE_SECRET: true },
+    { maxConcurrentAgents: 3 },
+    { maxTotalDispatches: 5 },
+    { maxImprovementRounds: 3 },
+    { constructor: true },
+    JSON.parse('{"__proto__":true}'),
+    { [Symbol('MODE_SECRET')]: true },
+    Object.defineProperty({}, 'MODE_SECRET', { value: true }),
+  ]) {
+    assert.throws(() => control.resolveMode('balanced', invalid), /unknown option/i);
+  }
+  for (const key of ['maxAgents', 'maxDispatches']) {
+    for (const invalid of [undefined, null, 0, -0, -1, 1.5, '3', true, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1, 1n, {}, []]) {
+      assert.throws(() => control.resolveMode('balanced', { [key]: invalid }), /positive safe integers/i);
+    }
+  }
+  for (const invalid of [
+    { maxAgents: 6, maxDispatches: 5 },
+    { maxAgents: 7 },
+    { maxDispatches: 1 },
+    { expanded: true, maxAgents: 13 },
+  ]) {
+    assert.throws(() => control.resolveMode('balanced', invalid), /must not exceed/i);
+  }
 
   assert.deepStrictEqual(control.parseArgs(['help']), { command: 'help' });
   assert.deepStrictEqual(control.parseArgs(['status']), { command: 'status' });
@@ -163,6 +319,25 @@ async function main() {
   assert.deepStrictEqual(control.parseArgs(['check-update']), { command: 'check-update' });
   assert.deepStrictEqual(control.parseArgs(['report', 'feature']), { command: 'report', kind: 'feature' });
   assert.deepStrictEqual(control.parseArgs(['notify', 'success']), { command: 'notify', goal: 'success' });
+  assert.deepStrictEqual(control.parseArgs(['mode']), { command: 'mode', mode: 'balanced', options: {} });
+  assert.deepStrictEqual(control.parseArgs(['--mode', 'turbo']), { command: 'mode', mode: 'turbo', options: {} });
+  assert.deepStrictEqual(control.parseArgs(['mode', '--expanded']), {
+    command: 'mode', mode: 'balanced', options: { expanded: true },
+  });
+  assert.deepStrictEqual(control.parseArgs(['mode', '--max-agents', '3', '--max-dispatches', '5']), {
+    command: 'mode', mode: 'balanced', options: { maxAgents: 3, maxDispatches: 5 },
+  });
+  assert.deepStrictEqual(control.parseArgs(['mode', 'balanced', '--max-dispatches', '5', '--expanded', '--max-agents', '3']), {
+    command: 'mode', mode: 'balanced', options: { maxDispatches: 5, expanded: true, maxAgents: 3 },
+  });
+  for (const flag of ['--max-agents', '--max-dispatches']) {
+    for (const value of [
+      '', '0', '00', '01', '-1', '+1', '1.5', '1e2', '0x10', '1junk', ' 1', '1 ', '1\n', '1\r',
+      '9007199254740992', 'Infinity', 'NaN', '1_000', '1,000', '１', 'MODE_SECRET',
+    ]) {
+      assert.throws(() => control.parseArgs(['mode', flag, value]), /positive safe integers in decimal form/i);
+    }
+  }
 
   const installedRoot = createInstalledRoot();
   const status = control.inspectStatus(installedRoot);
@@ -171,7 +346,7 @@ async function main() {
     installed: true,
     version: '2.5.2',
     roleCount: 12,
-    ownedFileCount: 20,
+    ownedFileCount: 22,
     activationManualOnly: false,
     modelInvocationAllowed: true,
     activationPolicy: 'explicit-request-instructions',
@@ -182,10 +357,107 @@ async function main() {
   const installedStatusJson = JSON.parse(installedStatus.stdout);
   assert.strictEqual(installedStatusJson.version, '2.5.2');
   assert.strictEqual(installedStatusJson.roleCount, 12);
-  assert.strictEqual(installedStatusJson.ownedFileCount, 20);
+  assert.strictEqual(installedStatusJson.ownedFileCount, 22);
 
   const installedHelp = runCli(path.join(installedRoot, 'scripts', 'hydra-control.js'), ['help'], 0);
   assert.strictEqual(JSON.parse(installedHelp.stdout).command, 'help');
+
+  for (const script of [CONTROL_PATH, path.join(installedRoot, 'scripts', 'hydra-control.js')]) {
+    for (const name of ['turbo', 'economy', 'balanced']) {
+      const result = runCli(script, ['mode', name], 0);
+      assert.deepStrictEqual(JSON.parse(result.stdout), expectedMode(name));
+      assert.strictEqual(result.stderr, '');
+    }
+    const defaultMode = runCli(script, ['mode'], 0);
+    assert.deepStrictEqual(JSON.parse(defaultMode.stdout), expectedMode('balanced'));
+  }
+  for (const [args, expected] of [
+    [['--mode'], expectedMode('balanced')],
+    [['--mode', 'turbo'], expectedMode('turbo')],
+    [['mode', 'balanced', '--expanded'], control.resolveMode('balanced', { expanded: true })],
+    [['mode', '--max-agents', '3', '--max-dispatches', '5'], control.resolveMode('balanced', { maxAgents: 3, maxDispatches: 5 })],
+    [['mode', 'economy', '--max-dispatches', '1000', '--max-agents', '100'], control.resolveMode('economy', { maxAgents: 100, maxDispatches: 1000 })],
+    [['mode', '--max-agents', '9007199254740991', '--max-dispatches', '9007199254740991'], control.resolveMode('balanced', {
+      maxAgents: Number.MAX_SAFE_INTEGER,
+      maxDispatches: Number.MAX_SAFE_INTEGER,
+    })],
+  ]) {
+    const result = runCli(CONTROL_PATH, args, 0);
+    assert.deepStrictEqual(JSON.parse(result.stdout), expected);
+    assert.strictEqual(result.stderr, '');
+  }
+
+  for (const args of [
+    ['mode', 'MODE_SECRET'],
+    ['mode', 'balanced', 'MODE_SECRET'],
+    ['--mode', 'balanced', 'MODE_SECRET'],
+    ['mode', '--MODE_SECRET'],
+    ['mode', '--max-agents', 'MODE_SECRET'],
+    ['mode', '--max-agents', '3', 'balanced'],
+    ['mode', '--expanded', 'balanced'],
+    ['mode', 'turbo', '--expanded'],
+    ['mode', 'economy', '--expanded'],
+    ['mode', '--expanded', '--expanded'],
+    ['mode', '--max-agents', '1', '--max-agents', '2'],
+    ['mode', '--max-dispatches', '6', '--max-dispatches', '7'],
+    ['mode', '--expanded', 'true'],
+    ['mode', '--max-agents'],
+    ['mode', '--max-dispatches'],
+    ['mode', '--max-agents', '--max-dispatches', '5'],
+    ['mode', '--max-agents=3'],
+    ['mode', '--max-agents', '6', '--max-dispatches', '5'],
+    ['mode', '--max-agents', '7'],
+    ['mode', '--max-dispatches', '1'],
+    ['mode', '--max-agents', '9007199254740992'],
+    ['mode', '--max-agents', '1.5'],
+    ['mode', '--max-agents', '1e2'],
+    ['mode', '--max-agents', '-1'],
+    ['mode', '--max-agents', '+1'],
+    ['mode', '--max-agents', '01'],
+    ['mode', '--max-agents', '1junk'],
+    ['--max-agents', '1'],
+    ['--max-dispatches', '5'],
+  ]) {
+    assert.throws(() => control.parseArgs(args), control.HydraControlError);
+    const result = runCli(CONTROL_PATH, args, 1);
+    assert.strictEqual(result.stdout, '');
+    assert.ok(result.stderr.trim());
+    assert.strictEqual(result.stderr.trim().split(/\r?\n/).length, 1);
+    assert.ok(!result.stderr.includes('MODE_SECRET'));
+  }
+
+  {
+    const guardedModules = [
+      [fs, ['readFileSync', 'writeFileSync', 'appendFileSync', 'mkdirSync', 'openSync', 'renameSync', 'rmSync', 'unlinkSync']],
+      [require('https'), ['get', 'request']],
+      [require('child_process'), ['spawn', 'spawnSync', 'exec', 'execSync', 'execFile', 'execFileSync', 'fork']],
+    ];
+    const originals = [];
+    try {
+      for (const [module, methods] of guardedModules) {
+        for (const method of methods) {
+          originals.push([module, method, module[method]]);
+          module[method] = () => { throw new Error(`Modes and help must not call ${method}.`); };
+        }
+      }
+      for (const args of [
+        ['help'],
+        ['--help'],
+        ['mode'],
+        ['--mode', 'turbo'],
+        ['mode', 'economy'],
+        ['mode', '--expanded', '--max-agents', '3', '--max-dispatches', '5'],
+      ]) {
+        const capture = makeCaptureIo();
+        assert.strictEqual(await control.main(args, capture.io, { root: path.join(SCRATCH, 'not-installed') }), 0);
+        assert.ok(['help', 'mode'].includes(JSON.parse(capture.stdout()).command));
+        assert.strictEqual(capture.stderr(), '');
+      }
+    } finally {
+      for (const [module, method, original] of originals) module[method] = original;
+    }
+    assert.deepStrictEqual(control.inspectStatus(installedRoot), status, 'mode resolution does not change installed status');
+  }
 
   const installedReport = runCli(path.join(installedRoot, 'scripts', 'hydra-control.js'), ['report', 'feature'], 0);
   assert.strictEqual(JSON.parse(installedReport.stdout).reports[0].kind, 'feature');
@@ -214,10 +486,17 @@ async function main() {
     assert.throws(() => control.inspectStatus(root), /does not match VERSION/i);
   }
 
-  {
+  for (const name of UTILITY_GUIDE_FILES) {
     const root = createInstalledRoot();
-    fs.unlinkSync(path.join(root, 'references', 'hydra-commands.md'));
-    assert.throws(() => control.inspectStatus(root), /missing references\/hydra-commands\.md/i);
+    fs.unlinkSync(path.join(root, 'references', name));
+    assert.throws(() => control.inspectStatus(root), (err) => err.message.includes(`missing references/${name}`));
+  }
+
+  for (const name of ['hydra-modes.md', 'hydra-continuity.md']) {
+    const root = createInstalledRoot({
+      manifestFiles: defaultManifestFiles().filter((file) => file !== `references/${name}`),
+    });
+    assert.throws(() => control.inspectStatus(root), (err) => err.message.includes(`${name} is not recorded`));
   }
 
   {
@@ -256,13 +535,13 @@ async function main() {
     assert.throws(() => control.inspectStatus(root), /at least one role/i);
   }
 
-  {
+  for (const name of UTILITY_GUIDE_FILES) {
     const root = createInstalledRoot({
       roles: [{
-        name: 'hydra-commands',
+        name: name.slice(0, -3),
         tier: 'cheap',
         modelSelection: 'latest-suitable-available',
-        instructions: 'references/hydra-commands.md',
+        instructions: `references/${name}`,
       }],
     });
     assert.throws(() => control.inspectStatus(root), /utility guides are not catalogue roles/i);

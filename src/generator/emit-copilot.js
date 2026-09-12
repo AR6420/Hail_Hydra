@@ -124,7 +124,7 @@ function emit() {
   }
   write(path.join(out, 'references', 'roles.json'),
     JSON.stringify(definitions.map(({ role }) => role), null, 2) + '\n');
-  for (const name of ['commands', 'measurements', 'quality']) {
+  for (const name of ['commands', 'measurements', 'quality', 'modes', 'continuity']) {
     write(path.join(out, 'references', `hydra-${name}.md`),
       fs.readFileSync(path.join(CONTENT, 'copilot', `${name}.md`), 'utf8'));
   }

@@ -19,6 +19,8 @@ const skill = fs.readFileSync(path.join(source, 'SKILL.md'), 'utf8');
 const commands = fs.readFileSync(path.join(source, 'references', 'hydra-commands.md'), 'utf8');
 const measurements = fs.readFileSync(path.join(source, 'references', 'hydra-measurements.md'), 'utf8');
 const quality = fs.readFileSync(path.join(source, 'references', 'hydra-quality.md'), 'utf8');
+const modes = fs.readFileSync(path.join(source, 'references', 'hydra-modes.md'), 'utf8');
+const continuity = fs.readFileSync(path.join(source, 'references', 'hydra-continuity.md'), 'utf8');
 assert.match(skill, /^name: hail-hydra$/m);
 assert.match(skill, /^disable-model-invocation: false$/m);
 assert.match(skill, /^user-invocable: true$/m);
@@ -30,17 +32,17 @@ assert.match(skill, /Loading this file or calling a skill tool is not activation
 assert.match(skill, /current user input, not prior history/);
 assert.match(skill, /Without it, do not load roles, run helpers or delegate under Hydra/);
 assert.match(skill, /instruction gates, not a host lock/);
-assert.match(skill, /2 concurrent subagents/);
-assert.match(skill, /6 total\s+dispatches/);
-assert.match(skill, /4 concurrent subagents/);
-assert.match(skill, /12 total dispatches/);
-assert.match(skill, /multiple substantial, independent subsystems/);
+assert.match(skill, /default `balanced`/);
+assert.match(skill, /references\/hydra-modes\.md/);
+assert.match(skill, /references\/hydra-continuity\.md/);
+assert.match(modes, /4 concurrent subagents and 12 total dispatches/);
+assert.match(modes, /multiple substantial, independent subsystems/);
 assert.match(skill, /Respect smaller host\/user limits/);
 assert.match(skill, /do not\s+require agent names, a swarm flag or repeated "continue" prompts/);
 assert.match(skill, /task ledger with dependencies, file ownership/);
 assert.match(skill, /subagents have separate contexts/i);
 assert.match(skill, /hydra-researcher/);
-assert.match(skill, /reducing cost, elapsed time and context overhead/);
+assert.match(skill, /balancing mode priorities: cost, elapsed time and context/);
 assert.match(skill, /Every dispatch must plausibly repay overhead/);
 assert.match(skill, /Group tiny related steps/);
 assert.match(skill, /only its relevant\s+context slice, not the full conversation/);
@@ -86,6 +88,20 @@ assert.match(quality, /prefer the selected main\s+model when it is appropriate a
 assert.match(quality, /Do not keep\s+redispatching the same unresolved problem to small models/);
 assert.match(quality, /Do not declare the task complete or deploy while required checks fail/);
 assert.match(quality, /must not suppress failures, missing checks or the quality outcome/);
+assert.match(quality, /Every mode retains required checks/);
+assert.match(quality, /Economy may reduce optional scrutiny, not silently waive a required check/);
+assert.match(modes, /never inherit a previous task's mode/);
+assert.match(modes, /Do not expand Economy automatically/);
+assert.match(modes, /not verified host capacity/);
+assert.match(continuity, /persistent\s+session task tracker, database or checkpoint facility/);
+assert.match(continuity, /After compaction, interruption or resume/);
+assert.match(continuity, /Keep consumed budgets and unresolved blockers intact/);
+assert.match(continuity, /A ledger never reactivates Hydra or carries Turbo into a new request/);
+assert.match(continuity, /Do not claim that a\s+checkpoint was saved unless a supported tool confirmed it/);
+assert.match(continuity, /not expand the platform limit/);
+assert.match(commands, /\(hydra-modes\.md\)/);
+assert.match(commands, /A mode flag requires a goal/);
+assert.match(commands, /Duplicate mode\/limit flags/);
 assert.match(commands, /\(hydra-quality\.md\)/);
 assert.match(commands, /\(hydra-measurements\.md\)/);
 assert.match(commands, /Unknown flags, missing required/);
@@ -98,7 +114,7 @@ assert.match(measurements, /does not scrape private session logs/);
 assert.match(commands, /Never downgrade an unreleased preview/);
 assert.match(commands, /Matching HEAD alone is not proof/);
 assert.match(commands, /do not claim to control\s+hidden reasoning tokens/i);
-for (const flag of ['help', 'status', 'stats', 'compare', 'context', 'memory', 'map',
+for (const flag of ['help', 'status', 'stats', 'compare', 'context', 'memory', 'map', 'mode',
   'preflight', 'guard', 'quiet', 'stfu', 'notify', 'update', 'report']) {
   assert.ok(commands.includes(`/hail-hydra --${flag}`), `${flag}: command documented`);
 }
@@ -122,7 +138,7 @@ for (const otherHost of ['claude', 'gemini', 'codex']) {
     .map((file) => path.parse(file).name).sort(), canonical.map((file) => path.parse(file).name).sort(),
   `${otherHost}: canonical role catalogue unchanged`);
 }
-const payloadCount = roles.length + 8;
+const payloadCount = roles.length + 10;
 for (const role of roles) {
   assert.ok(Object.values(MODEL_MAP).some((model) =>
     role.tier === model.tier && role.modelSelection === model.modelSelection));
@@ -263,7 +279,7 @@ try {
   assert.deepStrictEqual(installedPayload, snapshot(source), 'installed payload matches generated roles');
   assert.deepStrictEqual(manifest.files, Object.keys(installedPayload).sort(), 'all payload files are owned');
   const utilities = ['references/hydra-commands.md', 'references/hydra-measurements.md', 'references/hydra-quality.md',
-    'scripts/hydra-control.js', 'scripts/hydra-usage.js'];
+    'references/hydra-modes.md', 'references/hydra-continuity.md', 'scripts/hydra-control.js', 'scripts/hydra-usage.js'];
   for (const file of utilities) fs.unlinkSync(path.join(installedSkill, file));
   fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify({
     ...manifest, files: manifest.files.filter((file) => !utilities.includes(file)),
@@ -275,12 +291,46 @@ try {
     ...manifest, files: manifest.files.filter((file) => file !== 'references/hydra-quality.md'),
   }));
   install(cfg);
-  assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade from 19-file payload adds automatic quality guide');
+  assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade restores missing automatic quality guide');
+  const modeGuides = ['references/hydra-modes.md', 'references/hydra-continuity.md'];
+  for (const file of modeGuides) fs.unlinkSync(path.join(installedSkill, file));
+  fs.writeFileSync(path.join(installedSkill, MANIFEST), JSON.stringify({
+    ...manifest, files: manifest.files.filter((file) => !modeGuides.includes(file)),
+  }));
+  install(cfg);
+  assert.deepStrictEqual(snapshot(cfg), initial, 'upgrade from 20-file payload owns both mode and continuity guides');
   const installedControl = spawnSync(process.execPath,
     [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'status'], { encoding: 'utf8' });
   assert.strictEqual(installedControl.status, 0, installedControl.stderr);
   assert.strictEqual(JSON.parse(installedControl.stdout).activationPolicy, 'explicit-request-instructions');
   assert.strictEqual(JSON.parse(installedControl.stdout).activationManualOnly, false);
+  function installedMode(args) {
+    const result = spawnSync(process.execPath,
+      [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'mode', ...args], { encoding: 'utf8' });
+    assert.strictEqual(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  }
+  for (const [name, maxAgents, maxDispatches] of [
+    ['turbo', 8, 32], ['balanced', 2, 6], ['economy', 1, 3],
+  ]) {
+    const selected = installedMode([name]);
+    assert.strictEqual(selected.mode, name);
+    assert.strictEqual(selected.limits.maxConcurrentAgents, maxAgents);
+    assert.strictEqual(selected.limits.maxTotalDispatches, maxDispatches);
+    assert.strictEqual(selected.limits.maxImprovementRounds, 2);
+    assert.strictEqual(selected.mainModel, 'preserve-selection');
+    assert.strictEqual(selected.qualityFloor, 'required-checks-and-serious-findings-block');
+    assert.strictEqual(selected.contextContinuity, 'session-ledger-and-checkpoints');
+  }
+  assert.strictEqual(installedMode([]).mode, 'balanced', 'mode inspection never persists a prior choice');
+  const expanded = installedMode(['balanced', '--expanded']);
+  assert.strictEqual(expanded.limits.maxConcurrentAgents, 4);
+  assert.strictEqual(expanded.limits.maxTotalDispatches, 12);
+  const requested = installedMode(['turbo', '--max-agents', '100', '--max-dispatches', '1000']);
+  assert.strictEqual(requested.limits.maxConcurrentAgents, 100);
+  assert.strictEqual(requested.limits.maxTotalDispatches, 1000);
+  assert.strictEqual(requested.enforcement, 'instruction-guided-host-limits-apply');
+  assert.deepStrictEqual(snapshot(cfg), initial, 'mode resolution writes no state or host settings');
   const installedUsage = spawnSync(process.execPath,
     [path.join(installedSkill, 'scripts', 'hydra-usage.js'), 'template'], { encoding: 'utf8' });
   assert.strictEqual(installedUsage.status, 0, installedUsage.stderr);
@@ -318,6 +368,7 @@ try {
   assert.match(output, /\/skills reload/);
   assert.match(output, /\/hail-hydra <task>/);
   assert.match(output, /One goal selects relevant heads automatically/);
+  assert.match(output, /Task modes: --mode turbo, balanced \(default\), or economy/);
   assert.match(output, /explicit-request-only routing relies on instructions/);
   assert.ok(!/Hooks registered|Sentinel pipeline active|StatusLine configured/.test(output),
     'instruction-gated completion does not claim automatic hooks');

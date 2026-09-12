@@ -164,6 +164,8 @@ Then, **inside the same Copilot session**:
 /skills reload
 /skills info hail-hydra
 /hail-hydra Implement pagination for this API and update the tests
+/hail-hydra --mode turbo Build product search and run the relevant checks
+/hail-hydra --mode economy Update the existing form validation
 /hail-hydra Build the dashboard and deploy it to the staging target documented in this repository
 /hail-hydra --help
 ```
@@ -182,7 +184,8 @@ The routing boundary is instruction-driven, not a host-enforced context reset.
 To prevent future loading, use native `/skills`, select `hail-hydra`, and choose
 Disable. Already injected instructions remain in conversation history; explicitly
 request normal routing for subsequent work, or use `/new` for a clean conversation.
-Hydra does not change the main session model and has no sticky on/off model mode.
+Hydra does not change the main session model. Execution modes are task-local,
+not a sticky on/off model mode.
 
 **Compatibility mode:** the Copilot integration sets `disable-model-invocation: false`.
 Some Copilot versions return `Skill not found` from the model's skill tool for
@@ -210,6 +213,33 @@ Required check failures, unverified required behavior and confirmed serious
 findings block completion/deployment. Every coding result includes concise
 review/check evidence and remaining gaps, even with quiet output. This is an
 in-task instruction policy, not an always-on monitor or defect-free guarantee.
+Economy reduces optional scrutiny, not required safety or correctness checks.
+
+### Choose a mode for the task
+
+| Mode | Priority | Default worker ceilings: concurrent / total dispatches |
+|---|---|---|
+| `turbo` | Quality and elapsed time over cost; strong workers, relevant alternatives and broader review | 8 / 32 |
+| `balanced` | Quality, speed and cost together; existing default routing | 2 / 6, or 4 / 12 for broad independent work |
+| `economy` | Efficient changes to existing designs; less optional research/polishing and targeted checks | 1 / 3 |
+
+Use `/hail-hydra --mode <turbo|balanced|economy> <goal>`. Omitting the mode
+always means Balanced; a prior Turbo task does not change later tasks or
+ordinary prompts. All modes preserve your main-model selection, required
+quality checks, native permissions and the two-round improvement bound.
+Simple work can stay direct in any mode.
+
+To request larger ceilings explicitly:
+
+```text
+/hail-hydra --mode turbo --max-agents 16 --max-dispatches 64 <goal>
+```
+
+The control helper's `mode [name]` command returns the resolved policy without
+starting workers or storing a mode. Higher limits are requests, not proof of
+host capacity: native limits still apply, and large task sets run in bounded
+waves. This integration does not add a scheduler or guarantee hundreds/thousands
+of concurrent agents. It never starts factories or another AI CLI to evade limits.
 
 **Your selected main model does the substantive reasoning and final acceptance.**
 Hydra must not reduce it to a dispatcher for smaller models. Keep unresolved
@@ -254,10 +284,19 @@ tools; unavailable capabilities are reported, not replaced with another
 provider. Private code and confidential requirements must not be sent to
 public searches.
 
-The main conversation keeps its available context when alternating between
-Hydra and ordinary prompts. Workers have separate contexts; the main agent
-briefs them and reconciles results in a session task ledger. This is not
-shared live subagent memory or a separate cross-session memory service.
+For substantial work in every mode, keep requirements, decisions, file ownership,
+active worker IDs, consumed budgets, evidence and next actions in the host's
+durable session ledger/checkpoint facility where available. Update at milestones
+and before compaction; on resume retrieve it and recheck worktree/worker state
+before acting. If no persistent session facility exists, disclose the weaker
+continuity rather than pretending a checkpoint was saved.
+
+Use the largest appropriate context allocation supported by the selected model
+and host, especially for complex Turbo work, without silently changing the main
+model or global settings. Leave tool/output headroom and pass workers only relevant
+context. This cannot increase platform limits or guarantee perfect recall.
+The ledger is not shared live worker memory or a new cross-project memory service;
+no automatic repository planning files, secrets or hidden reasoning are saved.
 
 The installer places everything under `~/.copilot/skills/hail-hydra/`:
 
@@ -271,7 +310,7 @@ hail-hydra/
     └── hydra-*.md             # 10 core roles + architect/researcher, loaded as needed
 ```
 
-The Copilot integration also includes on-demand command, measurement and quality guides under
+The Copilot integration also includes on-demand command, measurement, quality, mode and continuity guides under
 `references/` and dependency-free `scripts/hydra-control.js` and
 `scripts/hydra-usage.js`. These run only for explicitly requested utilities;
 installing them does not enable hooks or telemetry.
@@ -303,11 +342,10 @@ fallback belong in the task report, with the main model identified separately
 from workers when the host exposes it; unknown is not inferred. Selecting a
 main model does not force every worker to use that same model. Hydra leaves
 the main selection unchanged, including native Auto behavior when selected.
-The default budget is two concurrent heads and six dispatches total. Broad
-goals spanning multiple substantial, independent subsystems can automatically
-use an expanded ceiling of four concurrent heads and twelve dispatches only
-when useful parallel progress justifies the overhead. Ceilings are not targets.
-Architecture, research, scans and retries all count; smaller host/user limits take precedence.
+Balanced defaults to two concurrent heads and six dispatches; broad independent
+work may use four/twelve. Turbo and Economy use their mode ceilings above.
+Ceilings are not targets. Architecture, research, scans and retries all count;
+smaller host/user limits take precedence.
 These are prompt-level orchestration limits, not a separate runtime scheduler
 or a hard billing cap. Small work stays with the main agent.
 If subagents or per-dispatch model selection are unavailable,
@@ -337,6 +375,7 @@ native memory, billing, model selection or session management.
 | Hydra feature | Copilot entry point | Behavior and boundary |
 |---|---|---|
 | Help | `/hail-hydra --help` | Lists supported routes; no agents needed. |
+| Task mode | `/hail-hydra --mode <turbo\|balanced\|economy> <goal>` | Adjusts effort and requested ceilings for one task, not the main model or quality floor. |
 | Status | `/hail-hydra --status` | Inspects installed version, catalogue and owned files. Native `/skills info hail-hydra` checks discovery. |
 | Statistics | `/hail-hydra --stats` | Directs to native `/usage` and `/context`; never invents values when the host UI is not callable. |
 | Run comparison | `/hail-hydra --compare normal.json hydra.json` | Validates and compares explicit local receipts, not automatically captured logs. |
@@ -350,8 +389,11 @@ native memory, billing, model selection or session management.
 | Memory/context | `/hail-hydra --memory` / `--context` | Reuses native controls and consent rules; no automatic Hydra memory files or session compaction. |
 | Notification | `/hail-hydra --notify <goal>` | One terminal bell on completion, subject to terminal settings; no watcher or background player. |
 
-Utility flags are explicit and mutually exclusive. `--quiet`, `--stfu` and
-`--notify` can combine before a goal and end with that invocation. `--` ends
+Utility flags are explicit and mutually exclusive. Task modifiers `--mode`,
+`--max-agents`, `--max-dispatches`, `--quiet`, `--stfu` and `--notify` can combine
+before a goal and end with that invocation; do not combine them with management
+utilities. Duplicate modes/limits or invalid values fail rather than guessing.
+`--` ends
 flag parsing. Normal text such as `update the README` remains a coding task.
 Unknown flags or missing arguments show usage rather than performing actions.
 
@@ -990,6 +1032,10 @@ Is it read-only? ─── Yes ──→ Finding files?
 ---
 
 ## ⚙️ Configuration
+
+The following config applies to Claude, Gemini and Codex. Copilot uses
+task-local `--mode turbo|balanced|economy` instead; it does not read this config
+or treat `aggressive` as an alias for Turbo.
 
 Customize Hydra's behavior with an optional config file — create it by hand at
 your host's config path (the installer doesn't write one, and `--uninstall`
