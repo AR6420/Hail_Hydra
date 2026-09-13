@@ -32,6 +32,8 @@ AGENTS
   🔵 hydra-coder         (mid tier)   — Write and edit code
   🔵 hydra-analyst       (mid tier)   — Debug, diagnose, review
   🔵 hydra-sentinel      (mid tier)   — Deep integration analysis (when scan flags issues)
+  🔵 hydra-architect     (mid tier)   — Backend/API/data-flow architecture advisory
+  🔵 hydra-researcher    (mid tier)   — Public library/API research and verification
 
   The concrete model behind each tier depends on the host CLI you installed on.
 

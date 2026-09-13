@@ -31,7 +31,7 @@ const TRIGGERS = ['⚠️ HYDRA_SENTINEL_REQUIRED', '✅ HYDRA_NO_CODE_CHANGES']
 // ── 1. Structural invariants ────────────────────────────────────────────────
 
 const agentFiles = fs.readdirSync(path.join(DIST, 'agents')).sort();
-assert.strictEqual(agentFiles.length, 10, '10 agents emitted');
+assert.strictEqual(agentFiles.length, 12, '12 agents emitted');
 
 const GEMINI_TOOLS = new Set(Object.values(TOOL_MAP));
 const GEMINI_MODELS = new Set(Object.values(MODEL_MAP));
@@ -84,7 +84,7 @@ const guardToml = fs.readFileSync(path.join(DIST, 'commands', 'hydra', 'guard.to
 assert.ok(guardToml.includes('**Target**: {{args}}'), 'guard target uses the Gemini {{args}} token');
 // Help screen: host-neutral tier labels, all 10 agents, no Anthropic models.
 const helpToml = fs.readFileSync(path.join(DIST, 'commands', 'hydra', 'help.toml'), 'utf8');
-assert.strictEqual((helpToml.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');
+assert.strictEqual((helpToml.match(/[🟢🔵] hydra-/gu) || []).length, 12, 'help lists all 12 agents');
 assert.ok(helpToml.includes('(cheap tier)') && helpToml.includes('(mid tier)'), 'help uses tier labels');
 assert.ok(!/Haiku|Sonnet|Opus/.test(helpToml), 'help hardcodes no Anthropic model names');
 
@@ -314,7 +314,7 @@ const res1 = host.install({ scope: 'global', configDirOverride: cfg, version: V,
 assert.strictEqual(res1.anyFailed, false, 'install reports no failures');
 assert.strictEqual(res1.statusLineConfigured, false, 'gemini has no statusline');
 
-assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 10, '10 agents installed');
+assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 12, '12 agents installed');
 assert.strictEqual(fs.readdirSync(path.join(cfg, 'commands', 'hydra')).length, 10, '10 command TOMLs installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'SKILL.md')), 'SKILL installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'references', 'routing-guide.md')), 'references installed');

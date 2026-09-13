@@ -35,7 +35,7 @@ const COMMANDS = ['guard', 'help', 'map', 'preflight', 'quiet', 'report', 'stats
 // ── 1. Structural invariants ────────────────────────────────────────────────
 
 const agentFiles = fs.readdirSync(path.join(DIST, 'agents')).sort();
-assert.strictEqual(agentFiles.length, 10, '10 agent TOMLs emitted');
+assert.strictEqual(agentFiles.length, 12, '12 agent TOMLs emitted');
 
 const CODEX_MODELS = new Set(Object.values(MODEL_MAP).map((m) => m.model));
 
@@ -118,7 +118,7 @@ const reportSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-report', 'S
 assert.ok(reportSkill.includes('github.com/AR6420/Hail_Hydra/issues/new'), 'report links the pre-filled issue URLs');
 // Help screen: host-neutral tier labels, all 10 agents, no Anthropic models.
 const helpSkill = fs.readFileSync(path.join(DIST, 'skills', 'hydra-help', 'SKILL.md'), 'utf8');
-assert.strictEqual((helpSkill.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');
+assert.strictEqual((helpSkill.match(/[🟢🔵] hydra-/gu) || []).length, 12, 'help lists all 12 agents');
 assert.ok(helpSkill.includes('(cheap tier)') && helpSkill.includes('(mid tier)'), 'help uses tier labels');
 assert.ok(!/Haiku|Sonnet|Opus/.test(helpSkill), 'help hardcodes no Anthropic model names');
 for (const c of COMMANDS) {
@@ -513,7 +513,7 @@ assert.strictEqual(res1.anyFailed, false, 'install reports no failures');
 assert.strictEqual(res1.statusLineConfigured, false, 'codex has no statusline');
 
 // Files.
-assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 10, '10 agent TOMLs installed');
+assert.strictEqual(fs.readdirSync(path.join(cfg, 'agents')).length, 12, '12 agent TOMLs installed');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'references', 'routing-guide.md')), 'references installed');
 assert.strictEqual(fs.readFileSync(path.join(cfg, 'hydra', 'VERSION'), 'utf8'), V, 'VERSION written');
 assert.ok(fs.existsSync(path.join(cfg, 'hydra', 'manifest.json')), 'manifest written');

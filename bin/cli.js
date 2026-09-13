@@ -22,10 +22,11 @@ program
   .name('hail-hydra-cc')
   .description('Multi-headed speculative execution framework for AI coding CLIs')
   .version(VERSION, '-v, --version', 'Output the current version')
-  .option('--agent <list>', 'Comma-separated target agents: claude,gemini,codex')
+  .option('--agent <list>', 'Comma-separated target agents: claude,gemini,codex,copilot')
   .option('--claude', 'Target Claude Code (alias for --agent=claude)')
   .option('--gemini', 'Target Gemini CLI (alias for --agent=gemini)')
   .option('--codex', 'Target Codex CLI (alias for --agent=codex)')
+  .option('--copilot', 'Target Copilot CLI (alias for --agent=copilot)')
   .option('--all', 'Target every detected agent')
   .option('--global', 'Skip prompts, install for all projects')
   .option('--local', 'Skip prompts, install for this project only')
@@ -56,7 +57,7 @@ function resolveAgentFlags(options) {
       if (id) ids.push(id);
     }
   }
-  for (const id of ['claude', 'gemini', 'codex']) {
+  for (const id of ['claude', 'gemini', 'codex', 'copilot']) {
     if (options[id] && !ids.includes(id)) ids.push(id);
   }
   if (options.all) {

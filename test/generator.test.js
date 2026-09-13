@@ -43,7 +43,7 @@ function walk(dir, base = dir) {
 const claudeFiles = walk(claudeDist);
 
 // Structural invariants.
-assert.strictEqual(claudeFiles.filter((f) => f.startsWith('agents/')).length, 10, '10 agents emitted');
+assert.strictEqual(claudeFiles.filter((f) => f.startsWith('agents/')).length, 12, '12 agents emitted');
 assert.strictEqual(claudeFiles.filter((f) => f.startsWith('commands/hydra/')).length, 10, '10 commands emitted');
 assert.ok(claudeFiles.includes('SKILL.md'), 'SKILL.md emitted');
 assert.ok(claudeFiles.includes('skills/stfu-agents/SKILL.md'), 'stfu skill emitted');
@@ -91,7 +91,7 @@ assert.ok(claudeSkill.includes('npx hail-hydra-cc --global'), 'SKILL.md document
 
 // Help screen: all 10 agents, host-neutral tier labels (no hardcoded models).
 const helpMd = fs.readFileSync(path.join(claudeDist, 'commands', 'hydra', 'help.md'), 'utf8');
-assert.strictEqual((helpMd.match(/[🟢🔵] hydra-/gu) || []).length, 10, 'help lists all 10 agents');
+assert.strictEqual((helpMd.match(/[🟢🔵] hydra-/gu) || []).length, 12, 'help lists all 12 agents');
 assert.ok(helpMd.includes('hydra-sentinel-scan') && helpMd.includes('hydra-sentinel '), 'help lists the sentinel pair');
 assert.ok(helpMd.includes('(cheap tier)') && helpMd.includes('(mid tier)'), 'help uses tier labels');
 assert.ok(!/Haiku|Sonnet|Opus/.test(helpMd), 'help hardcodes no concrete model names');
