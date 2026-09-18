@@ -5,6 +5,82 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2026-09-11
+
+### Added
+- **Task-local Turbo, Balanced and Economy modes** with an inspectable policy
+  resolver and explicit worker/dispatch ceiling overrides. Balanced preserves
+  existing defaults; Turbo favors quality/speed and Economy reduces optional
+  work without waiving required checks. Native capacity limits always apply.
+- **Context continuity guidance** for session-local ledgers, milestone checkpoints
+  and revalidation after compaction/resume, plus appropriate supported context
+  allocation without changing the main model or promising unlimited recall.
+- **Opt-in GitHub Copilot CLI support** via `--agent=copilot` / `--copilot`,
+  interactive selection and host detection. `/hail-hydra <task>` uses the
+  current session's native subagents without a second CLI or API client.
+- **Explicit-request skill with 10 canonical role prompts plus Copilot-only
+  architecture/performance and public-web advisors**. No automatic hooks,
+  global instructions, discoverable custom agents or persistent model
+  switches are installed. Instruction guards keep unprefixed work outside Hydra.
+- **Copilot-specific scope and lifecycle support**: global
+  `~/.copilot/skills/hail-hydra`, local `.github/skills/hail-hydra`, both,
+  dry-run, status and bounded, manifest-aware uninstall.
+- **Goal-driven orchestration**: automatic relevant-head selection, a session
+  task ledger, dependency-aware parallelism, public-source research with
+  citations, stable-change review, and at most two improvement rounds.
+- **Cost/speed/context-first routing**: parallelize useful independent work,
+  group tiny steps, reuse verified findings, load only selected prompts and
+  hand off focused context. Extra heads must justify dispatch overhead.
+- **On-demand code-aware design direction**: assess unresolved, high-impact
+  backend/request-flow choices before dependent coding, alongside useful UI research.
+  Reconcile recommendations into shared contracts and measurement criteria;
+  pause and redirect affected work when evidence changes the design.
+  Performance choices require evidence and preserve correctness, not blanket
+  batching/caching or claims of an unmeasured "best" backend.
+- **Budget-aware routing**: two concurrent heads and six dispatches by default;
+  broad independent work can use a four-head/twelve-dispatch ceiling.
+  Available-model checks, explicit direct-execution fallback, and verification.
+  No hardcoded Copilot pricing or parity claims for unported hooks.
+- **Build/deploy workflow**: follow the existing release process only for a
+  clear authorized target, verify artifact and health, and report blocked
+  releases separately. No guessed production targets or perpetual deploy loop.
+- **Cross-platform preflight instructions** and Copilot generator/installer
+  regression coverage.
+- **Automatic in-task quality review**: reserve review capacity, select
+  independent review for substantial code with a disclosed direct fallback,
+  require relevant checks and report quality evidence without another prompt.
+  Required failures and unresolved serious findings block completion/deployment;
+  trivial edits avoid unnecessary reviewers. This is instruction-driven, not a hook.
+- **Explicit utilities** for help, status, statistics, map, preflight, guard,
+  quiet, concise workers, updates and issue reports under `/hail-hydra`.
+  Native memory/context controls remain native.
+- **Local utility helpers** for installation status, graph summaries and
+  transitive dependents, explicit update checks, issue links and an opt-in
+  terminal bell. No new dependency, hook, watcher or telemetry opt-in.
+- **Validated run receipts** for supplied native usage and measured elapsed
+  time, with compatible-run comparisons, unavailable-data handling and separate
+  context snapshots. This is not automatic capture or a billing-log parser.
+- **Parity documentation and lifecycle coverage** distinguish manual/native
+  equivalents from still-unported automatic hook/state features.
+
+### Changed
+- **Selected-main-model responsibility**: keep substantive reasoning, unresolved
+  high-risk logic and final acceptance with the user's main model. Worker tiers
+  are hints, not capability ceilings; complex delegated review needs a capable
+  model or a disclosed main-agent fallback. Report main and worker models
+  separately without inferring identities from roles.
+- **Current model selection instead of stale pins**: Copilot role metadata
+  keeps task tiers but no fixed model IDs. Routing instructions prefer newer
+  suitable host-available models within cost constraints and user pins/exclusions;
+  actual IDs are selected per dispatch, not by a new pricing/model-discovery service.
+- **Copilot skill-tool compatibility**: allow model-mediated skill loading to
+  avoid `Skill not found` on hosts that exclude `disable-model-invocation: true`
+  skills even for explicit requests. Current-input instruction guards preserve
+  the intended opt-in workflow, but automatic-selection prevention is not
+  host-enforced. Status/help and installer output expose that distinction.
+- Installer output distinguishes instruction-gated Copilot installs from hosts
+  with automatic hooks. Existing host defaults and payloads are unchanged.
+
 ## [2.5.1] - 2026-08-11
 
 ### Removed
