@@ -21,7 +21,7 @@ function showLogo() {
   console.log(chalk.bold.white(`  Hail Hydra v${VERSION}`));
   console.log(chalk.gray('  A multi-headed speculative execution framework for AI coding CLIs'));
   console.log(chalk.gray('  (Claude Code · Gemini CLI · Codex CLI · GitHub Copilot CLI).'));
-  console.log(chalk.gray('  Inspired by speculative decoding — savings depend on the task and model.'));
+  console.log(chalk.gray('  Inspired by speculative decoding — same quality, ~50% cheaper.'));
   console.log();
 }
 
@@ -42,17 +42,21 @@ function showInstallComplete(statusLineConfigured = true, notes = null, automati
   console.log();
   console.log(chalk.cyan.bold('  \uD83D\uDC09 Hail Hydra! Framework deployed and ready.'));
   console.log(chalk.gray('  ' + '\u2500'.repeat(45)));
-  console.log(chalk.green(`    \u2714 Hydra agent instructions installed`));
+  if (automaticHooks) {
+    console.log(chalk.green(`    \u2714 10 agents installed`));
+  } else {
+    console.log(chalk.green(`    \u2714 hail-hydra skill installed`));
+  }
   console.log(chalk.green(`    \u2714 Commands + skills installed`));
   if (automaticHooks) {
-    console.log(chalk.green(`    \u2714 Hooks registered for automatic hosts (auto-guard, update check, notify)`));
+    console.log(chalk.green(`    \u2714 Hooks registered (auto-guard, update check, notify)`));
   }
   // Only Claude Code has a statusline \u2014 stay silent for hosts without one.
   if (statusLineConfigured) {
     console.log(chalk.green(`    \u2714 StatusLine configured`));
   }
   if (automaticHooks) {
-    console.log(chalk.green(`    \u2714 Sentinel pipeline active for automatic hosts`));
+    console.log(chalk.green(`    \u2714 Sentinel pipeline active`));
   }
   console.log(chalk.green(`    \u2714 Version tracked (${VERSION})`));
   console.log();

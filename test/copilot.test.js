@@ -140,11 +140,13 @@ for (const otherHost of ['claude', 'gemini', 'codex']) {
 }
 const payloadCount = roles.length + 10;
 for (const role of roles) {
-  assert.ok(Object.values(MODEL_MAP).some((model) =>
-    role.tier === model.tier && role.modelSelection === model.modelSelection));
+  const tierEntry = Object.values(MODEL_MAP).find((model) => model.tier === role.tier);
+  assert.ok(tierEntry, `${role.name}: known tier`);
+  assert.deepStrictEqual(role.models, tierEntry.models, `${role.name}: default models match tier catalogue`);
   assert.ok(!Object.prototype.hasOwnProperty.call(role, 'preferredModel'), 'no stale model pin');
+  assert.ok(!Object.prototype.hasOwnProperty.call(role, 'modelSelection'), 'modelSelection removed');
   assert.strictEqual(role.tierIsHint, true, 'role tier must not cap worker capability');
-  assert.strictEqual(role.modelSelection, 'latest-suitable-available');
+  assert.strictEqual(role.instructions, `references/${role.name}.md`);
   const body = fs.readFileSync(path.join(source, role.instructions), 'utf8');
   assert.ok(!/\.claude|Claude Code|\{\{HYDRA_|^## (Your Memory|Cleanup|Collaboration)$/m.test(body),
     `${role.name}: no unported host hooks, memory or paths`);
@@ -229,12 +231,12 @@ function fresh() {
   fs.mkdirSync(dir);
   return dir;
 }
-function cli(args, cwd = scratch, expectedStatus = 0) {
+function cli(args, cwd = scratch, expectedStatus = 0, env = {}) {
   const result = spawnSync(process.execPath, [cliFile, ...args], {
     cwd,
     encoding: 'utf8',
     timeout: 30000,
-    env: { ...process.env, HOME: scratch, USERPROFILE: scratch },
+    env: { ...process.env, HOME: scratch, USERPROFILE: scratch, COPILOT_HOME: '', ...env },
   });
   assert.strictEqual(result.status, expectedStatus, result.stdout + result.stderr);
   return result.stdout + result.stderr;
@@ -358,6 +360,17 @@ try {
   assert.strictEqual(host.plan('global', cfg, VERSION).length, payloadCount + 1);
   assert.throws(() => host.plan('bad-scope', cfg, VERSION), /Unsupported Copilot scope/);
 
+  process.env.COPILOT_HOME = path.join(cfg, 'env-copilot-home');
+  assert.strictEqual(host.configDir(), process.env.COPILOT_HOME, 'COPILOT_HOME env var honored');
+  assert.strictEqual(host.configDir(cfg), cfg, 'explicit --config-dir override still wins over COPILOT_HOME');
+  delete process.env.COPILOT_HOME;
+
+  const envHomeDir = fresh();
+  const envOutput = cli(['--copilot', '--global', '--yes'], scratch, 0, { COPILOT_HOME: envHomeDir });
+  assert.match(envOutput, /hail-hydra/);
+  assert.ok(fs.existsSync(path.join(envHomeDir, SKILL, 'SKILL.md')), 'COPILOT_HOME env var used for install');
+  assert.ok(!fs.existsSync(path.join(scratch, '.copilot')), 'no fallback ~/.copilot when COPILOT_HOME is set');
+
   const dryCfg = path.join(fresh(), 'not-created');
   const preview = cli(['--copilot', '--global', '--dry-run', '--config-dir', dryCfg]);
   assert.match(preview, /hail-hydra/);
@@ -367,9 +380,9 @@ try {
   const output = cli(['--copilot', '--global', '--yes', '--config-dir', cliCfg]);
   assert.match(output, /\/skills reload/);
   assert.match(output, /\/hail-hydra <task>/);
-  assert.match(output, /One goal selects relevant heads automatically/);
   assert.match(output, /Task modes: --mode turbo, balanced \(default\), or economy/);
-  assert.match(output, /explicit-request-only routing relies on instructions/);
+  assert.match(output, /cheap model per tier/);
+  assert.match(output, /Copilot hooks are deferred until upstream hook reliability bugs are fixed/);
   assert.ok(!/Hooks registered|Sentinel pipeline active|StatusLine configured/.test(output),
     'instruction-gated completion does not claim automatic hooks');
   assert.match(cli(['--agent=copilot', '--status', '--config-dir', cliCfg]), new RegExp(`v${VERSION.replace(/\./g, '\\.')}`));

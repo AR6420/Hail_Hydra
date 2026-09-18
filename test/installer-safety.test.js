@@ -330,6 +330,7 @@ async function main() {
     assert.ok(r.stdout.includes('$hydra-help'), 'codex $-trigger syntax shown instead');
     assert.ok(r.stdout.includes('AI coding CLIs'), 'tagline is host-neutral');
     assert.ok(!r.stdout.includes('70% cheaper'), 'savings claim aligned to ~50%');
+    assert.ok(r.stdout.includes('~50% cheaper'), 'banner states the ~50% savings claim');
   }
 
   fs.rmSync(scratch, { recursive: true, force: true });

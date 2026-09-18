@@ -25,7 +25,7 @@ function checkPath(base, relative) {
 }
 
 function configDir(override) {
-  return override || path.join(os.homedir(), '.copilot');
+  return override || process.env.COPILOT_HOME || path.join(os.homedir(), '.copilot');
 }
 
 function localDir() {
@@ -170,14 +170,21 @@ module.exports = {
   uninstallTargets,
   uninstallExtras() {},
   status,
-  postInstallNotes: () => [
-    'Run /skills reload in the current Copilot session, then /skills info hail-hydra.',
-    'Use /hail-hydra <task> for this request only; unprefixed messages use the normal agent.',
-    'One goal selects relevant heads automatically; deployment requires a clear, authorized target.',
-    'Use /hail-hydra --help for explicit utilities and native usage/context guidance.',
-    'Task modes: --mode turbo, balanced (default), or economy; your main model stays selected.',
-    'Compatibility mode: skill loading is allowed; explicit-request-only routing relies on instructions.',
-    'No automatic hooks, global instructions or persistent agent/model changes are installed.',
-    'Model routing depends on native subagent support; cost and speed savings are not guaranteed.',
-  ],
+  postInstallNotes: () => {
+    const notes = [
+      'Run /skills reload in the current Copilot session, then /skills info hail-hydra.',
+      'Use /hail-hydra <task> for this request only; unprefixed messages use the normal agent.',
+      'Task modes: --mode turbo, balanced (default), or economy; your main model stays selected.',
+      'Worker roles default to a cheap model per tier (see roles.json); your main model keeps reasoning.',
+      'Copilot hooks are deferred until upstream hook reliability bugs are fixed; quality gates and ' +
+        '--notify run in-task/manually for now.',
+    ];
+    if (fs.existsSync(path.join(process.cwd(), '.claude', 'skills', 'hydra'))) {
+      notes.push("Copilot also loads a project's .claude/skills/ and .claude/agents/. A repo-local Claude " +
+        'Code Hydra install (.claude/skills/hydra/, auto-activating, and .claude/agents/hydra-*.md) will ' +
+        'also be visible inside Copilot — install Claude Hydra globally, or remove the local copy, in ' +
+        'repos where you use /hail-hydra.');
+    }
+    return notes;
+  },
 };

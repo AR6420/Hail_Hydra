@@ -41,7 +41,7 @@ Examples:
   npx hail-hydra-cc                          Interactive installation (recommended)
   npx hail-hydra-cc --global                 Install for Claude Code — no prompts
   npx hail-hydra-cc --agent=claude --global  Same, explicit agent
-  npx hail-hydra-cc --copilot --global      Opt-in /hail-hydra skill for Copilot
+  npx hail-hydra-cc --copilot --global       Opt-in /hail-hydra skill for Copilot
   npx hail-hydra-cc --all --global --yes     Every detected agent, non-interactive
   npx hail-hydra-cc --dry-run --all          Preview what would be written
   npx hail-hydra-cc --status                 Check installation status

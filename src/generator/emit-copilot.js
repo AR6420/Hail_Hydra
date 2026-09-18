@@ -4,9 +4,14 @@ const fs = require('fs');
 const path = require('path');
 const { ROOT, CONTENT, DIST, VERSION, write, listMd } = require('./shared');
 
+// Default worker models per tier. Cheapest GA, cli:true, all-paid-plan model per tier (retiring-soon and
+// promo pricing excluded), preferring a model already in Hydra's own tiers (Claude haiku/sonnet, Codex
+// gpt-5.6-luna/terra — see emit-codex.js MODEL_MAP) when within 1.25x cost, else a fallback from another
+// provider. Source: github/docs data/tables/copilot/models-and-pricing.yml (edited 2026-09-10).
+// Verified 2026-09-17 — re-verify each release.
 const MODEL_MAP = {
-  haiku: { tier: 'cheap', tierIsHint: true, modelSelection: 'latest-suitable-available' },
-  sonnet: { tier: 'mid', tierIsHint: true, modelSelection: 'latest-suitable-available' },
+  haiku: { tier: 'cheap', tierIsHint: true, models: ['gpt-5.6-luna', 'claude-haiku-4.5'] },
+  sonnet: { tier: 'mid', tierIsHint: true, models: ['claude-sonnet-5', 'gpt-5.6-terra'] },
 };
 
 const CAPABILITIES = {
