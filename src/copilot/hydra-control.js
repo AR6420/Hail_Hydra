@@ -692,7 +692,7 @@ function getHelp() {
     flags: HELP_FLAGS,
     notes: [
       'These are explicit /hail-hydra management routes, not native /hydra:* slash commands.',
-      'Compatibility mode allows model skill loading; the current user request gates work through instructions.',
+      'Only an explicit /hail-hydra request in the current user input activates Hydra.',
       'Balanced is the default; mode policies are task-local and never persisted. Only balanced supports --expanded.',
       'Mode output does not mean a mode is active in the current shell; goals belong to skill instructions, not this helper.',
       'Host and user hard limits still apply, including all required quality, security, correctness, and permission checks; serious findings block completion.',

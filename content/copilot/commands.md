@@ -34,7 +34,7 @@ Run `node <skill-root>/scripts/hydra-control.js help` or display this guide; do 
 
 `/hail-hydra --status`
 
-Run `node <skill-root>/scripts/hydra-control.js status`. It reports whether the installation is present, its version and owned-file count — checks version and owned files, not a live capability probe.
+Run `node <skill-root>/scripts/hydra-control.js status`. It checks version and owned files and reports the owned-file count; it is not a live capability probe.
 Use native `/skills info hail-hydra` to inspect discovery and `/skills reload` after an update; never silently choose another copy to turn a failed status into success.
 
 ## Statistics, comparison and context
