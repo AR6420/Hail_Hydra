@@ -45,6 +45,9 @@ async function runPrompts(availableHosts) {
   console.log();
   const chosen = availableHosts.filter((h) => hostIds.includes(h.id)).map((h) => h.label).join(', ');
   console.log(chalk.bold(`  This will install the 10 Hydra agents + orchestration skill for: ${chosen}.`));
+  if (hostIds.includes('copilot')) {
+    console.log('  Copilot: explicit /hail-hydra skill; hooks deferred (upstream bugs).');
+  }
   console.log();
   console.log('  Agents:');
 

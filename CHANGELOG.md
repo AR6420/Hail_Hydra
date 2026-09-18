@@ -5,7 +5,7 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.5.2] - 2026-09-18
 
 ### Fixed
 - **Cache-write billing corrected in `/hydra:stats`** — cache writes were
@@ -22,6 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the Gemini emitter carries it as gemini-cli's `max_turns`. Guards against
   unbounded subagent loops (the class of incident where a trivial task burns
   1M+ tokens), zero effect on normal runs.
+- **Opt-in GitHub Copilot CLI support** via `--copilot`, installing to
+  `~/.copilot/skills/hail-hydra` (or `$COPILOT_HOME`) globally, or
+  `.github/skills/hail-hydra` with `--local`. Adds the 10 canonical roles
+  plus architect/researcher on Copilot's native subagents, with cheap
+  per-tier default models, task-local Turbo/Balanced/Economy modes, an
+  in-task quality gate, explicit `/hail-hydra` utilities, a run receipt
+  helper, and manifest-owned install/uninstall. Copilot hooks are deferred
+  until upstream hook reliability bugs are fixed; quality gates and
+  `--notify` run in-task/manually for now. Contributed by @hsurapur (#6).
 
 ### Changed
 - **One savings number everywhere** — README headline, badges, and impact

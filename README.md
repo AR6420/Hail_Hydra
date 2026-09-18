@@ -8,7 +8,7 @@
 
 <p align="center">
   <strong>Multi-Headed Speculative Execution for AI Coding CLIs</strong><br/>
-  <sub>Claude Code &nbsp;·&nbsp; Gemini CLI &nbsp;·&nbsp; Codex CLI</sub>
+  <sub>Claude Code &nbsp;·&nbsp; Gemini CLI &nbsp;·&nbsp; Codex CLI &nbsp;·&nbsp; GitHub Copilot CLI</sub>
 </p>
 
 <p align="center">
@@ -38,14 +38,14 @@
 </p>
 
 <p align="center">
-  <strong>10 agents &nbsp;·&nbsp; 10 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 3 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
+  <strong>10 agents &nbsp;·&nbsp; 10 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 4 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, and **Codex CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 10 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 10 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes — plus an opt-in `/hail-hydra` skill on Copilot with the same 10 roles on native subagents and no automatic hooks.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically cuts per-task cost by **~50%** compared to running the same work on the orchestrator alone — while maintaining output quality through verification. That's the same ~50% you'll see everywhere Hydra is described, and it comes from one place: real session logs, via `/hydra:stats` (51.5% in the sample below).
 
@@ -57,7 +57,13 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
 >
 > Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
 
-**New in v2.5.0 — Multi-Host:** One canonical source (`content/`) now generates a native payload per host. **Gemini CLI** and **Codex CLI** join Claude Code as first-class hosts — same 10 agents and 10 commands, pinned to each host's own model tiers, with per-host hooks and real token tracking. Invoke with `/hydra:*` on Claude Code and Gemini CLI, or `$hydra-*` skills on Codex CLI.
+**New — GitHub Copilot CLI (opt-in):** use `/hail-hydra <task>` inside your existing
+Copilot session. Normal messages keep the normal agent. No second CLI, API key,
+background service or model-default change is needed. See [Copilot setup](#github-copilot-cli-opt-in).
+
+**Multi-Host:** One canonical source (`content/`) generates a native payload per
+host. Invoke with `/hydra:*` on Claude Code and Gemini CLI, `$hydra-*` skills on
+Codex CLI, or `/hail-hydra <task>` on Copilot.
 
 Everything else Hydra is known for is still here: persistent agent memory, the codebase map with blast-radius lookups, the sentinel verification touchpoint after substantial edits, internal-thinking compression (`/hydra:stfu`), and real token tracking with `/hydra:stats`. Full version history lives in the [CHANGELOG](CHANGELOG.md).
 
@@ -73,7 +79,9 @@ Hydra's biggest cost savings come from explicit invocation in scenarios where sp
 | Environment validation | `/hydra:preflight` | Cross-references compatibility matrices on Sonnet |
 | Codebase architecture review | `/hydra:map` | Dependency graph stored locally |
 
-For one-off questions, simple edits, or conversational work, Claude Code handles it directly. Hydra's only automatic intervention is the post-substantial-edit sentinel verification directive — see [Sentinel](#-sentinel--integration-integrity) below.
+For one-off questions, simple edits, or conversational work, the host handles it
+directly. On Claude, Gemini and Codex, Hydra's only automatic intervention is the
+post-substantial-edit sentinel directive. Copilot has no automatic intervention.
 
 ---
 
@@ -85,7 +93,7 @@ For one-off questions, simple edits, or conversational work, Claude Code handles
 npx hail-hydra-cc@latest
 ```
 
-Runs the interactive installer — pick your CLI(s) (Claude Code, Gemini CLI, Codex CLI)
+Runs the interactive installer — pick your CLI(s) (Claude Code, Gemini CLI, Codex CLI, GitHub Copilot CLI)
 and scope, and it deploys the agents, commands, hooks, and per-host wiring. Done in seconds.
 
 ### Installation Options
@@ -98,7 +106,8 @@ npx hail-hydra-cc --global
 npx hail-hydra-cc --agent=claude --global
 npx hail-hydra-cc --gemini --global
 npx hail-hydra-cc --codex --global
-npx hail-hydra-cc --agent=claude,gemini,codex --global
+npx hail-hydra-cc --copilot --global
+npx hail-hydra-cc --agent=claude,gemini,codex,copilot --global
 
 # Every detected agent, fully non-interactive
 npx hail-hydra-cc --all --global --yes
@@ -117,8 +126,8 @@ npx hail-hydra-cc --status
 npx hail-hydra-cc --uninstall
 ```
 
-All flags: `--agent=<list>` (`claude,gemini,codex`) or the aliases `--claude` /
-`--gemini` / `--codex` / `--all` (every detected agent) · scope `--global` /
+All flags: `--agent=<list>` (`claude,gemini,codex,copilot`) or the aliases `--claude` /
+`--gemini` / `--codex` / `--copilot` / `--all` (every detected agent) · scope `--global` /
 `--local` / `--both` · `--yes` non-interactive (requires an agent selection) ·
 `--dry-run` · `--config-dir <path>` config-dir override (single agent only) ·
 `--status` · `--uninstall`.
@@ -130,6 +139,55 @@ All flags: `--agent=<list>` (`claude,gemini,codex`) or the aliases `--claude` /
 | **Claude Code** | `/hydra:help`, `/hydra:stats`, … | StatusLine + hooks registered in `~/.claude/settings.json` |
 | **Gemini CLI** | `/hydra:help`, `/hydra:stats`, … | Restart Gemini CLI (or run `/commands reload`) to pick up the new commands |
 | **Codex CLI** | `$hydra-help`, `$hydra-stats`, … (skills with a `$` trigger) | **Required once:** run `/hooks` inside Codex to review and trust the Hydra hooks — they stay inert until then |
+| **GitHub Copilot CLI** | `/hail-hydra <task>` | Run `/skills reload`; instruction-gated explicit requests, no hooks or persistent agent switch |
+
+### GitHub Copilot CLI (opt-in)
+
+Requires a Copilot CLI version that supports skills and explicit invocation.
+
+```bash
+npx hail-hydra-cc@latest --copilot --global --yes   # ~/.copilot/skills/hail-hydra (or $COPILOT_HOME)
+npx hail-hydra-cc@latest --copilot --local --yes    # .github/skills/hail-hydra, this project only
+```
+
+The installer honors `COPILOT_HOME` for the global path; `--config-dir <path>` (Hydra's installer flag, not a Copilot setting) overrides it.
+
+Then, **inside the same Copilot session**:
+
+```text
+/skills reload
+/hail-hydra Implement pagination for this API and update the tests
+/hail-hydra --mode turbo Build product search and run the relevant checks
+/hail-hydra --help
+```
+
+`/hail-hydra` is an explicit skill invocation, not a sticky mode — a later message such as `Explain this function` uses the normal agent. The skill sets `disable-model-invocation: false` because some Copilot versions return `Skill not found` for explicit requests otherwise ([copilot-cli#4438](https://github.com/github/copilot-cli/issues/4438)); accidental model-mediated loading must not trigger Hydra work.
+
+**Model defaults** — each role dispatches through its tier's `models` list, in order; an admin-disabled or rejected entry falls through to the next. Your selected main model keeps substantive reasoning and final acceptance, and naming a model in the request overrides the default. Under `Auto`, workers may inherit the session model.
+
+| Tier | Roles | models[0] | fallback | $/1M in/out |
+|---|---|---|---|---|
+| cheap | git, guard, preflight, runner, scout, scribe, sentinel-scan | `gpt-5.6-luna` | `claude-haiku-4.5` | 0.20/1.20 · 1.00/5.00 |
+| mid | analyst, coder, sentinel, architect, researcher | `claude-sonnet-5` | `gpt-5.6-terra` | 2.00/10.00 · 2.00/12.00 |
+
+**Modes:** `/hail-hydra --mode <turbo|balanced|economy> <goal>` (default `balanced`); Turbo puts speed first and costs more. Ceilings are instruction-level heuristics bounded by your Copilot plan's concurrency, not a scheduler guarantee.
+
+**Quality:** substantial changes get an automatic in-task review via native `code-review`/`security-review` before completion is reported.
+
+**Continuity:** treat a `/model` switch like a compaction boundary — write the session ledger before an anticipated switch, read it back before the next dispatch or decision.
+
+**Measuring savings:** compare `/usage` before/after a normal run against a `/hail-hydra` run, then `/hail-hydra --compare`; not yet benchmarked on Copilot specifically.
+
+**Hooks are deferred** until upstream hook reliability bugs are fixed (copilot-cli issues [#4520](https://github.com/github/copilot-cli/issues/4520), [#1730](https://github.com/github/copilot-cli/issues/1730), [#2201](https://github.com/github/copilot-cli/issues/2201), [#4001](https://github.com/github/copilot-cli/issues/4001), [#4549](https://github.com/github/copilot-cli/issues/4549)); quality gates and `--notify` run in-task/manually for now.
+
+> **`.claude/` collision:** Copilot also loads a project's `.claude/skills/` and `.claude/agents/`. A repo-local Claude Code Hydra install (`.claude/skills/hydra/`, auto-activating, and `.claude/agents/hydra-*.md`) will also be visible inside Copilot — install Claude Hydra globally, or remove the local copy, in repos where you use `/hail-hydra`.
+
+```bash
+npx hail-hydra-cc --copilot --status      # installed version + owned-file count
+npx hail-hydra-cc --copilot --uninstall --yes
+```
+
+See `/hail-hydra --help` for the full command list.
 
 ### What Gets Installed
 
@@ -179,13 +237,16 @@ Hooks (AfterTool, SessionStart, Notification) are registered in `~/.gemini/setti
 ~/.agents/skills/                # Skills: $hydra-help, $hydra-stats, $hydra-guard, …
 ```
 
-> **Local scope** (`--local`): the per-project payload goes to `./.claude/`,
+> **Local scope for Claude/Gemini/Codex** (`--local`): the per-project payload goes to `./.claude/`,
 > `./.gemini/`, or `./.codex/` in your working directory. Hooks and host wiring
 > (settings/hooks registration, context files, Codex skills) always stay user-level.
 
 ---
 
 ## ⚡ Slash Commands
+
+> The following command catalogue and automatic integrations describe
+> Claude/Gemini/Codex. Copilot has the separate opt-in skill documented above.
 
 > **Codex CLI:** the same commands ship as skills invoked with a `$` trigger —
 > `$hydra-help`, `$hydra-stats`, `$hydra-guard`, … The `/hydra:*` form below is
@@ -717,6 +778,10 @@ Is it read-only? ─── Yes ──→ Finding files?
 
 ## ⚙️ Configuration
 
+The following config applies to Claude, Gemini and Codex. Copilot uses
+task-local `--mode turbo|balanced|economy` instead; it does not read this config
+or treat `aggressive` as an alias for Turbo.
+
 Customize Hydra's behavior with an optional config file — create it by hand at
 your host's config path (the installer doesn't write one, and `--uninstall`
 leaves it alone):
@@ -1063,7 +1128,7 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/><br/>
   <em>Built with 🧠 by Claude Opus — ironically, the model this framework is designed to use less of.</em>
   <br/>
-  <em>v2.5.0 — Now multi-host: Claude Code, Gemini CLI, and Codex CLI.</em>
+  <em>Multi-host: Claude Code, Gemini CLI, Codex CLI, and GitHub Copilot CLI.</em>
 </p>
 
 ---
