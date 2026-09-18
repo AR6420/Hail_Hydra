@@ -38,14 +38,14 @@
 </p>
 
 <p align="center">
-  <strong>10 core agent roles &nbsp;·&nbsp; 4 host CLIs &nbsp;·&nbsp; Host-specific commands and hooks &nbsp;·&nbsp; Opt-in Copilot orchestration and research</strong>
+  <strong>10 agents &nbsp;·&nbsp; 10 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 4 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
 ---
 
 ## 🧬 What is Hydra?
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one explicit-request `/hail-hydra` skill with the same 10 roles plus read-only architecture/performance and web research advisors, routed through native subagents when available, without automatic hooks.
+**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 10 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes — plus an opt-in `/hail-hydra` skill on Copilot with the same 10 roles on native subagents and no automatic hooks.
 
 Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically cuts per-task cost by **~50%** compared to running the same work on the orchestrator alone — while maintaining output quality through verification. That's the same ~50% you'll see everywhere Hydra is described, and it comes from one place: real session logs, via `/hydra:stats` (51.5% in the sample below).
 
@@ -53,15 +53,11 @@ Each agent runs on the smallest model that can do its job well. When invoked, Hy
   <img src="assets/hydra-stats-demo.svg" alt="/hydra:stats sample output — 51.5% saved, parsed from real session logs" width="680"/>
 </p>
 
-**Copilot cost caveat:** the speed/cost claims above are not Copilot benchmarks.
-Copilot savings depend on your plan, available models, task size and dispatch
-overhead. No fixed savings or quality guarantee applies.
-
 > **Think of it this way:**
 >
 > Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
 
-**New in v2.5.2 — Opt-in Copilot:** use `/hail-hydra <task>` inside your existing
+**New — GitHub Copilot CLI (opt-in):** use `/hail-hydra <task>` inside your existing
 Copilot session. Normal messages keep the normal agent. No second CLI, API key,
 background service or model-default change is needed. See [Copilot setup](#github-copilot-cli-opt-in).
 
@@ -148,305 +144,50 @@ All flags: `--agent=<list>` (`claude,gemini,codex,copilot`) or the aliases `--cl
 ### GitHub Copilot CLI (opt-in)
 
 Requires a Copilot CLI version that supports skills and explicit invocation.
-Install once for all projects:
 
 ```bash
-npx hail-hydra-cc@latest --copilot --global --yes
+npx hail-hydra-cc@latest --copilot --global --yes   # ~/.copilot/skills/hail-hydra (or $COPILOT_HOME)
+npx hail-hydra-cc@latest --copilot --local --yes    # .github/skills/hail-hydra, this project only
 ```
 
-Until 2.5.2 is published, install from a checkout containing this change:
-
-```bash
-npm install
-npm run build
-node bin/cli.js --copilot --global --yes
-```
+The installer honors `COPILOT_HOME` for the global path; `--config-dir <path>` (Hydra's installer flag, not a Copilot setting) overrides it.
 
 Then, **inside the same Copilot session**:
 
 ```text
 /skills reload
-/skills info hail-hydra
 /hail-hydra Implement pagination for this API and update the tests
 /hail-hydra --mode turbo Build product search and run the relevant checks
-/hail-hydra --mode economy Update the existing form validation
-/hail-hydra Build the dashboard and deploy it to the staging target documented in this repository
 /hail-hydra --help
 ```
 
-A later message such as `Explain this function` uses the normal agent.
-`/hail-hydra` is a skill invocation, not a sticky mode or a replacement shell.
-Its instructions apply to the invoked task only, even while they remain in
-conversation history. An empty invocation shows usage rather than spawning
-agents. The skill does not pre-approve tools or bypass existing permissions.
+`/hail-hydra` is an explicit skill invocation, not a sticky mode — a later message such as `Explain this function` uses the normal agent. The skill sets `disable-model-invocation: false` because some Copilot versions return `Skill not found` for explicit requests otherwise ([copilot-cli#4438](https://github.com/github/copilot-cli/issues/4438)); accidental model-mediated loading must not trigger Hydra work.
 
-Some interactive clients may display skill selection separately from the next
-input. Do not infer an active mode or a model change from that display alone.
-For an unambiguous task-level request, include the skill reference and goal in
-one input: `Use the /hail-hydra skill to implement pagination and run tests.`
-The routing boundary is instruction-driven, not a host-enforced context reset.
-To prevent future loading, use native `/skills`, select `hail-hydra`, and choose
-Disable. Already injected instructions remain in conversation history; explicitly
-request normal routing for subsequent work, or use `/new` for a clean conversation.
-Hydra does not change the main session model. Execution modes are task-local,
-not a sticky on/off model mode.
+**Model defaults** — each role dispatches through its tier's `models` list, in order; an admin-disabled or rejected entry falls through to the next. Your selected main model keeps substantive reasoning and final acceptance, and naming a model in the request overrides the default. Under `Auto`, workers may inherit the session model.
 
-**Compatibility mode:** the Copilot integration sets `disable-model-invocation: false`.
-Some Copilot versions return `Skill not found` from the model's skill tool for
-`disable-model-invocation: true`, even when the user names an installed, enabled
-skill. See [upstream issue #4438](https://github.com/github/copilot-cli/issues/4438).
-Reloading cannot overcome that filtering. The compatibility setting permits
-model-mediated loading; explicit-request-only behavior now relies on the skill's
-description and current-input guard, **not a host-enforced automatic-selection
-block**. Accidental loading must not trigger Hydra helpers or delegation.
-Status exposes `activationPolicy: explicit-request-instructions`,
-`activationManualOnly: false` and `modelInvocationAllowed: true` so this tradeoff
-is visible. These describe installed configuration, not proof of a live invocation.
+| Tier | Roles | models[0] | fallback | $/1M in/out |
+|---|---|---|---|---|
+| cheap | git, guard, preflight, runner, scout, scribe, sentinel-scan | `gpt-5.6-luna` | `claude-haiku-4.5` | 0.20/1.20 · 1.00/5.00 |
+| mid | analyst, coder, sentinel, architect, researcher | `claude-sonnet-5` | `gpt-5.6-terra` | 2.00/10.00 · 2.00/12.00 |
 
-Give the outcome, not a roster of agents. Hydra selects relevant specialists,
-tracks dependencies and decisions, and coordinates the task without requiring
-a swarm flag or repeated "continue" prompts. Small changes stay direct;
-independent substantial work can run in parallel. Writers own separate files,
-and reviewers examine stable changes rather than a moving worktree.
+**Modes:** `/hail-hydra --mode <turbo|balanced|economy> <goal>` (default `balanced`); Turbo puts speed first and costs more. Ceilings are instruction-level heuristics bounded by your Copilot plan's concurrency, not a scheduler guarantee.
 
-**Quality review is automatic for Hydra coding tasks.** The main agent plans
-acceptance checks, reserves review capacity and requests independent review
-for substantial changes without needing another prompt. Trivial edits stay
-direct; unavailable independent review gets a disclosed main-agent fallback.
-Required check failures, unverified required behavior and confirmed serious
-findings block completion/deployment. Every coding result includes concise
-review/check evidence and remaining gaps, even with quiet output. This is an
-in-task instruction policy, not an always-on monitor or defect-free guarantee.
-Economy reduces optional scrutiny, not required safety or correctness checks.
+**Quality:** substantial changes get an automatic in-task review via native `code-review`/`security-review` before completion is reported.
 
-### Choose a mode for the task
+**Continuity:** treat a `/model` switch like a compaction boundary — write the session ledger before an anticipated switch, read it back before the next dispatch or decision.
 
-| Mode | Priority | Default worker ceilings: concurrent / total dispatches |
-|---|---|---|
-| `turbo` | Quality and elapsed time over cost; strong workers, relevant alternatives and broader review | 8 / 32 |
-| `balanced` | Quality, speed and cost together; existing default routing | 2 / 6, or 4 / 12 for broad independent work |
-| `economy` | Efficient changes to existing designs; less optional research/polishing and targeted checks | 1 / 3 |
+**Measuring savings:** compare `/usage` before/after a normal run against a `/hail-hydra` run, then `/hail-hydra --compare`; not yet benchmarked on Copilot specifically.
 
-Use `/hail-hydra --mode <turbo|balanced|economy> <goal>`. Omitting the mode
-always means Balanced; a prior Turbo task does not change later tasks or
-ordinary prompts. All modes preserve your main-model selection, required
-quality checks, native permissions and the two-round improvement bound.
-Simple work can stay direct in any mode.
+**Hooks are deferred** until upstream hook reliability bugs are fixed (copilot-cli issues [#4520](https://github.com/github/copilot-cli/issues/4520), [#1730](https://github.com/github/copilot-cli/issues/1730), [#2201](https://github.com/github/copilot-cli/issues/2201), [#4001](https://github.com/github/copilot-cli/issues/4001), [#4549](https://github.com/github/copilot-cli/issues/4549)); quality gates and `--notify` run in-task/manually for now.
 
-To request larger ceilings explicitly:
-
-```text
-/hail-hydra --mode turbo --max-agents 16 --max-dispatches 64 <goal>
-```
-
-The control helper's `mode [name]` command returns the resolved policy without
-starting workers or storing a mode. Higher limits are requests, not proof of
-host capacity: native limits still apply, and large task sets run in bounded
-waves. This integration does not add a scheduler or guarantee hundreds/thousands
-of concurrent agents. It never starts factories or another AI CLI to evade limits.
-
-**Your selected main model does the substantive reasoning and final acceptance.**
-Hydra must not reduce it to a dispatcher for smaller models. Keep unresolved
-architecture, difficult debugging and high-risk logic with the main agent;
-workers gather evidence, execute checks or implement bounded, well-specified
-changes. A complex delegated review needs an explicitly chosen capable model
-(the selected main model when appropriate and available), or a disclosed
-main-agent fallback. The main agent reviews the actual result and evidence
-instead of simply accepting a worker's "passed" report.
-
-**Same Hydra priorities: cost, speed and context.** Dispatch must plausibly
-repay its overhead through parallel progress, a cheaper capable model or
-context isolation. Group tiny steps, reuse current findings and decisions,
-load only selected role prompts, and pass each worker a focused context slice.
-More agents are not automatically faster or cheaper.
-
-Architecture and web research are optional capabilities, not mandatory
-pipeline stages. When an unresolved backend/request-flow choice could avoid
-substantial rework, `hydra-architect` assesses the code or proposed design
-**before dependent implementation**, even without a performance-specific prompt.
-Reuse settled decisions and skip an extra advisor when direct handling suffices.
-The role considers relevant API,
-database, algorithm, caching, concurrency and resource-use tradeoffs. This is
-not limited to bulk calls: an optimization needs a code-backed reason, workload
-assumptions and a measurement plan. Batching is not automatically better, and
-correctness, authorization, partial failures and compatibility still matter.
-
-The bounded swarm can run this assessment alongside independent UI research.
-The main agent reconciles both into a decision brief covering shared contracts,
-accepted/rejected choices and measurement criteria, then briefs affected writers.
-If later evidence changes the direction, affected work pauses and is redirected;
-unaffected work can continue. Stale-direction results are not integrated.
-Replanning uses the existing dispatch and improvement budgets, not a new loop.
-Small or unrelated tasks avoid this overhead; the main agent can assess directly.
-
-When external evidence can materially affect a decision, the Copilot-only
-`hydra-researcher` compares public sources and returns options, tradeoffs and
-citations. This includes UI/accessibility, library, architecture and
-compatibility questions, not just visual design. The main agent chooses
-against project requirements and constraints. Web research needs native host
-tools; unavailable capabilities are reported, not replaced with another
-provider. Private code and confidential requirements must not be sent to
-public searches.
-
-For substantial work in every mode, keep requirements, decisions, file ownership,
-active worker IDs, consumed budgets, evidence and next actions in the host's
-durable session ledger/checkpoint facility where available. Update at milestones
-and before compaction; on resume retrieve it and recheck worktree/worker state
-before acting. If no persistent session facility exists, disclose the weaker
-continuity rather than pretending a checkpoint was saved.
-
-Use the largest appropriate context allocation supported by the selected model
-and host, especially for complex Turbo work, without silently changing the main
-model or global settings. Leave tool/output headroom and pass workers only relevant
-context. This cannot increase platform limits or guarantee perfect recall.
-The ledger is not shared live worker memory or a new cross-project memory service;
-no automatic repository planning files, secrets or hidden reasoning are saved.
-
-The installer places everything under `~/.copilot/skills/hail-hydra/`:
-
-```text
-hail-hydra/
-├── SKILL.md
-├── VERSION
-├── .hydra-manifest.json
-└── references/
-    ├── roles.json
-    └── hydra-*.md             # 10 core roles + architect/researcher, loaded as needed
-```
-
-The Copilot integration also includes on-demand command, measurement, quality, mode and continuity guides under
-`references/` and dependency-free `scripts/hydra-control.js` and
-`scripts/hydra-usage.js`. These run only for explicitly requested utilities;
-installing them does not enable hooks or telemetry.
-
-`--local` installs only to `.github/skills/hail-hydra/` in the current project;
-it does not write personal configuration. `--both` installs both copies.
-`--config-dir <path>` replaces the personal `.copilot` directory, not the
-project path; a custom personal path must also be discoverable by Copilot.
-Reload skills after installing, updating or removing a copy.
-
-No always-on instructions, discoverable custom agents, automatic hooks, MCP
-servers, session model settings or global subagent defaults are installed.
-The explicit-request instruction guard keeps ordinary work outside the Hydra
-workflow; it is not a host-enforced selection block. If another host has already
-installed Hydra instructions/skills into locations Copilot also reads (such as
-`AGENTS.md` or `~/.agents/skills`), those remain independent; this installer does
-not remove or disable them.
-
-The role catalogue records `cheap`/`mid` hints (`tierIsHint: true`) and
-`modelSelection: latest-suitable-available`, **not fixed model IDs**.
-At dispatch, routing instructions prefer newer suitable models from those the
-host actually exposes, within the task's cost constraints and explicit user
-pins/exclusions. Role tiers are not capability ceilings; select for the actual
-scope/risk and reclaim inadequate worker results rather than always choosing
-small models. The main agent selects the real ID; this metadata is not an
-automatic model-discovery or pricing service. Newer models do not guarantee
-equal token usage, latency or plan charges. Actual selected models and any
-fallback belong in the task report, with the main model identified separately
-from workers when the host exposes it; unknown is not inferred. Selecting a
-main model does not force every worker to use that same model. Hydra leaves
-the main selection unchanged, including native Auto behavior when selected.
-Balanced defaults to two concurrent heads and six dispatches; broad independent
-work may use four/twelve. Turbo and Economy use their mode ceilings above.
-Ceilings are not targets. Architecture, research, scans and retries all count;
-smaller host/user limits take precedence.
-These are prompt-level orchestration limits, not a separate runtime scheduler
-or a hard billing cap. Small work stays with the main agent.
-If subagents or per-dispatch model selection are unavailable,
-Hydra explains the limitation and works directly, without claiming savings.
-
-Improvement is bounded: at most two rounds after the first candidate, within
-the same dispatch budget, to address concrete findings or unmet acceptance
-criteria. Stop when the criteria are met, progress stalls or the budget is
-exhausted; unresolved required work is reported as blocked. Hydra does not
-start an infinite optimization loop or enable autopilot.
-
-For an explicit build/deploy goal, Hydra follows the existing project release
-process, completes local work before releasing, and verifies the deployed
-artifact and health. Deployment still requires a clear authorized account,
-target and artifact, plus any existing approvals. A vague "deploy" does not
-authorize guessing production, billable provisioning or destructive changes.
-If deployment is blocked, completed build work and the blocked release are
-reported separately. Iteration does not repeatedly deploy speculative changes.
-
-### Explicit utilities and native feature equivalents
-
-The Copilot integration uses `/hail-hydra --<utility>` rather than
-installing native `/hydra:*` aliases. Existing Copilot features and permissions
-remain available in compatible Copilot-backed shells. No command replaces
-native memory, billing, model selection or session management.
-
-| Hydra feature | Copilot entry point | Behavior and boundary |
-|---|---|---|
-| Help | `/hail-hydra --help` | Lists supported routes; no agents needed. |
-| Task mode | `/hail-hydra --mode <turbo\|balanced\|economy> <goal>` | Adjusts effort and requested ceilings for one task, not the main model or quality floor. |
-| Status | `/hail-hydra --status` | Inspects installed version, catalogue and owned files. Native `/skills info hail-hydra` checks discovery. |
-| Statistics | `/hail-hydra --stats` | Directs to native `/usage` and `/context`; never invents values when the host UI is not callable. |
-| Run comparison | `/hail-hydra --compare normal.json hydra.json` | Validates and compares explicit local receipts, not automatically captured logs. |
-| Map | `/hail-hydra --map [rebuild\|file]` | Explicit scout rebuild or local graph summary/blast radius, with freshness and coverage caveats. |
-| Preflight | `/hail-hydra --preflight` | Sequential environment inventory and compatibility analysis, without installing or exposing secrets. |
-| Guard/sentinel | `/hail-hydra --guard [files]` | Explicit stable-change review and in-task integration verification, not global post-edit hooks. |
-| Quiet | `/hail-hydra --quiet <goal>` | Suppresses Hydra's dispatch roster for this task, never failures or host tool output. |
-| Concise workers | `/hail-hydra --stfu <goal>` | Requests concise worker reports for this task; no claim to control hidden reasoning or guarantee savings. |
-| Update | `/hail-hydra --update` | Explicit registry check and normal installer workflow for a verified newer release; never downgrade a preview. |
-| Issue reporting | `/hail-hydra --report [bug\|feature\|feedback]` | Shows official issue-template links without submitting or uploading private data. |
-| Memory/context | `/hail-hydra --memory` / `--context` | Reuses native controls and consent rules; no automatic Hydra memory files or session compaction. |
-| Notification | `/hail-hydra --notify <goal>` | One terminal bell on completion, subject to terminal settings; no watcher or background player. |
-
-Utility flags are explicit and mutually exclusive. Task modifiers `--mode`,
-`--max-agents`, `--max-dispatches`, `--quiet`, `--stfu` and `--notify` can combine
-before a goal and end with that invocation; do not combine them with management
-utilities. Duplicate modes/limits or invalid values fail rather than guessing.
-`--` ends
-flag parsing. Normal text such as `update the README` remains a coding task.
-Unknown flags or missing arguments show usage rather than performing actions.
-
-**Honest measurement:** `/usage` is the native source for reported tokens and
-AI credits (or legacy premium requests). `/context` measures current window
-occupancy, not cumulative tokens or every worker's context. Native statusline
-options remain user-controlled. The receipt helper can calculate reductions
-only from supplied compatible normal/Hydra runs that passed the same criteria
-and declare complete worker coverage. Missing metrics stay unavailable.
-It cannot independently prove the recorded measurements or verification claims.
-
-To see the receipt schema in PowerShell, run:
-
-```powershell
-node "$HOME\.copilot\skills\hail-hydra\scripts\hydra-usage.js" template
-```
-
-Fill the template from actual native counter deltas and wall-clock timing,
-using a separate clean run for each mode; leave unmeasured fields null. Store
-only at an explicitly chosen local path, without secrets or source content.
-Then use `/hail-hydra --stats <receipt.json>` or `--compare` above.
-
-This is **not full automatic hook parity**: the integration does not install
-always-on edit tracking, sentinel state indicators, persistent agent-memory
-hooks, update polling, a custom live billing dashboard or raw session-log
-scraping. Native host features cover part of that surface; manual/in-task
-equivalents cover others. Automatic instrumentation needs separately verified
-host contracts and explicit opt-in. Claude's provider-price/all-frontier
-estimate is not observed Copilot savings and is not reused.
+> **`.claude/` collision:** Copilot also loads a project's `.claude/skills/` and `.claude/agents/`. A repo-local Claude Code Hydra install (`.claude/skills/hydra/`, auto-activating, and `.claude/agents/hydra-*.md`) will also be visible inside Copilot — install Claude Hydra globally, or remove the local copy, in repos where you use `/hail-hydra`.
 
 ```bash
-npx hail-hydra-cc --copilot --status
+npx hail-hydra-cc --copilot --status      # installed version + owned-file count
 npx hail-hydra-cc --copilot --uninstall --yes
 ```
 
-Uninstall removes Hydra's recorded payload in personal and current-project
-locations, preserving unrelated files and settings. A malformed manifest
-causes an explicit error instead of trusting arbitrary deletion paths.
-
-See GitHub's [skill setup and reload documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
-for supported discovery locations and invocation, and the
-[skills reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skills-reference)
-for frontmatter semantics. Interactive skill expansion and model-driven
-skill-tool lookup are distinct paths; compatibility mode addresses the latter
-without claiming a hard per-task runtime boundary.
-
-Generator and lifecycle tests cover the shipped instruction contracts and
-payloads; utility tests exercise local status/graph/report calculations.
-They do not prove live model behavior, end-to-end deployment or savings.
+See `/hail-hydra --help` for the full command list.
 
 ### What Gets Installed
 
@@ -1387,7 +1128,7 @@ MIT — Use it, fork it, deploy it. Just don't use it for world domination.
   <br/><br/>
   <em>Built with 🧠 by Claude Opus — ironically, the model this framework is designed to use less of.</em>
   <br/>
-  <em>v2.5.2 — Opt-in GitHub Copilot CLI support alongside Claude Code, Gemini CLI, and Codex CLI.</em>
+  <em>Multi-host: Claude Code, Gemini CLI, Codex CLI, and GitHub Copilot CLI.</em>
 </p>
 
 ---
