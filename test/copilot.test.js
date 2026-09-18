@@ -302,8 +302,8 @@ try {
   const installedControl = spawnSync(process.execPath,
     [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'status'], { encoding: 'utf8' });
   assert.strictEqual(installedControl.status, 0, installedControl.stderr);
-  assert.strictEqual(JSON.parse(installedControl.stdout).activationPolicy, 'explicit-request-instructions');
-  assert.strictEqual(JSON.parse(installedControl.stdout).activationManualOnly, false);
+  assert.strictEqual(JSON.parse(installedControl.stdout).version, VERSION);
+  assert.strictEqual(JSON.parse(installedControl.stdout).installed, true);
   function installedMode(args) {
     const result = spawnSync(process.execPath,
       [path.join(installedSkill, 'scripts', 'hydra-control.js'), 'mode', ...args], { encoding: 'utf8' });

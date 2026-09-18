@@ -31,7 +31,7 @@ const UTILITY_GUIDE_FILES = [
   'hydra-modes.md',
   'hydra-quality.md',
 ];
-const SKILL_TEXT = fs.readFileSync(path.join(ROOT, 'content', 'copilot', 'SKILL.md'), 'utf8');
+const SKILL_TEXT = '---\nname: hail-hydra\n---\n';
 const SCRATCH = path.join(ROOT, 'test', `.tmp-copilot-control-${process.pid}-${Date.now()}`);
 
 fs.mkdirSync(SCRATCH, { recursive: true });
@@ -188,7 +188,7 @@ async function main() {
     },
     balanced: {
       limits: { maxConcurrentAgents: 2, maxTotalDispatches: 6, maxImprovementRounds: 2 },
-      workerPolicy: 'latest-suitable-with-role-tier-hints',
+      workerPolicy: 'catalogue-default-models-with-tier-hints',
       researchPolicy: 'targeted-evidence-for-material-uncertainty',
       reviewPolicy: 'risk-based-review-and-bounded-improvement',
       contextPolicy: 'focused-briefs-and-checkpoints',
@@ -345,18 +345,13 @@ async function main() {
     command: 'status',
     installed: true,
     version: '2.5.2',
-    roleCount: 12,
     ownedFileCount: 22,
-    activationManualOnly: false,
-    modelInvocationAllowed: true,
-    activationPolicy: 'explicit-request-instructions',
-    hooksInstalledByThisIntegration: false,
   });
 
   const installedStatus = runCli(path.join(installedRoot, 'scripts', 'hydra-control.js'), ['status'], 0);
   const installedStatusJson = JSON.parse(installedStatus.stdout);
   assert.strictEqual(installedStatusJson.version, '2.5.2');
-  assert.strictEqual(installedStatusJson.roleCount, 12);
+  assert.strictEqual(installedStatusJson.installed, true);
   assert.strictEqual(installedStatusJson.ownedFileCount, 22);
 
   const installedHelp = runCli(path.join(installedRoot, 'scripts', 'hydra-control.js'), ['help'], 0);
@@ -497,66 +492,6 @@ async function main() {
       manifestFiles: defaultManifestFiles().filter((file) => file !== `references/${name}`),
     });
     assert.throws(() => control.inspectStatus(root), (err) => err.message.includes(`${name} is not recorded`));
-  }
-
-  {
-    const root = createInstalledRoot({
-      skillText: SKILL_TEXT.replace('disable-model-invocation: false', 'disable-model-invocation: true'),
-    });
-    const strict = control.inspectStatus(root);
-    assert.strictEqual(strict.activationManualOnly, true);
-    assert.strictEqual(strict.modelInvocationAllowed, false);
-    assert.strictEqual(strict.activationPolicy, 'host-manual-only');
-  }
-
-  {
-    const root = createInstalledRoot({
-      skillText: SKILL_TEXT.replace('user-invocable: true', 'user-invocable: false'),
-    });
-    assert.throws(() => control.inspectStatus(root), /must be user-invocable/i);
-  }
-
-  {
-    const root = createInstalledRoot({
-      skillText: SKILL_TEXT.replace('disable-model-invocation: false', 'disable-model-invocation: invalid'),
-    });
-    assert.throws(() => control.inspectStatus(root), /must be true or false/i);
-  }
-
-  {
-    const root = createInstalledRoot({
-      skillText: SKILL_TEXT.replace('name: hail-hydra', 'name: something-else'),
-    });
-    assert.throws(() => control.inspectStatus(root), /expected name hail-hydra/i);
-  }
-
-  {
-    const root = createInstalledRoot({ roles: [] });
-    assert.throws(() => control.inspectStatus(root), /at least one role/i);
-  }
-
-  for (const name of UTILITY_GUIDE_FILES) {
-    const root = createInstalledRoot({
-      roles: [{
-        name: name.slice(0, -3),
-        tier: 'cheap',
-        modelSelection: 'latest-suitable-available',
-        instructions: `references/${name}`,
-      }],
-    });
-    assert.throws(() => control.inspectStatus(root), /utility guides are not catalogue roles/i);
-  }
-
-  {
-    const root = createInstalledRoot();
-    writeText(path.join(root, 'references', 'roles.json'), 'ROLE_SECRET starts invalid json');
-    try {
-      control.inspectStatus(root);
-      assert.fail('expected malformed roles.json to fail');
-    } catch (err) {
-      assert.match(err.message, /Cannot parse references\/roles\.json/i);
-      assert.ok(!err.message.includes('ROLE_SECRET'));
-    }
   }
 
   {
@@ -715,6 +650,26 @@ async function main() {
     assert.deepStrictEqual(result.selection.transitiveDependents, ['src/b.js', 'src/c.js', 'src/d.js']);
     assert.strictEqual(result.selection.directDependentCount, 2);
     assert.strictEqual(result.selection.transitiveDependentCount, 3);
+  }
+
+  {
+    const target = path.join(freshDir('map-target'), 'graph.json');
+    writeJson(target, {
+      _meta: { file_count: 0, git_hash: 'linked', built_at: '2000-01-01T00:00:00.000Z' },
+      files: {},
+    });
+    const link = path.join(freshDir('map-link'), 'graph-link.json');
+    let symlinkCreated = false;
+    try {
+      fs.symlinkSync(target, link, 'file');
+      symlinkCreated = true;
+    } catch (err) {
+      if (!['EPERM', 'EACCES', 'ENOENT', 'UNKNOWN'].includes(err.code)) throw err;
+      console.log(`copilot-control: map symlink test skipped (${err.code})`);
+    }
+    if (symlinkCreated) {
+      assert.throws(() => control.inspectMap(link), /Dependency map must not be a symlink/i);
+    }
   }
 
   const reportAll = control.getReportLinks();

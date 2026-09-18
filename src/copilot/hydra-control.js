@@ -6,7 +6,6 @@ const https = require('https');
 const path = require('path');
 
 const DEFAULT_ROOT = path.resolve(__dirname, '..');
-const SKILL_NAME = 'hail-hydra';
 const MANIFEST_FILE = '.hydra-manifest.json';
 const ROLES_FILE = 'references/roles.json';
 const UTILITY_GUIDE_FILES = [
@@ -16,7 +15,6 @@ const UTILITY_GUIDE_FILES = [
   'references/hydra-modes.md',
   'references/hydra-quality.md',
 ];
-const UTILITY_GUIDE_SET = new Set(UTILITY_GUIDE_FILES);
 const REQUIRED_MANIFEST_FILES = [
   'SKILL.md',
   'VERSION',
@@ -32,8 +30,6 @@ const MAX_ENV_VARS = 2048;
 const MAX_REGISTRY_BYTES = 65536;
 const REGISTRY_TIMEOUT_MS = 5000;
 const LATEST_URL = 'https://registry.npmjs.org/hail-hydra-cc/latest';
-const ROLE_FILE_RE = /^references\/hydra-[a-z-]+\.md$/;
-const ROLE_NAME_RE = /^hydra-[a-z-]+$/;
 const MANIFEST_ENTRY_RE = /^(?:SKILL\.md|VERSION|references\/roles\.json|references\/hydra-[a-z-]+\.md|scripts\/hydra-control\.js|scripts\/hydra-usage\.js)$/;
 const BASIC_SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 const ENV_VAR_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -47,7 +43,7 @@ const MODE_POLICIES = Object.freeze({
   }),
   balanced: Object.freeze({
     limits: Object.freeze({ maxConcurrentAgents: 2, maxTotalDispatches: 6, maxImprovementRounds: 2 }),
-    workerPolicy: 'latest-suitable-with-role-tier-hints',
+    workerPolicy: 'catalogue-default-models-with-tier-hints',
     researchPolicy: 'targeted-evidence-for-material-uncertainty',
     reviewPolicy: 'risk-based-review-and-bounded-improvement',
     contextPolicy: 'focused-briefs-and-checkpoints',
@@ -283,73 +279,6 @@ function validateManifest(root) {
   return { files: files.sort(), fileSet, manifestVersion };
 }
 
-function readFrontmatter(text) {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(text);
-  if (!match) fail('Invalid SKILL.md: frontmatter is required.');
-  const frontmatter = Object.create(null);
-  for (const line of match[1].split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    const split = line.indexOf(':');
-    if (split === -1) continue;
-    frontmatter[line.slice(0, split).trim()] = line.slice(split + 1).trim();
-  }
-  return frontmatter;
-}
-
-function parseBooleanField(frontmatter, key) {
-  if (!Object.prototype.hasOwnProperty.call(frontmatter, key)) {
-    fail(`Invalid SKILL.md: missing ${key} frontmatter.`);
-  }
-  if (frontmatter[key] === 'true') return true;
-  if (frontmatter[key] === 'false') return false;
-  fail(`Invalid SKILL.md: ${key} must be true or false.`);
-}
-
-function validateActivationBoundary(skillText) {
-  const frontmatter = readFrontmatter(skillText);
-  if (frontmatter.name !== SKILL_NAME) {
-    fail(`Invalid SKILL.md: expected name ${SKILL_NAME}.`);
-  }
-  if (!parseBooleanField(frontmatter, 'user-invocable')) {
-    fail('Invalid SKILL.md: hail-hydra must be user-invocable.');
-  }
-  const disabled = parseBooleanField(frontmatter, 'disable-model-invocation');
-  return {
-    activationManualOnly: disabled,
-    modelInvocationAllowed: !disabled,
-    activationPolicy: disabled ? 'host-manual-only' : 'explicit-request-instructions',
-  };
-}
-
-function validateRolesCatalog(root, ownedFiles) {
-  const rolesPath = path.join(root, ...splitRelativePath(ROLES_FILE));
-  const roles = readManagedJson(root, ROLES_FILE, ROLES_FILE);
-  if (!Array.isArray(roles)) fail(`Invalid role catalogue at ${rolesPath}: expected an array.`);
-  if (!roles.length) fail(`Invalid role catalogue at ${rolesPath}: expected at least one role.`);
-  const seenNames = new Set();
-  const seenInstructions = new Set();
-  for (const role of roles) {
-    if (!isPlainObject(role) || typeof role.name !== 'string' || typeof role.instructions !== 'string') {
-      fail(`Invalid role catalogue at ${rolesPath}: each role needs string name and instructions fields.`);
-    }
-    if (!ROLE_NAME_RE.test(role.name) || role.instructions !== `references/${role.name}.md`) {
-      fail(`Invalid role catalogue at ${rolesPath}: role references must be exact Hydra reference files.`);
-    }
-    if (!ROLE_FILE_RE.test(role.instructions) || UTILITY_GUIDE_SET.has(role.instructions)) {
-      fail(`Invalid role catalogue at ${rolesPath}: utility guides are not catalogue roles.`);
-    }
-    if (seenNames.has(role.name) || seenInstructions.has(role.instructions)) {
-      fail(`Invalid role catalogue at ${rolesPath}: duplicate roles are not allowed.`);
-    }
-    if (!ownedFiles.has(role.instructions)) {
-      fail(`Hydra installation is incomplete: ${role.instructions} is not owned by ${MANIFEST_FILE}.`);
-    }
-    seenNames.add(role.name);
-    seenInstructions.add(role.instructions);
-  }
-  return roles;
-}
-
 function ensureOwnedFilesPresent(root, files) {
   for (const relativePath of files) {
     readManagedText(root, relativePath, relativePath);
@@ -358,22 +287,17 @@ function ensureOwnedFilesPresent(root, files) {
 
 function inspectStatus(root) {
   const resolvedRoot = ensureRoot(root);
-  const { files, fileSet, manifestVersion } = validateManifest(resolvedRoot);
+  const { files, manifestVersion } = validateManifest(resolvedRoot);
   ensureOwnedFilesPresent(resolvedRoot, files);
   const version = parseRequiredSemver(readManagedText(resolvedRoot, 'VERSION', 'VERSION'), 'installed VERSION').raw;
   if (manifestVersion !== version) {
     fail(`Hydra installation is incomplete: ${MANIFEST_FILE} version does not match VERSION.`);
   }
-  const activation = validateActivationBoundary(readManagedText(resolvedRoot, 'SKILL.md', 'SKILL.md'));
-  const roles = validateRolesCatalog(resolvedRoot, fileSet);
   return {
     command: 'status',
     installed: true,
     version,
-    roleCount: roles.length,
     ownedFileCount: files.length,
-    ...activation,
-    hooksInstalledByThisIntegration: false,
   };
 }
 
@@ -488,11 +412,12 @@ function readMapFile(mapFile) {
   const absolute = path.resolve(mapFile);
   let stat;
   try {
-    stat = fs.statSync(absolute);
+    stat = fs.lstatSync(absolute);
   } catch (err) {
     if (err.code === 'ENOENT') fail(`Dependency map not found: ${absolute}`);
     throw err;
   }
+  if (stat.isSymbolicLink()) fail(`Dependency map must not be a symlink: ${absolute}`);
   if (!stat.isFile()) fail(`Dependency map is not a regular file: ${absolute}`);
   if (stat.size > MAX_MAP_BYTES) fail(`Dependency map exceeds the 10MB limit: ${absolute}`);
   return {

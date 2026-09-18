@@ -9,25 +9,6 @@ const MAX_FILE_BYTES = 64 * 1024;
 const USAGE =
   'usage: hydra-usage.js report <receipt.json> | compare <normal.json> <hydra.json> | template';
 
-const ROOT_FIELDS = [
-  'schemaVersion',
-  'label',
-  'workloadId',
-  'startingCommit',
-  'mainModel',
-  'environmentId',
-  'verification',
-  'includesSubagents',
-  'nativeSource',
-  'elapsedSeconds',
-  'usage',
-  'credit',
-  'context',
-];
-const USAGE_FIELDS = ['input', 'output', 'cached'];
-const CREDIT_FIELDS = ['unit', 'value'];
-const CONTEXT_FIELDS = ['beforeTokens', 'afterTokens'];
-
 const LABELS = new Set(['normal', 'hydra']);
 const VERIFICATIONS = new Set(['passed', 'failed', 'incomplete']);
 const CREDIT_UNITS = new Set(['ai_credits', 'premium_requests', 'USD']);
@@ -163,57 +144,65 @@ function buildTemplateReceipt() {
   };
 }
 
-function validateUsage(usage) {
-  const value = requirePlainObject(usage, 'usage');
-  rejectUnsupportedFields(value, USAGE_FIELDS, 'usage');
-  return {
-    input: validateNonNegativeIntegerOrNull(value.input, 'usage.input'),
-    output: validateNonNegativeIntegerOrNull(value.output, 'usage.output'),
-    cached: validateNonNegativeIntegerOrNull(value.cached, 'usage.cached'),
-  };
+// validateObject walks an ordered field spec once: plain-object/null check,
+// then reject unsupported fields, then validate each field in spec order.
+// `name` doubles as the object-type label ('receipt must be an object') and,
+// for nested objects, the field-path prefix ('usage.input'); the root spec
+// ('receipt') keeps bare field names to match the original per-field errors.
+function validateObject(value, name, nullable, spec) {
+  if (nullable) {
+    value = requireNullablePlainObject(value, name);
+    if (value === null) return null;
+  } else {
+    value = requirePlainObject(value, name);
+  }
+  const fields = Object.keys(spec);
+  rejectUnsupportedFields(value, fields, name);
+  const prefix = name === 'receipt' ? '' : `${name}.`;
+  const result = {};
+  for (const field of fields) {
+    result[field] = spec[field](value[field], `${prefix}${field}`);
+  }
+  return result;
 }
 
-function validateCredit(credit) {
-  const value = requireNullablePlainObject(credit, 'credit');
-  if (value === null) return null;
-  rejectUnsupportedFields(value, CREDIT_FIELDS, 'credit');
-  return {
-    unit: requireEnum(value.unit, CREDIT_UNITS, 'credit.unit'),
-    value: validateNonNegativeNumberOrNull(value.value, 'credit.value'),
-  };
-}
+const USAGE_SPEC = {
+  input: (v, fieldPath) => validateNonNegativeIntegerOrNull(v, fieldPath),
+  output: (v, fieldPath) => validateNonNegativeIntegerOrNull(v, fieldPath),
+  cached: (v, fieldPath) => validateNonNegativeIntegerOrNull(v, fieldPath),
+};
 
-function validateContext(context) {
-  const value = requireNullablePlainObject(context, 'context');
-  if (value === null) return null;
-  rejectUnsupportedFields(value, CONTEXT_FIELDS, 'context');
-  return {
-    beforeTokens: validateNonNegativeIntegerOrNull(value.beforeTokens, 'context.beforeTokens'),
-    afterTokens: validateNonNegativeIntegerOrNull(value.afterTokens, 'context.afterTokens'),
-  };
-}
+const CREDIT_SPEC = {
+  unit: (v, fieldPath) => requireEnum(v, CREDIT_UNITS, fieldPath),
+  value: (v, fieldPath) => validateNonNegativeNumberOrNull(v, fieldPath),
+};
+
+const CONTEXT_SPEC = {
+  beforeTokens: (v, fieldPath) => validateNonNegativeIntegerOrNull(v, fieldPath),
+  afterTokens: (v, fieldPath) => validateNonNegativeIntegerOrNull(v, fieldPath),
+};
+
+const ROOT_SPEC = {
+  schemaVersion: (v) => {
+    if (v !== SCHEMA_VERSION) throw new Error('unsupported schemaVersion');
+    return SCHEMA_VERSION;
+  },
+  label: (v, fieldPath) => requireEnum(v, LABELS, fieldPath),
+  workloadId: (v, fieldPath) => requirePattern(v, WORKLOAD_ID_RE, fieldPath),
+  startingCommit: (v, fieldPath) => requirePattern(v, COMMIT_RE, fieldPath).toLowerCase(),
+  mainModel: (v, fieldPath) => requirePattern(v, MODEL_RE, fieldPath),
+  environmentId: (v, fieldPath) => requirePattern(v, ID_RE, fieldPath),
+  verification: (v, fieldPath) => requireEnum(v, VERIFICATIONS, fieldPath),
+  includesSubagents: (v, fieldPath) => requireBoolean(v, fieldPath),
+  nativeSource: (v, fieldPath) => requirePattern(v, ID_RE, fieldPath),
+  elapsedSeconds: (v, fieldPath) => validateNonNegativeNumberOrNull(v, fieldPath),
+  usage: (v) => validateObject(v, 'usage', false, USAGE_SPEC),
+  credit: (v) => validateObject(v, 'credit', true, CREDIT_SPEC),
+  context: (v) => validateObject(v, 'context', true, CONTEXT_SPEC),
+};
 
 function validateReceipt(receipt) {
-  const value = requirePlainObject(receipt, 'receipt');
-  rejectUnsupportedFields(value, ROOT_FIELDS, 'receipt');
-
-  if (value.schemaVersion !== SCHEMA_VERSION) throw new Error('unsupported schemaVersion');
-
-  return {
-    schemaVersion: SCHEMA_VERSION,
-    label: requireEnum(value.label, LABELS, 'label'),
-    workloadId: requirePattern(value.workloadId, WORKLOAD_ID_RE, 'workloadId'),
-    startingCommit: requirePattern(value.startingCommit, COMMIT_RE, 'startingCommit').toLowerCase(),
-    mainModel: requirePattern(value.mainModel, MODEL_RE, 'mainModel'),
-    environmentId: requirePattern(value.environmentId, ID_RE, 'environmentId'),
-    verification: requireEnum(value.verification, VERIFICATIONS, 'verification'),
-    includesSubagents: requireBoolean(value.includesSubagents, 'includesSubagents'),
-    nativeSource: requirePattern(value.nativeSource, ID_RE, 'nativeSource'),
-    elapsedSeconds: validateNonNegativeNumberOrNull(value.elapsedSeconds, 'elapsedSeconds'),
-    usage: validateUsage(value.usage),
-    credit: validateCredit(value.credit),
-    context: validateContext(value.context),
-  };
+  return validateObject(receipt, 'receipt', false, ROOT_SPEC);
 }
 
 function deriveContext(context) {
