@@ -59,6 +59,15 @@ assert.deepStrictEqual(hookJs, [
 ], 'exactly the 6 expected hook bundles');
 assert.ok(claudeFiles.includes('hooks/hydra-task-complete.wav'), 'wav emitted');
 
+// Every agent carries a maxTurns runaway guard (cheap tier 25, mid tier 50).
+for (const f of claudeFiles.filter((x) => x.startsWith('agents/'))) {
+  const fm = fs.readFileSync(path.join(claudeDist, f), 'utf8');
+  const cap = /^maxTurns: (\d+)$/m.exec(fm);
+  assert.ok(cap, `${f}: maxTurns present`);
+  const expected = /^model: haiku$/m.test(fm) ? 25 : 50;
+  assert.strictEqual(Number(cap[1]), expected, `${f}: maxTurns matches tier`);
+}
+
 // No unresolved generator tokens anywhere.
 for (const f of claudeFiles) {
   if (f.endsWith('.wav')) continue;

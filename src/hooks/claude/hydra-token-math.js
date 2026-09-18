@@ -20,11 +20,13 @@ const { tierCost, emptyStats, makeSummary } = require('../../lib/token-math-core
 // Keyed by tier, not model prefix — getTier() owns the model→tier mapping, so
 // new point releases (opus-5, sonnet-5, ...) need no change here. Only add an
 // entry when Anthropic ships a genuinely new tier.
+// cacheWrite = 1.25x input (5-min TTL), cacheWrite1h = 2x input (1-hour TTL)
+// per Anthropic's published prompt-caching surcharges.
 const PRICING = {
-  haiku:  { input: 1,  output: 5  },
-  sonnet: { input: 3,  output: 15 },
-  opus:   { input: 5,  output: 25 },
-  fable:  { input: 10, output: 50 }
+  haiku:  { input: 1,  output: 5,  cacheWrite: 1.25, cacheWrite1h: 2  },
+  sonnet: { input: 3,  output: 15, cacheWrite: 3.75, cacheWrite1h: 6  },
+  opus:   { input: 5,  output: 25, cacheWrite: 6.25, cacheWrite1h: 10 },
+  fable:  { input: 10, output: 50, cacheWrite: 12.5, cacheWrite1h: 20 }
 };
 
 // Tiers cheaper than the Opus baseline. Fable is deliberately excluded — it
@@ -112,6 +114,11 @@ function parseSession(sessionFile) {
         stats[tier].output       += u.output_tokens || 0;
         stats[tier].cache_read   += u.cache_read_input_tokens || 0;
         stats[tier].cache_create += u.cache_creation_input_tokens || 0;
+        // Newer session logs break cache writes down by TTL; track the 1-hour
+        // subset so tierCost can bill it at 2x instead of 1.25x. Legacy logs
+        // without the breakdown bill the whole lump at 1.25x (5-min default).
+        stats[tier].cache_create_1h = (stats[tier].cache_create_1h || 0) +
+          ((u.cache_creation && u.cache_creation.ephemeral_1h_input_tokens) || 0);
         stats[tier].turns        += 1;
         totalTurns               += 1;
       } catch (e) { /* skip malformed line */ }

@@ -5,6 +5,31 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Cache-write billing corrected in `/hydra:stats`** — cache writes were
+  billed at plain input price; Anthropic actually bills 5-minute writes at
+  1.25× and 1-hour writes at 2× input. The Claude adapter now reads the
+  per-TTL breakdown from session logs (`cache_creation.ephemeral_1h_input_tokens`)
+  and prices each bucket correctly; legacy logs without the breakdown bill at
+  1.25×. Hosts without a write surcharge (Gemini/Codex) are unchanged.
+  Savings numbers were slightly overstated on cache-heavy sessions before this.
+
+### Added
+- **`maxTurns` runaway guards on all 10 agents** — cheap tier caps at 25
+  turns, mid tier at 50, using Claude Code's native `maxTurns` frontmatter;
+  the Gemini emitter carries it as gemini-cli's `max_turns`. Guards against
+  unbounded subagent loops (the class of incident where a trivial task burns
+  1M+ tokens), zero effect on normal runs.
+
+### Changed
+- **One savings number everywhere** — README headline, badges, and impact
+  tables now all say ~50% (the sample session's real 51.5% is shown as the
+  receipt); a terminal-style `/hydra:stats` demo graphic (`assets/`) leads the
+  README; a new section explains why Hydra's bounded dispatch avoids the
+  documented 3–7× subagent fan-out cost explosion; the Sentinel feature is
+  framed as the answer to "did the cheap model's output hold up?".
 ## [2.5.2] - 2026-09-11
 
 ### Added

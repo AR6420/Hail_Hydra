@@ -33,7 +33,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Speed-2--3×_Faster-22C55E?style=flat-square&logo=zap&logoColor=white" alt="Speed" />
-  <img src="https://img.shields.io/badge/Cost-40--60%25_Per_Dispatch-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
+  <img src="https://img.shields.io/badge/Cost-~50%25_Per_Dispatch-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
   <img src="https://img.shields.io/badge/Quality-Zero_Loss-7C3AED?style=flat-square&logo=shield-check&logoColor=white" alt="Quality" />
 </p>
 
@@ -47,7 +47,11 @@
 
 **Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. Claude, Gemini and Codex ship 10 specialized agents pinned to their host's model tiers, 10 commands, and an automatic integration-verification touchpoint. Copilot instead ships one explicit-request `/hail-hydra` skill with the same 10 roles plus read-only architecture/performance and web research advisors, routed through native subagents when available, without automatic hooks.
 
-Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically reduces per-task cost by 40–60% compared to running the same work on the orchestrator alone — while maintaining output quality through verification.
+Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically cuts per-task cost by **~50%** compared to running the same work on the orchestrator alone — while maintaining output quality through verification. That's the same ~50% you'll see everywhere Hydra is described, and it comes from one place: real session logs, via `/hydra:stats` (51.5% in the sample below).
+
+<p align="center">
+  <img src="assets/hydra-stats-demo.svg" alt="/hydra:stats sample output — 51.5% saved, parsed from real session logs" width="680"/>
+</p>
 
 **Copilot cost caveat:** the speed/cost claims above are not Copilot benchmarks.
 Copilot savings depend on your plan, available models, task size and dispatch
@@ -612,7 +616,7 @@ After updating, restart Claude Code to load the new files.
 ## ✨ Features
 
 - **Ten specialized heads** — Haiku (fast) and Sonnet (capable) heads for every task type, including preflight detection for new projects
-- **Sentinel integration integrity** — Two-tier verification (fast scan + deep analysis) catches ~72% of integration bugs before runtime
+- **Sentinel verification** — the answer to "did the cheap model's output actually hold up?": a two-tier check (fast scan + deep analysis) runs after code changes and catches ~72% of integration bugs before runtime
 - **Persistent agent memory** — Every agent remembers your codebase patterns, conventions, and past decisions across sessions
 - **Orchestrator memory** — Opus maintains its own notes on fragile zones, routing patterns, and known issues via CLAUDE.md
 - **Verification touchpoint** — after substantial code changes, the auto-guard hook injects a directive recommending a sentinel + guard verification wave before results are presented; trivial edits stay silent
@@ -1110,7 +1114,7 @@ hydra/
 | Metric | Without Hydra | With Hydra | Improvement |
 |:-------|:-------------|:-----------|:------------|
 | **Task Speed (per dispatch)** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku heads respond ~10× faster |
-| **API Cost (per dispatch)** | 1× (Opus for everything) | ~0.5× per dispatch | 40–60% cheaper when invoked |
+| **API Cost (per dispatch)** | 1× (Opus for everything) | ~0.5× per dispatch | ~50% cheaper when invoked |
 | **Quality** | Opus-level | Opus-level | Zero degradation |
 | **User Experience** | Normal | Normal | Explicit invocation; one automatic touchpoint (post-substantial-edit verification) |
 | **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
@@ -1132,14 +1136,32 @@ hydra/
 | **Blended effective cost** | | | **~48% of all-Opus** | **~48% of all-Opus** |
 
 Note: When Hydra is invoked across a representative mix of task types, blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48% of all-Opus.
-Per-dispatch savings of **40–60%** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
-Savings calculated against Opus ($5/$25 per MTok) as of February 2026.
+Per-dispatch savings of **~50%** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
 
 On Gemini CLI and Codex CLI the same routing applies against that host's own
 frontier model — Flash-tier heads measured against an all-Gemini-Pro baseline,
 Luna/Terra heads against an all-GPT-5.6-Sol baseline — landing around the same
 ~50% blended mark. `/hydra:stats` (`$hydra-stats` on Codex) reports real
 per-host numbers.
+
+### Why Hydra Doesn't Hit the Subagent Cost-Explosion Problem
+
+A fair objection to any subagent framework: naive fan-out can cost **3–7× more**
+than a single-thread session, because every spawned agent re-bootstraps context
+and re-verifies work the orchestrator already understood. Hydra's design avoids
+that trap deliberately:
+
+- **Bounded, task-scoped dispatch** — the orchestrator sends one agent per
+  well-defined subtask with only the context slice it needs, not a wide swarm
+  re-reading the repo in parallel
+- **Cheap tiers do the token-heavy work** — the expensive model never pays
+  frontier prices for exploration, test runs, or doc writing
+- **`maxTurns` caps on every agent** — a runaway agent stops at 25 turns
+  (cheap tier) or 50 (mid tier) instead of burning tokens indefinitely
+- **The codebase map replaces re-exploration** — blast-radius lookups cost
+  ~500–1,500 tokens instead of a 3,000–8,000-token grep sweep per verification
+- **Receipts, not claims** — `/hydra:stats` parses the CLI's own session logs,
+  so if dispatch overhead ever ate the savings, the number would show it
 
 ### Measure Your Savings
 
@@ -1154,11 +1176,11 @@ The most accurate way to measure Hydra's impact — no estimation, real numbers:
 
 That's it. Real data beats theoretical calculations every time.
 
-#### What to expect (based on February 2026 API pricing)
+#### What to expect
 When Hydra is actively invoked across a typical mix (50% Haiku, 30% Sonnet, 20% Opus):
 - **Input tokens**: ~52% cheaper per dispatch ($2.40 vs $5.00 per MTok)
 - **Output tokens**: ~52% cheaper per dispatch ($12.00 vs $25.00 per MTok)
-- **Per-dispatch blended**: 40–60% cost reduction on Hydra-invoked work
+- **Per-dispatch blended**: ~50% cost reduction on Hydra-invoked work
 - **Speed**: 2–3× faster on delegated tasks
 
 Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your session logs — no estimation.

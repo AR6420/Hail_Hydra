@@ -11,6 +11,7 @@ description: >
   output so the orchestrator can merge results from multiple simultaneous agents.
 tools: Read, Grep, Glob, Bash, Write
 model: haiku
+maxTurns: 25
 color: "#10B981"
 memory: project
 ---

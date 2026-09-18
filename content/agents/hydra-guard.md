@@ -12,6 +12,7 @@ description: >
   structured output so the orchestrator can merge results from multiple simultaneous agents.
 tools: Read, Grep, Glob, Bash
 model: haiku
+maxTurns: 25
 memory: project
 ---
 
