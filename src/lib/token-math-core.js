@@ -46,9 +46,13 @@ function makeSummary({ stats, totalTurns, unknownModels, sessionFile, pricing })
   let actualCost = 0;
   let hypotheticalCost = 0;
   for (const tier of TIERS) {
-    costs[tier] = tierCost(stats[tier], PRICING[tier]);
+    const s = stats[tier];
+    // Adapters that price per line (Claude: per-generation prices and
+    // per-request bands) precompute s.cost / s.baselineCost; others fall back
+    // to the flat tier table.
+    costs[tier] = typeof s.cost === 'number' ? s.cost : tierCost(s, PRICING[tier]);
     actualCost += costs[tier];
-    hypotheticalCost += tierCost(stats[tier], PRICING[baselineTier]);
+    hypotheticalCost += typeof s.baselineCost === 'number' ? s.baselineCost : tierCost(s, PRICING[baselineTier]);
   }
 
   const savedUSD = Math.max(0, hypotheticalCost - actualCost);
