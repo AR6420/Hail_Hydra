@@ -6,7 +6,7 @@ const { ROOT, CONTENT, DIST, VERSION, write, listMd } = require('./shared');
 
 // Default worker models per tier. Cheapest GA, cli:true, all-paid-plan model per tier (retiring-soon and
 // promo pricing excluded), preferring a model already in Hydra's own tiers (Claude haiku/sonnet, Codex
-// gpt-5.6-luna/terra — see emit-codex.js MODEL_MAP) when within 1.25x cost, else a fallback from another
+// gpt-6-luna/sol — see emit-codex.js MODEL_MAP) when within 1.25x cost, else a fallback from another
 // provider. Source: github/docs data/tables/copilot/models-and-pricing.yml. GPT-6 Sol is categorized
 // Powerful, so it is not used as the mid fallback. Verified 2026-10-12 — re-verify each release.
 const MODEL_MAP = {
