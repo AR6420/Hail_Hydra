@@ -12,18 +12,31 @@ Math + JSONL parsing live in the shared helper at
 `~/.claude/hooks/hydra-token-math.js`. Statusline and `/hydra:stats` both
 call it so numbers stay consistent.
 
-## Pricing (per 1M tokens, verified 2026-08 for Claude 4.x / 5.x)
+## Pricing (per 1M tokens, verified 2026-10)
 
-| Tier   | Input | Output | Cache read |
-|--------|-------|--------|------------|
-| Haiku  | $1    | $5     | 10% of input |
-| Sonnet | $3    | $15    | 10% of input |
-| Opus   | $5    | $25    | 10% of input |
-| Fable  | $10   | $50    | 10% of input |
+| Generation        | Models                       | Input | Output | 5m write | 1h write | Cache read |
+|-------------------|------------------------------|-------|--------|----------|----------|------------|
+| Haiku 4.5         | haiku-4-5                    | $1    | $5     | $1.25    | $2       | $0.10      |
+| Haiku 5.5 (≤100k) | haiku-5-5                    | $0.10 | $0.50  | $0.125   | $0.20    | $0.01      |
+| Haiku 5.5 (>100k) | haiku-5-5                    | $0.50 | $2.50  | $0.625   | $1       | $0.05      |
+| Sonnet 4          | sonnet-4.x                   | $3    | $15    | $3.75    | $6       | $0.30      |
+| Sonnet 5          | sonnet-5                     | $2    | $10    | $2.50    | $4       | $0.20      |
+| Sonnet 5.5        | sonnet-5-5                   | $2    | $10    | $2.50    | $4       | $0.10      |
+| Opus 4            | opus-4, opus-4-1             | $15   | $75    | $18.75   | $30      | $1.50      |
+| Opus 4.5          | opus-4-5 … opus-5            | $5    | $25    | $6.25    | $10      | $0.50      |
+| Opus 5.5          | opus-5-5                     | $4    | $20    | $5       | $8       | $0.20      |
+| Fable 5           | fable-5, mythos-5            | $10   | $50    | $12.50   | $20      | $1.00      |
+| Fable 5.1         | fable-5-1, mythos-5-1        | $10   | $50    | $12.50   | $20      | $0.25      |
 
-Prices are keyed by tier, not by model ID — Opus 4.6 through Opus 5 all bill at
-$5/$25, so point releases need no change. Edit the `PRICING` map in
-`hydra-token-math.js` only if Anthropic publishes new prices or ships a new tier.
+Prices are keyed by generation; newer unknown point releases bill at the
+newest known generation of their family. The Haiku 5.5 band is chosen per
+request: prompts (input + cache read + cache write) over 100k tokens use the
+long rate. `claude-mythos-preview` has no published price and is reported as
+an unknown model. Edit the `PRICING` / `GENERATIONS` maps in
+`hydra-token-math.js` only if Anthropic publishes new prices.
+
+The all-Opus baseline prices every turn at the session's most-used Opus
+generation (Opus 5.5 if the session used no Opus).
 
 Fable sits *above* the Opus baseline, so Fable turns are not counted as
 delegations and they reduce (never increase) reported savings.
@@ -162,7 +175,7 @@ Print the output exactly as the script emits. Do not summarize or reformat.
 
 ## Notes
 
-- `All-Opus baseline` (or `Was:`) is hypothetical cost if every turn had been Opus.
+- `All-Opus baseline` (or `Was:`) is hypothetical cost if every turn had been the session's Opus generation.
 - Stats are session-scoped.
-- Cache-read pricing is 10% of input price (Anthropic prompt-caching rate, Claude 4.x, 2026-05).
+- Cache-read and cache-write prices are per generation (see the table above), not a fixed share of input.
 - Strikethrough auto-detected from terminal env. Override: `HYDRA_STRIKETHROUGH=0` or `=1`.
