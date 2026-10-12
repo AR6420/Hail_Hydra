@@ -136,6 +136,8 @@ for (const otherHost of ['claude', 'gemini', 'codex']) {
     .map((file) => path.parse(file).name).sort(), canonical.map((file) => path.parse(file).name).sort(),
   `${otherHost}: canonical role catalogue unchanged`);
 }
+assert.deepStrictEqual(MODEL_MAP.haiku.models, ['claude-haiku-5.5', 'gpt-6-luna'], 'cheap tier: Haiku first');
+assert.deepStrictEqual(MODEL_MAP.sonnet.models, ['claude-sonnet-5.5', 'gpt-5.6-terra'], 'mid tier: Sonnet first');
 const payloadCount = roles.length + 10;
 for (const role of roles) {
   const tierEntry = Object.values(MODEL_MAP).find((model) => model.tier === role.tier);

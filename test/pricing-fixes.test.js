@@ -34,10 +34,24 @@ const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'hydra-pricing-'));
 
 const gtm = require('../src/hooks/gemini/hydra-token-math.js');
 
-assert.strictEqual(gtm.getTier('gemini-3.5-flash'), 'flash-3.5');
-assert.deepStrictEqual(gtm.getPrice('gemini-3.5-flash'), { input: 1.50, output: 9.00, cacheRead: 0.15 });
+const FLASH_38 = { input: 0.75, output: 3.75, cacheRead: 0.075 };
+assert.strictEqual(gtm.getTier('gemini-3.8-flash'), 'flash-3.8');
+assert.deepStrictEqual(gtm.getPrice('gemini-3.8-flash'), FLASH_38);
+assert.strictEqual(gtm.getTier('gemini-3.7-flash'), 'flash-3.8', 'deprecated 3.7 bills as 3.8');
 assert.strictEqual(gtm.getTier('gemini-3.6-flash'), 'flash-3.6');
-assert.deepStrictEqual(gtm.getPrice('gemini-3.6-flash'), { input: 1.50, output: 7.50, cacheRead: 0.15 });
+assert.deepStrictEqual(gtm.getPrice('gemini-3.6-flash'), FLASH_38);
+assert.strictEqual(gtm.getTier('gemini-3.5-flash'), 'flash-3.6', 'deprecated 3.5 bills as 3.6');
+// Exact match: 3.5-flash-lite is its own model, not caught by the 3.5-flash prefix.
+assert.strictEqual(gtm.getTier('gemini-3.5-flash-lite'), 'flash-lite-3.5');
+assert.deepStrictEqual(gtm.getPrice('gemini-3.5-flash-lite'), { input: 0.30, output: 2.50, cacheRead: 0.03 });
+assert.strictEqual(gtm.getTier('gemini-3.5-flash-lite-preview-09-2026'), 'flash-lite-3.5', 'dated preview suffix stripped');
+assert.strictEqual(gtm.getTier('gemini-3.8-flash-latest'), 'flash-3.8', '-latest suffix stripped');
+assert.deepStrictEqual(gtm.getPrice('gemini-3-flash-preview'), { input: 0.50, output: 3.00, cacheRead: 0.05 });
+assert.deepStrictEqual(gtm.getPrice('gemini-3.1-pro-preview'), { input: 2.00, output: 12.00, cacheRead: 0.20, proxyOf: 'gemini-3.1-pro-preview' });
+// Audio/realtime variants price differently → unknown.
+assert.strictEqual(gtm.getTier('gemini-2.5-flash-preview-tts'), null);
+assert.strictEqual(gtm.getTier('gemini-3.8-flash-live'), null);
+assert.strictEqual(gtm.getTier('gemini-2.5-flash-live-preview'), null);
 assert.strictEqual(gtm.getTier('gemini-3.1-flash-lite'), 'flash-lite-3.1');
 assert.deepStrictEqual(gtm.getPrice('gemini-3.1-flash-lite'), { input: 0.25, output: 1.50, cacheRead: 0.025 });
 assert.strictEqual(gtm.getTier('gemini-2.5-pro'), 'pro-2.5');
@@ -49,7 +63,7 @@ assert.strictEqual(gtm.getTier('gemini-3.1-flash'), null);
 assert.strictEqual(gtm.getTier('gemini-2.0-flash'), null);
 assert.strictEqual(gtm.getTier('gemini-4-pro'), null);
 // Flash tiers delegated; pro tiers not.
-assert.ok(gtm.DELEGATED_TIERS.includes('flash-3.5') && gtm.DELEGATED_TIERS.includes('flash-3.6') && gtm.DELEGATED_TIERS.includes('flash-lite-3.1'));
+assert.ok(['flash-3.6', 'flash-3.8', 'flash-lite-3.1', 'flash-lite-3.5'].every((t) => gtm.DELEGATED_TIERS.includes(t)));
 assert.ok(!gtm.DELEGATED_TIERS.includes('pro') && !gtm.DELEGATED_TIERS.includes('pro-2.5'));
 
 // Parse-level: unmatched generation lands in unknownModels, priced one bills.
@@ -58,10 +72,12 @@ assert.ok(!gtm.DELEGATED_TIERS.includes('pro') && !gtm.DELEGATED_TIERS.includes(
   fs.writeFileSync(f, [
     JSON.stringify({ sessionId: 's', kind: 'main' }),
     JSON.stringify({ type: 'gemini', model: 'gemini-3.5-flash', tokens: { input: 100, output: 10, cached: 0, thoughts: 0, tool: 0 } }),
+    JSON.stringify({ type: 'gemini', model: 'gemini-3.5-flash-lite', tokens: { input: 100, output: 10, cached: 0, thoughts: 0, tool: 0 } }),
     JSON.stringify({ type: 'gemini', model: 'gemini-3.1-flash', tokens: { input: 100, output: 10, cached: 0, thoughts: 0, tool: 0 } }),
   ].join('\n'));
   const parsed = gtm.parseSession(f);
-  assert.strictEqual(parsed.stats['flash-3.5'].turns, 1, '3.5-flash billed on its own tier');
+  assert.strictEqual(parsed.stats['flash-3.6'].turns, 1, '3.5-flash billed as 3.6-flash');
+  assert.strictEqual(parsed.stats['flash-lite-3.5'].turns, 1, '3.5-flash-lite billed on its own tier');
   assert.ok(parsed.unknownModels.has('gemini-3.1-flash'), 'unpriced generation surfaces as unknown');
 }
 console.log('pricing-fixes: gemini tier map ok');
@@ -70,11 +86,11 @@ console.log('pricing-fixes: gemini tier map ok');
 
 const ctm = require('../src/hooks/codex/hydra-token-math.js');
 
-assert.strictEqual(ctm.getTier('gpt-5.3-codex'), 'codex-5.3');
+assert.strictEqual(ctm.getTier('gpt-5.3-codex'), 'gpt-5.3-codex');
 assert.deepStrictEqual(ctm.getPrice('gpt-5.3-codex'), { input: 1.75, output: 14.00, cacheRead: 0.175 });
 assert.strictEqual(ctm.getTier('gpt-5.3-codex-spark'), null, 'spark stays unpriced');
 assert.strictEqual(ctm.getTier('gpt-5.3-codex-mini'), null, 'mini stays unpriced');
-assert.ok(!ctm.DELEGATED_TIERS.includes('codex-5.3'), 'a user-pinned main model is not a delegation tier');
+assert.ok(!ctm.DELEGATED_TIERS.includes('gpt-5.3-codex'),'a user-pinned main model is not a delegation tier');
 console.log('pricing-fixes: codex tier map ok');
 
 // ── 3. Codex mixed total/last rows never double-count ───────────────────────
@@ -93,18 +109,18 @@ const rowLast = (i, c, o) => JSON.stringify({ type: 'event_msg', payload: { type
   const f = path.join(scratch, 'cdx-mixed.jsonl');
   fs.writeFileSync(f, [turnCtx('gpt-5.5'), rowTotal(1000, 0, 100), rowLast(500, 0, 50), rowTotal(2000, 0, 200)].join('\n') + '\n');
   const parsed = ctm.parseSession(f);
-  assert.strictEqual(parsed.stats.sol.input, 2000, 'mixed rows: input not double-counted');
-  assert.strictEqual(parsed.stats.sol.output, 200, 'mixed rows: output not double-counted');
-  assert.strictEqual(parsed.stats.sol.turns, 2, 'last-only row after baseline is skipped');
+  assert.strictEqual(parsed.stats['gpt-5.5'].input, 2000, 'mixed rows: input not double-counted');
+  assert.strictEqual(parsed.stats['gpt-5.5'].output, 200, 'mixed rows: output not double-counted');
+  assert.strictEqual(parsed.stats['gpt-5.5'].turns, 2,'last-only row after baseline is skipped');
 }
 {
   // Pure-last sessions (no cumulative rows at all) still bill per row.
   const f = path.join(scratch, 'cdx-last-only.jsonl');
   fs.writeFileSync(f, [turnCtx('gpt-5.5'), rowLast(500, 0, 50), rowLast(300, 0, 30)].join('\n') + '\n');
   const parsed = ctm.parseSession(f);
-  assert.strictEqual(parsed.stats.sol.input, 800, 'pure-last path still bills');
-  assert.strictEqual(parsed.stats.sol.output, 80);
-  assert.strictEqual(parsed.stats.sol.turns, 2);
+  assert.strictEqual(parsed.stats['gpt-5.5'].input, 800, 'pure-last path still bills');
+  assert.strictEqual(parsed.stats['gpt-5.5'].output, 80);
+  assert.strictEqual(parsed.stats['gpt-5.5'].turns, 2);
 }
 console.log('pricing-fixes: codex mixed-row accounting ok');
 

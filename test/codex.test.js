@@ -57,11 +57,11 @@ for (const f of agentFiles) {
 
   const model = /^model = "(.+)"$/m.exec(text);
   assert.ok(model && CODEX_MODELS.has(model[1]), `${f}: model '${model && model[1]}' is a mapped Codex model`);
-  if (model[1] === 'gpt-5.6-luna') {
+  if (model[1] === 'gpt-6-luna') {
     assert.ok(/^model_reasoning_effort = "low"$/m.test(text), `${f}: luna agents pin low reasoning effort`);
   }
-  if (model[1] === 'gpt-5.6-terra') {
-    assert.ok(/^model_reasoning_effort = "medium"$/m.test(text), `${f}: terra agents pin medium reasoning effort`);
+  if (model[1] === 'gpt-6-sol') {
+    assert.ok(/^model_reasoning_effort = "medium"$/m.test(text), `${f}: sol agents pin medium reasoning effort`);
   }
 
   // C2 refutation: "inherit" is invalid — inherit by omission. hydra-sentinel
@@ -288,17 +288,47 @@ assert.strictEqual(rChain2.stdout, '', 'notify-chain emits nothing');
 
 const tm = require(path.join(DIST, 'hooks', 'hydra-token-math.js'));
 
-assert.strictEqual(tm.getTier('gpt-5.6-luna'), 'luna');
-assert.strictEqual(tm.getTier('gpt-5.6-terra'), 'terra');
-assert.strictEqual(tm.getTier('gpt-5.6-sol'), 'sol');
-assert.strictEqual(tm.getTier('gpt-5.6'), 'sol', 'gpt-5.6 alias (C20)');
-assert.strictEqual(tm.getTier('gpt-5.5'), 'sol', 'gpt-5.5 bills identically to sol (C21)');
+// Exact current prices per model id (USD/1M: input / cachedInput / output).
+const EXPECTED_PRICES = {
+  'gpt-6-astra':   [10, 1.00, 50],
+  'gpt-6.1-sol':   [2, 0.10, 10],
+  'gpt-6-sol':     [2, 0.20, 10],
+  'gpt-6-luna':    [0.10, 0.01, 0.50],
+  'gpt-5.6-sol':   [4, 0.40, 20],
+  'gpt-5.6-terra': [2, 0.20, 12],
+  'gpt-5.6-luna':  [0.20, 0.02, 1.20],
+  'gpt-5.5':       [5, 0.50, 30],
+  'gpt-5.3-codex': [1.75, 0.175, 14],
+};
+for (const [id, [input, cacheRead, output]] of Object.entries(EXPECTED_PRICES)) {
+  assert.strictEqual(tm.getTier(id), id, `${id} maps to itself`);
+  assert.deepStrictEqual(tm.getPrice(id), { input, output, cacheRead }, `${id} price`);
+}
+assert.deepStrictEqual(Object.keys(tm.PRICING).sort(), Object.keys(EXPECTED_PRICES).sort(), 'no extra priced models');
+// Substring regression: GPT-6 ids must not fall through to GPT-5.6 prices.
+assert.strictEqual(tm.getPrice('gpt-6-sol').input, 2);
+assert.strictEqual(tm.getPrice('gpt-6-luna').input, 0.10);
+// Dated suffixes strip; alias resolves.
+assert.strictEqual(tm.getTier('gpt-6.1-sol-2026-09-01'), 'gpt-6.1-sol', 'dashed date suffix');
+assert.strictEqual(tm.getTier('gpt-5.6-luna-20260901'), 'gpt-5.6-luna', 'compact date suffix');
+assert.strictEqual(tm.getTier('gpt-5.6'), 'gpt-5.6-sol', 'gpt-5.6 alias');
+assert.strictEqual(tm.getTier('gpt-5.6-2026-09-01'), 'gpt-5.6-sol', 'dated alias');
+// Newer GPT-6 point releases price at the newest known model in that line.
+assert.strictEqual(tm.getTier('gpt-6.2-sol'), 'gpt-6.1-sol', 'gpt-6.2-sol falls back to gpt-6.1-sol');
+assert.strictEqual(tm.getTier('gpt-6.3-luna'), 'gpt-6-luna');
+assert.strictEqual(tm.getTier('gpt-6.2-astra'), 'gpt-6-astra');
+// Unknown → null (reported as unpriced).
 assert.strictEqual(tm.getTier('gpt-5.3-codex-spark'), null, 'spark has no published price');
 assert.strictEqual(tm.getTier('gpt-5.4'), null, 'retired models unpriced');
+assert.strictEqual(tm.getTier('gpt-6-terra'), null, 'unlisted gpt-6 variant unpriced');
+assert.strictEqual(tm.getTier('gpt-7-sol'), null);
 assert.strictEqual(tm.getTier('claude-opus-5'), null);
 assert.strictEqual(tm.getTier(''), null);
-assert.deepStrictEqual(tm.DELEGATED_TIERS, ['luna', 'terra']);
-assert.strictEqual(tm.getPrice('gpt-5.6-luna').cacheRead, 0.02, 'explicit cached pricing (C21)');
+assert.deepStrictEqual(tm.DELEGATED_TIERS, ['gpt-6-luna', 'gpt-6-sol', 'gpt-5.6-luna', 'gpt-5.6-terra']);
+// Baseline = most-used non-delegated model; default gpt-6.1-sol.
+assert.strictEqual(tm.baselineModel({}), 'gpt-6.1-sol', 'default baseline');
+assert.strictEqual(tm.baselineModel({ 'gpt-6-luna': { turns: 9 } }), 'gpt-6.1-sol', 'delegated-only session → default');
+assert.strictEqual(tm.baselineModel({ 'gpt-6-astra': { turns: 1 }, 'gpt-5.5': { turns: 3 }, 'gpt-6-sol': { turns: 7 } }), 'gpt-5.5', 'most-used main model');
 
 const cdxHome = path.join(scratch, 'codex-config');
 const dayDir = path.join(cdxHome, 'sessions', '2026', '08', '10');
@@ -358,32 +388,35 @@ if (process.platform === 'win32') {
 
 const summary = tm.computeSummary();
 assert.strictEqual(summary.available, true);
-assert.strictEqual(summary.totalTurns, 3, 'sol(2) + luna(1); repeat + unpriced rows uncounted');
+assert.strictEqual(summary.totalTurns, 3, 'gpt-5.5(2) + gpt-5.6-luna(1); repeat + unpriced rows uncounted');
 assert.strictEqual(summary.delegatedTurns, 1, 'luna turn counts as delegated');
 assert.ok(Math.abs(summary.delegationRate - 100 / 3) < 1e-9);
 assert.ok(summary.unknownModels.has('gpt-5.3-codex-spark'), 'spark surfaces as unpriced');
+assert.strictEqual(summary.baselineModel, 'gpt-5.5', 'baseline = most-used non-delegated model');
 
 // Hand-computed accounting (cumulative deltas; cached ⊂ input; reasoning ⊂ output).
-assert.strictEqual(summary.stats.sol.input, 10000);
-assert.strictEqual(summary.stats.sol.cache_read, 20000);
-assert.strictEqual(summary.stats.sol.output, 1500);
-assert.strictEqual(summary.stats.sol.turns, 2);
-assert.strictEqual(summary.stats.luna.input, 4000);
-assert.strictEqual(summary.stats.luna.cache_read, 16000);
-assert.strictEqual(summary.stats.luna.output, 2000);
-assert.strictEqual(summary.stats.luna.turns, 1);
+const s55 = summary.stats['gpt-5.5'];
+const sLuna = summary.stats['gpt-5.6-luna'];
+assert.strictEqual(s55.input, 10000);
+assert.strictEqual(s55.cache_read, 20000);
+assert.strictEqual(s55.output, 1500);
+assert.strictEqual(s55.turns, 2);
+assert.strictEqual(sLuna.input, 4000);
+assert.strictEqual(sLuna.cache_read, 16000);
+assert.strictEqual(sLuna.output, 2000);
+assert.strictEqual(sLuna.turns, 1);
 
-// Hand-computed costs (C21): sol 0.105, luna 0.00352; baseline all-Sol 0.193.
+// Hand-computed costs: gpt-5.5 0.105, gpt-5.6-luna 0.00352; gpt-5.5 baseline 0.193.
 const close = (a, b, m) => assert.ok(Math.abs(a - b) < 1e-9, `${m}: ${a} != ${b}`);
-close(summary.costs.sol, 0.105, 'sol cost');
-close(summary.costs.luna, 0.00352, 'luna cost');
+close(summary.costs['gpt-5.5'], 0.105, 'gpt-5.5 cost');
+close(summary.costs['gpt-5.6-luna'], 0.00352, 'luna cost');
 close(summary.actualCost, 0.10852, 'actual cost');
-close(summary.hypotheticalCost, 0.193, 'all-Sol baseline');
+close(summary.hypotheticalCost, 0.193, 'gpt-5.5 baseline');
 close(summary.savedUSD, 0.08448, 'saved USD');
 
 const report = tm.formatReport(summary);
 assert.ok(report.includes('Hydra Stats (Codex CLI)'), 'report card header');
-assert.ok(report.includes('All-Sol baseline:   $0.193'), 'report shows baseline');
+assert.ok(report.includes('Baseline (gpt-5.5): $0.193'), 'report shows baseline');
 assert.ok(report.includes('gpt-5.3-codex-spark'), 'report footnotes unpriced models');
 
 // Direct execution prints the report (argv main guard).

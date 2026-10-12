@@ -14,7 +14,7 @@ incompatible dependency pairs before they cost hours of debugging.
 Follow the **Preflight Protocol** defined in SKILL.md — two phases, always
 dispatched in sequence. Never skip Phase 2.
 
-### Phase 1 — Detection (dispatch hydra-preflight, Haiku 4.5)
+### Phase 1 — Detection (dispatch hydra-preflight, Haiku)
 
 Dispatch the `hydra-preflight` agent with this prompt:
 
@@ -27,7 +27,7 @@ the full structured PREFLIGHT_INVENTORY JSON. Do not make recommendations.
 
 Wait for the agent to return `PREFLIGHT_INVENTORY_COMPLETE` before proceeding.
 
-### Phase 2 — Analysis (dispatch hydra-analyst, Sonnet 4.6)
+### Phase 2 — Analysis (dispatch hydra-analyst, Sonnet)
 
 Pass the full PREFLIGHT_INVENTORY from Phase 1 as context and dispatch
 `hydra-analyst` with this prompt:

@@ -38,36 +38,51 @@ const { tierCost, emptyStats, makeSummary } = require('../../lib/token-math-core
 // prices differently (G23), so each priced generation gets its own tier;
 // generations without a published price go to unknownModels, never a
 // neighboring tier's rate.
+// Current (effective) prices only — no date-switch logic.
 const PRICING = {
   'flash-lite':     { input: 0.10, output: 0.40,  cacheRead: 0.01 },
   'flash-lite-3.1': { input: 0.25, output: 1.50,  cacheRead: 0.025 },
+  'flash-lite-3.5': { input: 0.30, output: 2.50,  cacheRead: 0.03 },
   'flash':          { input: 0.30, output: 2.50,  cacheRead: 0.03 },
   'flash-3':        { input: 0.50, output: 3.00,  cacheRead: 0.05 },
-  'flash-3.5':      { input: 1.50, output: 9.00,  cacheRead: 0.15 },
-  'flash-3.6':      { input: 1.50, output: 7.50,  cacheRead: 0.15 },
+  'flash-3.6':      { input: 0.75, output: 3.75,  cacheRead: 0.075 },
+  'flash-3.8':      { input: 0.75, output: 3.75,  cacheRead: 0.075 },
   'pro-2.5':        { input: 1.25, output: 10.00, cacheRead: 0.125 },
   'pro':            { input: 2.00, output: 12.00, cacheRead: 0.20, proxyOf: 'gemini-3.1-pro-preview' },
 };
 
-const DELEGATED_TIERS = ['flash-lite', 'flash-lite-3.1', 'flash', 'flash-3', 'flash-3.5', 'flash-3.6'];
+const DELEGATED_TIERS = ['flash-lite', 'flash-lite-3.1', 'flash-lite-3.5', 'flash', 'flash-3', 'flash-3.6', 'flash-3.8'];
 const TIERS = Object.keys(PRICING);
 const BASELINE_TIER = 'pro';
 
 const pricingConfig = { PRICING, TIERS, DELEGATED_TIERS, baselineTier: BASELINE_TIER };
 
-// Exact generation matching — an unmatched generation returns null (reported
-// as unknown/uncounted) rather than being billed at another generation's rate.
+// Exact model-ID matching (prefix matching let gemini-3.5-flash catch
+// gemini-3.5-flash-lite). Deprecated IDs bill as the model they route to:
+// 3.5-flash → 3.6-flash, 3.7-flash → 3.8-flash. Anything unlisted returns
+// null (reported as unknown/uncounted), never a neighboring tier's rate.
+const MODEL_TIERS = {
+  'gemini-2.5-flash-lite': 'flash-lite',
+  'gemini-3.1-flash-lite': 'flash-lite-3.1',
+  'gemini-3.5-flash-lite': 'flash-lite-3.5',
+  'gemini-2.5-flash':      'flash',
+  'gemini-3-flash':        'flash-3',      // gemini-3-flash-preview
+  'gemini-3.5-flash':      'flash-3.6',    // deprecated, routed to 3.6
+  'gemini-3.6-flash':      'flash-3.6',
+  'gemini-3.7-flash':      'flash-3.8',    // deprecated, routed to 3.8
+  'gemini-3.8-flash':      'flash-3.8',
+  'gemini-2.5-pro':        'pro-2.5',
+  'gemini-3-pro':          'pro',
+  'gemini-3.1-pro':        'pro',
+};
+
 function getTier(model) {
   if (!model || !model.startsWith('gemini')) return null;
-  if (model.startsWith('gemini-2.5-flash-lite')) return 'flash-lite';
-  if (model.startsWith('gemini-3.1-flash-lite')) return 'flash-lite-3.1';
-  if (model.startsWith('gemini-2.5-flash')) return 'flash';
-  if (model.startsWith('gemini-3-flash')) return 'flash-3';       // gemini-3-flash-preview
-  if (model.startsWith('gemini-3.5-flash')) return 'flash-3.5';
-  if (model.startsWith('gemini-3.6-flash')) return 'flash-3.6';
-  if (model.startsWith('gemini-2.5-pro')) return 'pro-2.5';
-  if (model.startsWith('gemini-3-pro') || model.startsWith('gemini-3.1-pro')) return 'pro';
-  return null;
+  if (/-(tts|live)(-|$)/.test(model)) return null;   // audio/realtime variants price differently
+  // Strip release suffixes the old prefix match tolerated: -latest, -preview,
+  // -preview-MM-YYYY / -preview-MM-DD.
+  const base = model.replace(/-latest$/, '').replace(/-preview(-\d{2}-\d{2,4})?$/, '');
+  return MODEL_TIERS[base] || null;
 }
 
 function getPrice(model) {
@@ -253,10 +268,11 @@ function fmt(n) {
 const TIER_LABELS = {
   'flash-lite':     '🟢 Flash-Lite',
   'flash-lite-3.1': '🟢 Lite 3.1  ',
+  'flash-lite-3.5': '🟢 Lite 3.5  ',
   'flash':          '🟢 Flash 2.5 ',
   'flash-3':        '🔵 Flash 3   ',
-  'flash-3.5':      '🔵 Flash 3.5 ',
   'flash-3.6':      '🔵 Flash 3.6 ',
+  'flash-3.8':      '🔵 Flash 3.8 ',
   'pro-2.5':        '🟣 Pro 2.5   ',
   'pro':            '🟣 Pro       ',
 };

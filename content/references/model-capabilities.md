@@ -3,11 +3,11 @@
 Understanding what each model does well (and where it struggles) is key to effective routing.
 This reference helps calibrate delegation decisions.
 
-## Claude Haiku 4.5
+## Claude Haiku
 
 ### Strengths
 - Extremely fast response times (~10× faster than Opus)
-- Very low cost per token (~5× cheaper than Opus)
+- Very low cost per token (a small fraction of Opus)
 - Excellent at following clear, well-defined instructions
 - Strong at text extraction, search, and pattern matching
 - Good at generating code from templates and clear patterns
@@ -32,14 +32,14 @@ Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguou
 - **hydra-scribe**: Internal docstrings, inline comments, changelog entries
 - **Requires verify**: Any analysis, interpretation, or user-facing documentation
 
-### hydra-scout (Haiku 4.5)
+### hydra-scout (Haiku)
 - **Strengths**: Codebase exploration, file search, reading, and codebase
   map building/maintenance — builds and incrementally updates the dependency
   map using grep-based import extraction, no external parsers required
 - **Memory focus**: Codebase structure, key file locations, module boundaries,
   map build history, files that failed to parse
 
-### hydra-sentinel-scan (Haiku 4.5)
+### hydra-sentinel-scan (Haiku)
 - **Strengths**: Pattern matching, grep-level analysis, import tracing,
   fast structural checks, and map-based instant blast-radius lookups
   (reads the codebase map for dependency lookups; falls back to grep
@@ -53,7 +53,7 @@ Haiku outputs qualify for auto-accept when they are raw, factual, and unambiguou
 
 ---
 
-## Claude Sonnet 4.6
+## Claude Sonnet
 
 ### Strengths
 - Strong code generation across most languages and frameworks
@@ -80,7 +80,7 @@ Sonnet outputs always require orchestrator review — code changes and analysis 
 - **hydra-coder**: ALWAYS verify — scan for correctness, edge cases, project pattern alignment
 - **hydra-analyst**: ALWAYS verify — validate reasoning, check suggested fix against actual code
 
-### hydra-sentinel (Sonnet 4.6)
+### hydra-sentinel (Sonnet)
 - **Strengths**: Semantic understanding of data flow, contract validation
   across component boundaries, accurate false positive filtering,
   specific fix suggestions
@@ -90,7 +90,7 @@ Sonnet outputs always require orchestrator review — code changes and analysis 
 
 ---
 
-## Claude Opus 4.6
+## Claude Opus
 
 ### Strengths
 - Deepest reasoning and analysis capability
