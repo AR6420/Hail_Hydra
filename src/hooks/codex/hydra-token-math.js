@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Shared helper: parse Codex CLI rollout JSONL, compute per-tier usage,
-// actual cost, and savings vs an all-Sol baseline.
+// actual cost, and savings vs the session's main-model baseline.
 //
 // Used by:
 //   - the $hydra-stats skill (runs printReport() via node -e)
@@ -29,13 +29,14 @@
 //   - info can be null for individual rows or ENTIRE sessions (some vscode /
 //     app-server surfaces — C17): those sessions produce an explicit
 //     "no usage data" result ({available:false, noUsageData:true}), never NaN.
-//   - pricing per C21 (USD/1M, in/cached/out): luna 0.20/0.02/1.20,
-//     terra 2.00/0.20/12.00, sol 5.00/0.50/30.00, gpt-5.3-codex
-//     1.75/0.175/14.00. gpt-5.5 bills identically to sol (published prices
-//     match) and maps to the sol tier. Models with no published price
-//     (gpt-5.3-codex-spark, codex-mini) are reported as unknown/uncounted,
-//     never guessed. Baseline = all-Sol; delegated tiers = luna + terra
-//     (gpt-5.3-codex is a user-pinned main model, not a delegation target).
+//   - pricing: PRICING is keyed by exact model id (current OpenAI list
+//     prices, USD/1M). Ids are normalized by stripping a dated suffix
+//     (-2026-09-01 / -20260901) and applying ALIASES; newer GPT-6 point
+//     releases (gpt-6.N-luna|sol|astra) price at the newest known model in
+//     that line. Anything else (gpt-5.3-codex-spark, codex-mini, retired
+//     gpt-5.4*) is reported as unknown/uncounted, never guessed.
+//     Baseline = the session's most-used non-delegated model (default
+//     gpt-6.1-sol, the Codex CLI default); delegated = DELEGATED_TIERS.
 //
 // Cost formula (C17/C21), realized through lib tierCost with explicit
 // cacheRead prices (stats.input already excludes cached tokens):
@@ -48,27 +49,44 @@ const os = require('os');
 const { tierCost, emptyStats, makeSummary } = require('../../lib/token-math-core');
 
 const PRICING = {
-  luna:  { input: 0.20, output: 1.20,  cacheRead: 0.02 },
-  terra: { input: 2.00, output: 12.00, cacheRead: 0.20 },
-  sol:   { input: 5.00, output: 30.00, cacheRead: 0.50 },
-  'codex-5.3': { input: 1.75, output: 14.00, cacheRead: 0.175 },
+  'gpt-6-astra':   { input: 10.00, output: 50.00, cacheRead: 1.00 },
+  'gpt-6.1-sol':   { input: 2.00,  output: 10.00, cacheRead: 0.10 },
+  'gpt-6-sol':     { input: 2.00,  output: 10.00, cacheRead: 0.20 },
+  'gpt-6-luna':    { input: 0.10,  output: 0.50,  cacheRead: 0.01 },
+  'gpt-5.6-sol':   { input: 4.00,  output: 20.00, cacheRead: 0.40 },
+  'gpt-5.6-terra': { input: 2.00,  output: 12.00, cacheRead: 0.20 },
+  'gpt-5.6-luna':  { input: 0.20,  output: 1.20,  cacheRead: 0.02 },
+  'gpt-5.5':       { input: 5.00,  output: 30.00, cacheRead: 0.50 },
+  'gpt-5.3-codex': { input: 1.75,  output: 14.00, cacheRead: 0.175 },
 };
 
-const DELEGATED_TIERS = ['luna', 'terra'];
+const ALIASES = { 'gpt-5.6': 'gpt-5.6-sol' };
+// Newest known model per GPT-6 line — unlisted point releases price here.
+const GPT6_LATEST = { sol: 'gpt-6.1-sol', luna: 'gpt-6-luna', astra: 'gpt-6-astra' };
+
+const DELEGATED_TIERS = ['gpt-6-luna', 'gpt-6-sol', 'gpt-5.6-luna', 'gpt-5.6-terra'];
 const TIERS = Object.keys(PRICING);
-const BASELINE_TIER = 'sol';
+const DEFAULT_BASELINE = 'gpt-6.1-sol';
 
-const pricingConfig = { PRICING, TIERS, DELEGATED_TIERS, baselineTier: BASELINE_TIER };
-
+// Model id → PRICING key, or null when unpriced. Name kept for API stability.
 function getTier(model) {
-  if (!model || !model.startsWith('gpt')) return null;
-  if (model.includes('luna')) return 'luna';
-  if (model.includes('terra')) return 'terra';
-  if (model.includes('sol')) return 'sol';
-  if (model === 'gpt-5.6') return 'sol';            // alias (C20)
-  if (/^gpt-5\.5($|[^0-9])/.test(model)) return 'sol'; // identical published price (C21)
-  if (/^gpt-5\.3-codex($|[^-])/.test(model)) return 'codex-5.3'; // published price (C21); -spark/-mini excluded
-  return null; // spark / codex-mini / retired gpt-5.4* — unpriced (C21)
+  if (!model) return null;
+  let id = model.replace(/-(\d{4}-\d{2}-\d{2}|\d{8})$/, '');
+  id = ALIASES[id] || id;
+  if (PRICING[id]) return id;
+  const m = /^gpt-6\.(\d+)-(luna|sol|astra)$/.exec(id);
+  return m ? GPT6_LATEST[m[2]] : null;
+}
+
+// Baseline = most-used (by turns) non-delegated model in the session.
+function baselineModel(stats) {
+  let best = DEFAULT_BASELINE;
+  let bestTurns = 0;
+  for (const t of TIERS) {
+    if (DELEGATED_TIERS.includes(t) || !stats[t]) continue;
+    if (stats[t].turns > bestTurns) { best = t; bestTurns = stats[t].turns; }
+  }
+  return best;
 }
 
 function getPrice(model) {
@@ -233,13 +251,16 @@ function computeSummary() {
     return { available: false };
   }
 
-  return makeSummary({
+  const baselineTier = baselineModel(parsed.stats);
+  const summary = makeSummary({
     stats: parsed.stats,
     totalTurns: parsed.totalTurns,
     unknownModels: parsed.unknownModels,
     sessionFile,
-    pricing: pricingConfig,
+    pricing: { PRICING, TIERS, DELEGATED_TIERS, baselineTier },
   });
+  summary.baselineModel = baselineTier;
+  return summary;
 }
 
 let _cache = null;
@@ -261,13 +282,6 @@ function fmt(n) {
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'k';
   return String(n);
 }
-
-const TIER_LABELS = {
-  luna:  '🟢 Luna ',
-  terra: '🔵 Terra',
-  sol:   '🟣 Sol  ',
-  'codex-5.3': '🔵 Codex',
-};
 
 function formatReport(summary) {
   const bar = '━'.repeat(40);
@@ -302,7 +316,7 @@ function formatReport(summary) {
     const s = summary.stats[tier];
     if (s.turns === 0) continue;
     out.push(
-      TIER_LABELS[tier] + ' (' + s.turns + ' turns):  ' +
+      (DELEGATED_TIERS.includes(tier) ? '🟢 ' : '🟣 ') + tier + ' (' + s.turns + ' turns):  ' +
       fmt(s.input + s.cache_read) + ' in / ' + fmt(s.output) + ' out  → $' +
       summary.costs[tier].toFixed(3)
     );
@@ -310,9 +324,9 @@ function formatReport(summary) {
   out.push(bar);
   out.push('');
   out.push('Delegation rate:    ' + summary.delegationRate.toFixed(1) + '% (' +
-    summary.delegatedTurns + '/' + summary.totalTurns + ' turns on Luna/Terra)');
+    summary.delegatedTurns + '/' + summary.totalTurns + ' turns delegated)');
   out.push('Actual cost:        $' + summary.actualCost.toFixed(3));
-  out.push('All-Sol baseline:   $' + summary.hypotheticalCost.toFixed(3));
+  out.push('Baseline (' + summary.baselineModel + '): $' + summary.hypotheticalCost.toFixed(3));
   out.push(bar);
   out.push('💰 Saved:           $' + summary.savedUSD.toFixed(3) + ' (' + summary.savedPct.toFixed(1) + '%)');
   out.push(bar);
@@ -345,6 +359,7 @@ module.exports = {
   tierCost,
   getTier,
   getPrice,
+  baselineModel,
   formatReport,
   printReport,
   PRICING,

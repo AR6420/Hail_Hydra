@@ -45,8 +45,8 @@ const TOKENS = {
 // effort, sonnet (mid) pins medium. Never gpt-5.4*/spark (retiring /
 // research-preview — C20).
 const MODEL_MAP = {
-  haiku: { model: 'gpt-5.6-luna', effort: 'low' },
-  sonnet: { model: 'gpt-5.6-terra', effort: 'medium' },
+  haiku: { model: 'gpt-6-luna', effort: 'low' },
+  sonnet: { model: 'gpt-6-sol', effort: 'medium' },
 };
 
 // Ordered literal rewrites (specific layout moves first, then catch-alls,
@@ -235,7 +235,9 @@ app-server sessions) do not emit token counts.
 
 ## Notes
 
-- Baseline is all-Sol (gpt-5.6-sol pricing); delegated tiers are Luna and Terra.
+- Baseline is the session's main (most-used non-delegated) model, default
+  gpt-6.1-sol; delegated models are gpt-6-luna, gpt-6-sol, gpt-5.6-luna and
+  gpt-5.6-terra.
 - Cost formula: (input − cached) × in-price + cached × cache-price + output ×
   out-price. Reasoning tokens are a subset of output; cached a subset of input.
 - Models without a published price (e.g. gpt-5.3-codex-spark) are listed as

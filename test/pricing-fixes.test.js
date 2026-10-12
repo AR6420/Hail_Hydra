@@ -70,11 +70,11 @@ console.log('pricing-fixes: gemini tier map ok');
 
 const ctm = require('../src/hooks/codex/hydra-token-math.js');
 
-assert.strictEqual(ctm.getTier('gpt-5.3-codex'), 'codex-5.3');
+assert.strictEqual(ctm.getTier('gpt-5.3-codex'), 'gpt-5.3-codex');
 assert.deepStrictEqual(ctm.getPrice('gpt-5.3-codex'), { input: 1.75, output: 14.00, cacheRead: 0.175 });
 assert.strictEqual(ctm.getTier('gpt-5.3-codex-spark'), null, 'spark stays unpriced');
 assert.strictEqual(ctm.getTier('gpt-5.3-codex-mini'), null, 'mini stays unpriced');
-assert.ok(!ctm.DELEGATED_TIERS.includes('codex-5.3'), 'a user-pinned main model is not a delegation tier');
+assert.ok(!ctm.DELEGATED_TIERS.includes('gpt-5.3-codex'),'a user-pinned main model is not a delegation tier');
 console.log('pricing-fixes: codex tier map ok');
 
 // ── 3. Codex mixed total/last rows never double-count ───────────────────────
@@ -93,18 +93,18 @@ const rowLast = (i, c, o) => JSON.stringify({ type: 'event_msg', payload: { type
   const f = path.join(scratch, 'cdx-mixed.jsonl');
   fs.writeFileSync(f, [turnCtx('gpt-5.5'), rowTotal(1000, 0, 100), rowLast(500, 0, 50), rowTotal(2000, 0, 200)].join('\n') + '\n');
   const parsed = ctm.parseSession(f);
-  assert.strictEqual(parsed.stats.sol.input, 2000, 'mixed rows: input not double-counted');
-  assert.strictEqual(parsed.stats.sol.output, 200, 'mixed rows: output not double-counted');
-  assert.strictEqual(parsed.stats.sol.turns, 2, 'last-only row after baseline is skipped');
+  assert.strictEqual(parsed.stats['gpt-5.5'].input, 2000, 'mixed rows: input not double-counted');
+  assert.strictEqual(parsed.stats['gpt-5.5'].output, 200, 'mixed rows: output not double-counted');
+  assert.strictEqual(parsed.stats['gpt-5.5'].turns, 2,'last-only row after baseline is skipped');
 }
 {
   // Pure-last sessions (no cumulative rows at all) still bill per row.
   const f = path.join(scratch, 'cdx-last-only.jsonl');
   fs.writeFileSync(f, [turnCtx('gpt-5.5'), rowLast(500, 0, 50), rowLast(300, 0, 30)].join('\n') + '\n');
   const parsed = ctm.parseSession(f);
-  assert.strictEqual(parsed.stats.sol.input, 800, 'pure-last path still bills');
-  assert.strictEqual(parsed.stats.sol.output, 80);
-  assert.strictEqual(parsed.stats.sol.turns, 2);
+  assert.strictEqual(parsed.stats['gpt-5.5'].input, 800, 'pure-last path still bills');
+  assert.strictEqual(parsed.stats['gpt-5.5'].output, 80);
+  assert.strictEqual(parsed.stats['gpt-5.5'].turns, 2);
 }
 console.log('pricing-fixes: codex mixed-row accounting ok');
 
