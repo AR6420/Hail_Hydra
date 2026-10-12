@@ -167,8 +167,8 @@ Then, **inside the same Copilot session**:
 
 | Tier | Roles | models[0] | fallback | $/1M in/out |
 |---|---|---|---|---|
-| cheap | git, guard, preflight, runner, scout, scribe, sentinel-scan | `gpt-5.6-luna` | `claude-haiku-4.5` | 0.20/1.20 · 1.00/5.00 |
-| mid | analyst, coder, sentinel, architect, researcher | `claude-sonnet-5` | `gpt-5.6-terra` | 2.00/10.00 · 2.00/12.00 |
+| cheap | git, guard, preflight, runner, scout, scribe, sentinel-scan | `claude-haiku-5.5` | `gpt-6-luna` | 0.10/0.50 · 0.10/0.50 |
+| mid | analyst, coder, sentinel, architect, researcher | `claude-sonnet-5.5` | `gpt-5.6-terra` | 2.00/10.00 · 2.00/12.00 |
 
 **Modes:** `/hail-hydra --mode <turbo|balanced|economy> <goal>` (default `balanced`); Turbo puts speed first and costs more. Ceilings are instruction-level heuristics bounded by your Copilot plan's concurrency, not a scheduler guarantee.
 
@@ -671,7 +671,7 @@ How the concepts map:
 
 | Speculative Decoding Concept | Hydra Equivalent |
 |:-----------------------------|:-----------------|
-| Target model (large) | 🧠 The orchestrator (Opus / Gemini Pro / GPT-5.6 Sol) |
+| Target model (large) | 🧠 The orchestrator (Opus / Gemini Pro / GPT-6.1 Sol) |
 | Draft model (small) | 🟢🔵 The cheap/mid-tier heads |
 | Draft K tokens | Heads draft the full task output |
 | Parallel verification | Orchestrator glances at the output |
@@ -869,19 +869,19 @@ hydra/
 
 | Task Type | % of Work | Model Used | Input Cost vs Opus | Output Cost vs Opus |
 |:----------|:----------|:-----------|:----------------------|:-----------------------|
-| Exploration, search, tests, docs | ~50% | 🟢 Haiku | 20% ($1 vs $5/MTok) | 20% ($5 vs $25/MTok) |
-| Implementation, review, debugging | ~30% | 🔵 Sonnet | 60% ($3 vs $5/MTok) | 60% ($15 vs $25/MTok) |
+| Exploration, search, tests, docs | ~50% | 🟢 Haiku | 2.5% ($0.10 vs $4/MTok) | 2.5% ($0.50 vs $20/MTok) |
+| Implementation, review, debugging | ~30% | 🔵 Sonnet | 50% ($2 vs $4/MTok) | 50% ($10 vs $20/MTok) |
 | Architecture, hard problems | ~20% | 🧠 Opus | 100% (no change) | 100% (no change) |
-| Sentinel scan (fast) | Auto (every code change) | 🟢 Haiku | 20% | 20% |
-| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet | 60% | 60% |
-| **Blended effective cost** | | | **~48% of all-Opus** | **~48% of all-Opus** |
+| Sentinel scan (fast) | Auto (every code change) | 🟢 Haiku | 2.5% | 2.5% |
+| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet | 50% | 50% |
+| **Blended effective cost** | | | **~36% of all-Opus** | **~36% of all-Opus** |
 
-Note: When Hydra is invoked across a representative mix of task types, blended input = (0.5×$1 + 0.3×$3 + 0.2×$5) / $5 = $2.40/$5 ≈ 48% of all-Opus.
-Per-dispatch savings of **~50%** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
+Note: Prices are Haiku 5.5 / Sonnet 5.5 / Opus 5.5 (verified 2026-10). When Hydra is invoked across a representative mix of task types, blended input = (0.5×$0.10 + 0.3×$2 + 0.2×$4) / $4 = $1.45/$4 ≈ 36% of all-Opus. Haiku 5.5 prompts over 100K tokens bill at $0.50/$2.50, so long-context-heavy sessions save less.
+Per-dispatch savings of **~50%** or more are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
 
 On Gemini CLI and Codex CLI the same routing applies against that host's own
 frontier model — Flash-tier heads measured against an all-Gemini-Pro baseline,
-Luna/Terra heads against an all-GPT-5.6-Sol baseline — landing around the same
+Luna/Sol heads against the session's main GPT model (default GPT-6.1 Sol) — landing around the same
 ~50% blended mark. `/hydra:stats` (`$hydra-stats` on Codex) reports real
 per-host numbers.
 
@@ -919,9 +919,9 @@ That's it. Real data beats theoretical calculations every time.
 
 #### What to expect
 When Hydra is actively invoked across a typical mix (50% Haiku, 30% Sonnet, 20% Opus):
-- **Input tokens**: ~52% cheaper per dispatch ($2.40 vs $5.00 per MTok)
-- **Output tokens**: ~52% cheaper per dispatch ($12.00 vs $25.00 per MTok)
-- **Per-dispatch blended**: ~50% cost reduction on Hydra-invoked work
+- **Input tokens**: ~64% cheaper per dispatch ($1.45 vs $4.00 per MTok)
+- **Output tokens**: ~64% cheaper per dispatch ($7.25 vs $20.00 per MTok)
+- **Per-dispatch blended**: ~50%+ cost reduction on Hydra-invoked work
 - **Speed**: 2–3× faster on delegated tasks
 
 Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your session logs — no estimation.

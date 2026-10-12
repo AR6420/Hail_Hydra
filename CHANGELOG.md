@@ -5,6 +5,35 @@ All notable changes to the Hydra framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.3] - 2026-10-12
+
+### Changed
+- **Pricing updated to current Anthropic, OpenAI and Google list prices**
+  (verified 2026-10-12). Claude pricing in `/hydra:stats` is now keyed by
+  model generation, not family: Haiku 5.5 ($0.10/$0.50, $0.50/$2.50 for
+  prompts over 100K tokens), Sonnet 5.5 and Sonnet 5 ($2/$10), Opus 5.5
+  ($4/$20) and Fable/Mythos 5.1 (cache reads $0.25) are priced exactly, while
+  older generations keep their own prices. Savings are measured against the
+  Opus generation the session actually uses (Opus 5.5 if none).
+- **Codex prices every GPT-6 model exactly** — `gpt-6-luna`, `gpt-6-sol`,
+  `gpt-6.1-sol` and `gpt-6-astra`, plus the current GPT-5.6 Sol price. The
+  savings baseline is the session's main model (default `gpt-6.1-sol`).
+- **New per-tier defaults:**
+  - Codex: cheap `gpt-6-luna`, mid `gpt-6-sol`.
+  - Gemini: cheap `gemini-3.5-flash-lite` (2.5 models are closed to new
+    users), mid `gemini-3.8-flash`.
+  - Copilot: cheap `claude-haiku-5.5` then `gpt-6-luna`; mid
+    `claude-sonnet-5.5` then `gpt-5.6-terra`.
+- README savings tables recomputed for the new prices.
+
+### Fixed
+- Codex model matching was substring-based, so `gpt-6-sol`, `gpt-6.1-sol` and
+  `gpt-6-luna` were billed at GPT-5.6 prices and `gpt-6-astra` went
+  uncounted. Matching is now by exact model ID.
+- `gemini-3.5-flash-lite` was billed as `gemini-3.5-flash`.
+- `claude-mythos-preview` has no published price and is now reported as an
+  unknown model instead of being billed at Fable prices.
+
 ## [2.5.2] - 2026-09-18
 
 ### Fixed
