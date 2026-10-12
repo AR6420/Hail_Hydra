@@ -197,7 +197,15 @@ assert.strictEqual(tm.getTier('gemini-3-pro-preview'), 'pro');
 assert.strictEqual(tm.getTier('gemini-3.1-pro-preview'), 'pro');
 assert.strictEqual(tm.getTier('claude-opus-5'), null);
 assert.strictEqual(tm.getTier(''), null);
-assert.deepStrictEqual(tm.DELEGATED_TIERS, ['flash-lite', 'flash-lite-3.1', 'flash', 'flash-3', 'flash-3.5', 'flash-3.6']);
+assert.strictEqual(tm.getTier('gemini-3.5-flash-lite'), 'flash-lite-3.5', 'exact match, not the 3.5-flash prefix');
+assert.strictEqual(tm.getTier('gemini-3.8-flash'), 'flash-3.8');
+assert.strictEqual(tm.getTier('gemini-3.7-flash'), 'flash-3.8', 'deprecated, routed to 3.8');
+assert.strictEqual(tm.getTier('gemini-2.5-flash-preview-tts'), null, 'tts → unknown');
+assert.strictEqual(tm.getTier('gemini-3.8-flash-live'), null, 'live → unknown');
+assert.deepStrictEqual(tm.DELEGATED_TIERS, ['flash-lite', 'flash-lite-3.1', 'flash-lite-3.5', 'flash', 'flash-3', 'flash-3.6', 'flash-3.8']);
+assert.strictEqual(MODEL_MAP.haiku, 'gemini-3.5-flash-lite');
+assert.strictEqual(MODEL_MAP.sonnet, 'gemini-3.8-flash');
+for (const m of Object.values(MODEL_MAP)) assert.ok(tm.getTier(m), `mapped worker model ${m} is priced`);
 assert.strictEqual(tm.PRICING.pro.proxyOf, 'gemini-3.1-pro-preview', 'pro tier carries the proxy note');
 assert.strictEqual(tm.getPrice('gemini-2.5-flash').input, 0.30);
 

@@ -51,8 +51,8 @@ const TOOL_MAP = {
 // implicitly (no Hydra agent pins it). Pro pins would fail on unpaid
 // API-key auth (G24) — never map to a Pro model here.
 const MODEL_MAP = {
-  haiku: 'gemini-2.5-flash',
-  sonnet: 'gemini-3-flash-preview',
+  haiku: 'gemini-3.5-flash-lite',
+  sonnet: 'gemini-3.8-flash',
 };
 
 // Ordered literal rewrites applied to every text payload. Specific path
