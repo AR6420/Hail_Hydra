@@ -1,0 +1,314 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="A request flows left to right: the orchestrator classifies it, a parallel wave of scout, coder and scribe heads does the work, sentinel-scan and guard verify it (escalating to sentinel only if issues are found), and one answer comes back.">
+  <title>How a task flows</title>
+  <defs>
+    <style>
+
+      .p0 { transform: translate(180px, 210px); opacity: 1; animation: p0 12s linear infinite; }
+      @keyframes p0 { 0% { transform: translate(180px, 210px); opacity: 1; } 6.7% { transform: translate(240px, 210px); opacity: 1; } 7.3% { transform: translate(240px, 210px); opacity: 0; } 99.4% { transform: translate(180px, 210px); opacity: 0; } 100% { transform: translate(180px, 210px); opacity: 1; } }
+      .p1 { transform: translate(380px, 210px); opacity: 0; animation: p1 12s linear infinite; }
+      @keyframes p1 { 0%, 16.1% { transform: translate(380px, 210px); opacity: 0; } 16.7% { transform: translate(380px, 210px); opacity: 1; } 18.48% { transform: translate(415px, 210px); opacity: 1; } 21.52% { transform: translate(415px, 150px); opacity: 1; } 23.3% { transform: translate(450px, 150px); opacity: 1; } 23.9% { transform: translate(450px, 150px); opacity: 0; } 100% { transform: translate(450px, 150px); opacity: 0; } }
+      .p2 { transform: translate(380px, 210px); opacity: 0; animation: p2 12s linear infinite; }
+      @keyframes p2 { 0%, 16.1% { transform: translate(380px, 210px); opacity: 0; } 16.7% { transform: translate(380px, 210px); opacity: 1; } 20% { transform: translate(415px, 210px); opacity: 1; } 23.3% { transform: translate(450px, 210px); opacity: 1; } 23.9% { transform: translate(450px, 210px); opacity: 0; } 100% { transform: translate(450px, 210px); opacity: 0; } }
+      .p3 { transform: translate(380px, 210px); opacity: 0; animation: p3 12s linear infinite; }
+      @keyframes p3 { 0%, 16.1% { transform: translate(380px, 210px); opacity: 0; } 16.7% { transform: translate(380px, 210px); opacity: 1; } 18.48% { transform: translate(415px, 210px); opacity: 1; } 21.52% { transform: translate(415px, 270px); opacity: 1; } 23.3% { transform: translate(450px, 270px); opacity: 1; } 23.9% { transform: translate(450px, 270px); opacity: 0; } 100% { transform: translate(450px, 270px); opacity: 0; } }
+      .p4 { transform: translate(640px, 150px); opacity: 0; animation: p4 12s linear infinite; }
+      @keyframes p4 { 0%, 42.7% { transform: translate(640px, 150px); opacity: 0; } 43.3% { transform: translate(640px, 150px); opacity: 1; } 45.14% { transform: translate(675px, 150px); opacity: 1; } 48.3% { transform: translate(675px, 210px); opacity: 1; } 48.9% { transform: translate(675px, 210px); opacity: 0; } 100% { transform: translate(675px, 210px); opacity: 0; } }
+      .p5 { transform: translate(640px, 210px); opacity: 0; animation: p5 12s linear infinite; }
+      @keyframes p5 { 0%, 42.7% { transform: translate(640px, 210px); opacity: 0; } 43.3% { transform: translate(640px, 210px); opacity: 1; } 48.3% { transform: translate(675px, 210px); opacity: 1; } 48.9% { transform: translate(675px, 210px); opacity: 0; } 100% { transform: translate(675px, 210px); opacity: 0; } }
+      .p6 { transform: translate(640px, 270px); opacity: 0; animation: p6 12s linear infinite; }
+      @keyframes p6 { 0%, 42.7% { transform: translate(640px, 270px); opacity: 0; } 43.3% { transform: translate(640px, 270px); opacity: 1; } 45.14% { transform: translate(675px, 270px); opacity: 1; } 48.3% { transform: translate(675px, 210px); opacity: 1; } 48.9% { transform: translate(675px, 210px); opacity: 0; } 100% { transform: translate(675px, 210px); opacity: 0; } }
+      .p7 { transform: translate(675px, 210px); opacity: 0; animation: p7 12s linear infinite; }
+      @keyframes p7 { 0%, 47.7% { transform: translate(675px, 210px); opacity: 0; } 48.3% { transform: translate(675px, 210px); opacity: 1; } 50.95% { transform: translate(675px, 150px); opacity: 1; } 52.5% { transform: translate(710px, 150px); opacity: 1; } 53.1% { transform: translate(710px, 150px); opacity: 0; } 100% { transform: translate(710px, 150px); opacity: 0; } }
+      .p8 { transform: translate(675px, 210px); opacity: 0; animation: p8 12s linear infinite; }
+      @keyframes p8 { 0%, 47.7% { transform: translate(675px, 210px); opacity: 0; } 48.3% { transform: translate(675px, 210px); opacity: 1; } 52.5% { transform: translate(710px, 210px); opacity: 1; } 53.1% { transform: translate(710px, 210px); opacity: 0; } 100% { transform: translate(710px, 210px); opacity: 0; } }
+      .p9 { transform: translate(900px, 150px); opacity: 0; animation: p9 12s linear infinite; }
+      @keyframes p9 { 0%, 66.1% { transform: translate(900px, 150px); opacity: 0; } 66.7% { transform: translate(900px, 150px); opacity: 1; } 68.54% { transform: translate(935px, 150px); opacity: 1; } 71.7% { transform: translate(935px, 210px); opacity: 1; } 72.3% { transform: translate(935px, 210px); opacity: 0; } 100% { transform: translate(935px, 210px); opacity: 0; } }
+      .p10 { transform: translate(900px, 210px); opacity: 0; animation: p10 12s linear infinite; }
+      @keyframes p10 { 0%, 66.1% { transform: translate(900px, 210px); opacity: 0; } 66.7% { transform: translate(900px, 210px); opacity: 1; } 71.7% { transform: translate(935px, 210px); opacity: 1; } 72.3% { transform: translate(935px, 210px); opacity: 0; } 100% { transform: translate(935px, 210px); opacity: 0; } }
+      .p11 { transform: translate(935px, 210px); opacity: 0; animation: p11 12s linear infinite; }
+      @keyframes p11 { 0%, 71.1% { transform: translate(935px, 210px); opacity: 0; } 71.7% { transform: translate(935px, 210px); opacity: 1; } 74.2% { transform: translate(970px, 210px); opacity: 1; } 74.8% { transform: translate(970px, 210px); opacity: 0; } 100% { transform: translate(970px, 210px); opacity: 0; } }
+      .p12 { transform: translate(724px, 232px); opacity: 0; animation: p12 24s linear infinite; }
+      @keyframes p12 { 0%, 26.5% { transform: translate(724px, 232px); opacity: 0; } 27.1% { transform: translate(724px, 232px); opacity: 1; } 28.8% { transform: translate(724px, 262px); opacity: 1; } 29.4% { transform: translate(724px, 262px); opacity: 0; } 100% { transform: translate(724px, 262px); opacity: 0; } }
+      .p13 { transform: translate(900px, 284px); opacity: 0; animation: p13 24s linear infinite; }
+      @keyframes p13 { 0%, 32.7% { transform: translate(900px, 284px); opacity: 0; } 33.3% { transform: translate(900px, 284px); opacity: 1; } 34.1% { transform: translate(935px, 284px); opacity: 1; } 35.8% { transform: translate(935px, 210px); opacity: 1; } 36.4% { transform: translate(935px, 210px); opacity: 0; } 100% { transform: translate(935px, 210px); opacity: 0; } }
+      @keyframes g1 { 0% { opacity: 1; } 5.5% { opacity: 1; } 6.7% { opacity: 0; } 98.8% { opacity: 0; } 100% { opacity: 1; } }
+      @keyframes g2 { 0%, 6% { opacity: 0; } 7.2%, 16.2% { opacity: 1; } 17.4%, 100% { opacity: 0; } }
+      @keyframes g3 { 0%, 22.1% { opacity: 0; } 23.3%, 43.3% { opacity: 1; } 44.5%, 100% { opacity: 0; } }
+      @keyframes g4 { 0%, 51.3% { opacity: 0; } 52.5%, 66.5% { opacity: 1; } 67.7%, 100% { opacity: 0; } }
+      @keyframes g5 { 0%, 73% { opacity: 0; } 74.2%, 95% { opacity: 1; } 96.2%, 100% { opacity: 0; } }
+      @keyframes esc { 0%, 25.9% { opacity: 0; } 27.1%, 35.8% { opacity: 1; } 37%, 100% { opacity: 0; } }
+      @keyframes b0 { 0%, 23.3% { transform: scaleX(1); } 23.7% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 36%, 100% { transform: scaleX(1); } }
+      @keyframes b1 { 0%, 23.3% { transform: scaleX(1); } 23.7% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 43%, 100% { transform: scaleX(1); } }
+      @keyframes b2 { 0%, 23.3% { transform: scaleX(1); } 23.7% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 39.5%, 100% { transform: scaleX(1); } }
+      @keyframes b3 { 0%, 52.5% { transform: scaleX(1); } 52.9% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 63%, 100% { transform: scaleX(1); } }
+      @keyframes b4 { 0%, 52.5% { transform: scaleX(1); } 52.9% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 66%, 100% { transform: scaleX(1); } }
+      @keyframes bd { 0%, 28.8% { transform: scaleX(.03); } 29.2% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 33%, 35.8% { transform: scaleX(1); } 37%, 100% { transform: scaleX(.03); } }
+      .bar { transform-box: fill-box; transform-origin: 0 50%; }
+      .gl { opacity: 0; }
+      .s1 { opacity: 1; animation: g1 12s ease-in-out infinite; }
+      .s2 { animation: g2 12s ease-in-out infinite; }
+      .s3 { animation: g3 12s ease-in-out infinite; }
+      .s4 { animation: g4 12s ease-in-out infinite; }
+      .s5 { animation: g5 12s ease-in-out infinite; }
+      .esc { opacity: 0; animation: esc 24s ease-in-out infinite; }
+      .bd { transform: scaleX(.03); animation: bd 24s linear infinite; }
+      .b0 { animation: b0 12s linear infinite; }
+      .b1 { animation: b1 12s linear infinite; }
+      .b2 { animation: b2 12s linear infinite; }
+      .b3 { animation: b3 12s linear infinite; }
+      .b4 { animation: b4 12s linear infinite; }
+      .cur { animation: cur 1s steps(1, end) infinite; }
+      @keyframes cur { 50% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+    <clipPath id="card"><rect x="0" y="0" width="1200" height="420" rx="16"/></clipPath>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <rect x="11" y="11" width="2" height="2" fill="#161b22" shape-rendering="crispEdges"/>
+    </pattern>
+    <g id="head">
+      <polygon points="-21,-16 -25,-30 -13,-18" fill="#dc2626"/>
+      <polygon points="-9,-18 -8,-29 0,-18" fill="#dc2626"/>
+      <rect x="-26" y="-19" width="34" height="31" rx="9" fill="currentColor"/>
+      <rect x="-3" y="-8" width="29" height="20" rx="7" fill="currentColor"/>
+      <rect x="-3" y="5" width="29" height="7" rx="3" fill="#000" opacity=".22"/>
+      <rect x="-26" y="6" width="22" height="6" rx="3" fill="#000" opacity=".18"/>
+      <rect x="-21" y="-15" width="9" height="3" fill="#fff" opacity=".28" shape-rendering="crispEdges"/>
+      <rect x="-11" y="-11" width="9" height="9" rx="2" fill="#e6edf3"/>
+      <rect x="-6" y="-8" width="4" height="5" fill="#0b0f14" shape-rendering="crispEdges"/>
+      <rect x="19" y="-4" width="3" height="3" fill="#0b0f14" opacity=".55" shape-rendering="crispEdges"/>
+      <polygon points="9,12 12,16 15,12" fill="#e6edf3"/>
+      <polygon points="17,12 19,15 21,12" fill="#e6edf3"/>
+    </g>
+    <filter id="soft" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+    <linearGradient id="bodyg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#30363d"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1199" height="419" rx="16" fill="#0b0f14" stroke="#1f2937"/>
+  <g clip-path="url(#card)">
+    <rect width="1200" height="420" fill="url(#dots)"/>
+
+    <!-- header -->
+    <text x="40" y="50" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="24" fill="#e6edf3">How a task flows</text>
+    <text x="40" y="74" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="14" fill="#8b949e">One request in, heads working in parallel, a verified answer out</text>
+    <rect x="1036" y="40" width="8" height="8" fill="#dc2626" transform="rotate(45 1040 44)"/>
+    <text x="1160" y="49" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-weight="700" font-size="13" letter-spacing="2" fill="#dc2626">HAIL HYDRA</text>
+
+    <!-- stage headings and one-liners -->
+    <g text-anchor="middle">
+      <text x="110" y="114" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="15" fill="#e6edf3"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">01 </tspan>Your request</text>
+      <text x="110" y="336" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">you ask once</text>
+      <text x="310" y="114" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="15" fill="#e6edf3"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">02 </tspan>Orchestrator</text>
+      <text x="310" y="336" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">classify + plan</text>
+      <text x="545" y="114" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="15" fill="#e6edf3"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">03 </tspan>Parallel wave</text>
+      <text x="545" y="336" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">parallel heads</text>
+      <text x="805" y="114" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="15" fill="#e6edf3"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">04 </tspan>Verification wave</text>
+      <text x="805" y="336" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">verify before you see it</text>
+      <text x="1065" y="114" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="15" fill="#e6edf3"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">05 </tspan>One answer</text>
+      <text x="1065" y="336" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">single response</text>
+    </g>
+
+    <!-- wiring -->
+    <g fill="none" stroke="#30363d" stroke-width="2" stroke-linejoin="round">
+      <polyline points="180,210 238,210" marker-end="url(#arr)"/>
+      <polyline points="380,210 415,210"/>
+      <polyline points="415,150 415,270"/>
+      <polyline points="415,150 448,150" marker-end="url(#arr)"/>
+      <polyline points="640,150 675,150"/>
+      <polyline points="415,210 448,210" marker-end="url(#arr)"/>
+      <polyline points="640,210 675,210"/>
+      <polyline points="415,270 448,270" marker-end="url(#arr)"/>
+      <polyline points="640,270 675,270"/>
+      <polyline points="675,150 675,270"/>
+      <polyline points="675,150 708,150" marker-end="url(#arr)"/>
+      <polyline points="675,210 708,210" marker-end="url(#arr)"/>
+      <polyline points="900,150 935,150 935,210"/>
+      <polyline points="900,210 968,210" marker-end="url(#arr)"/>
+      <g stroke-dasharray="4 4">
+        <polyline points="724,232 724,260"/>
+        <polyline points="900,284 935,284 935,210"/>
+      </g>
+    </g>
+    <rect x="671" y="206" width="8" height="8" fill="#30363d" transform="rotate(45 675 210)"/>
+    <rect x="931" y="206" width="8" height="8" fill="#30363d" transform="rotate(45 935 210)"/>
+
+    <!-- stage glows -->
+      <g class="gl s1">
+        <rect x="37" y="157" width="146" height="106" rx="13" fill="none" stroke="#e6edf3" stroke-width="6" filter="url(#soft)"/>
+        <rect x="39" y="159" width="142" height="102" rx="11" fill="none" stroke="#e6edf3" stroke-width="2"/>
+      </g>
+      <g class="gl s2">
+        <rect x="237" y="147" width="146" height="126" rx="15" fill="none" stroke="#a78bfa" stroke-width="6" filter="url(#soft)"/>
+        <rect x="239" y="149" width="142" height="122" rx="13" fill="none" stroke="#a78bfa" stroke-width="2"/>
+      </g>
+      <g class="gl s3">
+        <rect x="447" y="125" width="196" height="50" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+        <rect x="449" y="127" width="192" height="46" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+      </g>
+      <g class="gl s3">
+        <rect x="447" y="185" width="196" height="50" rx="11" fill="none" stroke="#60a5fa" stroke-width="6" filter="url(#soft)"/>
+        <rect x="449" y="187" width="192" height="46" rx="9" fill="none" stroke="#60a5fa" stroke-width="2"/>
+      </g>
+      <g class="gl s3">
+        <rect x="447" y="245" width="196" height="50" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+        <rect x="449" y="247" width="192" height="46" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+      </g>
+      <g class="gl s4">
+        <rect x="707" y="125" width="196" height="50" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+        <rect x="709" y="127" width="192" height="46" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+      </g>
+      <g class="gl s4">
+        <rect x="707" y="185" width="196" height="50" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+        <rect x="709" y="187" width="192" height="46" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+      </g>
+      <g class="gl s5">
+        <rect x="967" y="147" width="196" height="126" rx="15" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+        <rect x="969" y="149" width="192" height="122" rx="13" fill="none" stroke="#4ade80" stroke-width="2"/>
+      </g>
+
+    <!-- 01 request -->
+    <g>
+      <rect x="40" y="160" width="140" height="100" rx="10" fill="#111827" stroke="#30363d"/>
+      <rect x="40" y="160" width="140" height="22" rx="10" fill="#161b22"/>
+      <rect x="40" y="172" width="140" height="10" fill="#161b22"/>
+      <g fill="#30363d" shape-rendering="crispEdges"><rect x="52" y="168" width="6" height="6"/><rect x="62" y="168" width="6" height="6"/><rect x="72" y="168" width="6" height="6"/></g>
+      <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13">
+        <text x="52" y="204" fill="#e6edf3"><tspan fill="#dc2626">›</tspan> add login</text>
+        <text x="68" y="224" fill="#e6edf3">with tests</text>
+      </g>
+      <rect class="cur" x="52" y="234" width="8" height="14" fill="#e6edf3" shape-rendering="crispEdges"/>
+    </g>
+
+    <!-- 02 orchestrator -->
+    <g>
+      <rect x="240" y="150" width="140" height="120" rx="12" fill="#161b22" stroke="#7c3aed"/>
+      <g fill="none" stroke-width="5" stroke-linecap="round">
+        <path d="M300,186 C298,176 288,172 282,166" stroke="#16a34a"/>
+        <path d="M310,184 C310,176 310,170 310,162" stroke="#2563eb"/>
+        <path d="M320,186 C322,176 332,172 338,166" stroke="#16a34a"/>
+      </g>
+      <rect x="277" y="161" width="10" height="10" rx="2" fill="#4ade80"/>
+      <rect x="305" y="157" width="10" height="10" rx="2" fill="#60a5fa"/>
+      <rect x="333" y="161" width="10" height="10" rx="2" fill="#4ade80"/>
+      <path d="M278,214 C278,194 292,182 310,182 C328,182 342,194 342,214 Z" fill="url(#bodyg)"/>
+      <rect x="305" y="196" width="10" height="10" fill="#f87171" transform="rotate(45 310 201)"/>
+      <text x="310" y="238" text-anchor="middle" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#a78bfa">orchestrator</text>
+      <text x="310" y="256" text-anchor="middle" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">your main model</text>
+    </g>
+
+    <!-- 03 parallel wave -->
+      <g>
+        <rect x="450" y="128" width="190" height="44" rx="8" fill="#111827" stroke="#16a34a"/>
+        <use href="#head" style="color:#4ade80" transform="translate(474,151) scale(.62)"/>
+        <text x="496" y="145" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#4ade80">scout</text>
+        <text x="496" y="161" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">find files, read code</text>
+        <rect x="458" y="166" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar b0" x="458" y="166" width="174" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      </g>
+      <g>
+        <rect x="450" y="188" width="190" height="44" rx="8" fill="#111827" stroke="#2563eb"/>
+        <use href="#head" style="color:#60a5fa" transform="translate(474,211) scale(.62)"/>
+        <text x="496" y="205" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#60a5fa">coder</text>
+        <text x="496" y="221" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">implement features</text>
+        <rect x="458" y="226" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar b1" x="458" y="226" width="174" height="3" fill="#60a5fa" shape-rendering="crispEdges"/>
+      </g>
+      <g>
+        <rect x="450" y="248" width="190" height="44" rx="8" fill="#111827" stroke="#16a34a"/>
+        <use href="#head" style="color:#4ade80" transform="translate(474,271) scale(.62)"/>
+        <text x="496" y="265" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#4ade80">scribe</text>
+        <text x="496" y="281" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">docs, READMEs</text>
+        <rect x="458" y="286" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar b2" x="458" y="286" width="174" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      </g>
+
+    <!-- 04 verification wave -->
+      <g>
+        <rect x="710" y="128" width="190" height="44" rx="8" fill="#111827" stroke="#16a34a"/>
+        <use href="#head" style="color:#4ade80" transform="translate(734,151) scale(.62)"/>
+        <text x="756" y="145" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#4ade80">guard</text>
+        <text x="756" y="161" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">security + quality scan</text>
+        <rect x="718" y="166" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar b3" x="718" y="166" width="174" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      </g>
+      <g>
+        <rect x="710" y="188" width="190" height="44" rx="8" fill="#111827" stroke="#16a34a"/>
+        <use href="#head" style="color:#4ade80" transform="translate(734,211) scale(.62)"/>
+        <text x="756" y="205" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#4ade80">sentinel-scan</text>
+        <text x="756" y="221" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">fast integration sweep</text>
+        <rect x="718" y="226" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar b4" x="718" y="226" width="174" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      </g>
+      <g opacity=".45">
+
+        <rect x="710" y="262" width="190" height="44" rx="8" fill="#111827" stroke="#2563eb"/>
+        <use href="#head" style="color:#60a5fa" transform="translate(734,285) scale(.62)"/>
+        <text x="756" y="279" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#60a5fa">sentinel</text>
+        <text x="756" y="295" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">deep integration check</text>
+        <rect x="718" y="300" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar bd" x="718" y="300" width="174" height="3" fill="#60a5fa" shape-rendering="crispEdges"/>
+      
+      </g>
+      <text x="734" y="251" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#6e7681">issues? → sentinel (deep)</text>
+      <g class="esc">
+        <polyline points="724,232 724,260" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="4 4"/>
+      <g >
+        <rect x="707" y="259" width="196" height="50" rx="11" fill="none" stroke="#60a5fa" stroke-width="6" filter="url(#soft)"/>
+        <rect x="709" y="261" width="192" height="46" rx="9" fill="none" stroke="#60a5fa" stroke-width="2"/>
+      </g>
+      <g>
+        <rect x="710" y="262" width="190" height="44" rx="8" fill="#111827" stroke="#2563eb"/>
+        <use href="#head" style="color:#60a5fa" transform="translate(734,285) scale(.62)"/>
+        <text x="756" y="279" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#60a5fa">sentinel</text>
+        <text x="756" y="295" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">deep integration check</text>
+        <rect x="718" y="300" width="174" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+        <rect class="bar bd" x="718" y="300" width="174" height="3" fill="#60a5fa" shape-rendering="crispEdges"/>
+      </g>
+        <text x="734" y="251" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#f87171">issues? → sentinel (deep)</text>
+      </g>
+
+    <!-- 05 answer -->
+    <g>
+      <rect x="970" y="150" width="190" height="120" rx="12" fill="#111827" stroke="#30363d"/>
+      <rect x="986" y="166" width="24" height="24" rx="6" fill="#16a34a"/>
+      <path d="M992,178 L996,183 L1004,172" fill="none" stroke="#e6edf3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="1020" y="183" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#e6edf3">ready for you</text>
+      <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#e6edf3">
+        <text x="986" y="216"><tspan fill="#4ade80">✓</tspan> code written</text>
+        <text x="986" y="236"><tspan fill="#4ade80">✓</tspan> tests pass</text>
+        <text x="986" y="256"><tspan fill="#4ade80">✓</tspan> scan clean</text>
+      </g>
+    </g>
+
+    <!-- token packets -->
+    <g>
+      <g class="p0"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#e6edf3" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#e6edf3" shape-rendering="crispEdges"/></g>
+      <g class="p1"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p2"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#60a5fa" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#60a5fa" shape-rendering="crispEdges"/></g>
+      <g class="p3"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p4"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p5"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#60a5fa" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#60a5fa" shape-rendering="crispEdges"/></g>
+      <g class="p6"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p7"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p8"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p9"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p10"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#4ade80" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#4ade80" shape-rendering="crispEdges"/></g>
+      <g class="p11"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#e6edf3" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#e6edf3" shape-rendering="crispEdges"/></g>
+      <g class="p12"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#f87171" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#f87171" shape-rendering="crispEdges"/></g>
+      <g class="p13"><rect x="-9" y="-9" width="18" height="18" rx="4" fill="#60a5fa" opacity=".25"/><rect x="-5" y="-5" width="10" height="10" fill="#60a5fa" shape-rendering="crispEdges"/></g>
+    </g>
+
+    <!-- legend -->
+    <g font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e" shape-rendering="crispEdges">
+      <rect x="406" y="384" width="12" height="12" fill="#4ade80"/><text x="426" y="394">cheap tier</text>
+      <rect x="518" y="384" width="12" height="12" fill="#60a5fa"/><text x="538" y="394">mid tier</text>
+      <rect x="618" y="384" width="12" height="12" fill="#a78bfa"/><text x="638" y="394">orchestrator</text>
+      <rect x="738" y="386" width="8" height="8" fill="#e6edf3"/><text x="754" y="394">token packet</text>
+    </g>
+  </g>
+</svg>

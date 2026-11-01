@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="/hydra:stats output for a sample 38-turn session: Haiku $0.018, Sonnet $0.167, Opus $0.236, delegation 86.8%, actual $0.421 against an all-Opus baseline of $1.301, saving $0.880 (67.6%). A donut and bar chart show cost by tier.">
+  <title>/hydra:stats sample session: $0.421 actual vs $1.301 all-Opus, 67.6% saved</title>
+  <defs>
+    <style>
+      .sans{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace}
+      /* 14 s loop. t=0 = complete output. 10-13% clear; header 16%; tiers 20/24/28% (donut slices with them);
+         summary 34/38/42% (bars at 38/42%); saved 50%; footer 54%; hold to 100%. */
+      .a16,.a20,.a24,.a28,.a34,.a38,.a42,.a50,.a54{animation:14s ease-out infinite}
+      .a16{animation-name:a16}.a20{animation-name:a20}.a24{animation-name:a24}.a28{animation-name:a28}
+      .a34{animation-name:a34}.a38{animation-name:a38}.a42{animation-name:a42}.a50{animation-name:a50}.a54{animation-name:a54}
+      @keyframes a16{0%,10%{opacity:1}13%,16%{opacity:0}18%,100%{opacity:1}}
+      @keyframes a20{0%,10%{opacity:1}13%,20%{opacity:0}22%,100%{opacity:1}}
+      @keyframes a24{0%,10%{opacity:1}13%,24%{opacity:0}26%,100%{opacity:1}}
+      @keyframes a28{0%,10%{opacity:1}13%,28%{opacity:0}30%,100%{opacity:1}}
+      @keyframes a34{0%,10%{opacity:1}13%,34%{opacity:0}36%,100%{opacity:1}}
+      @keyframes a38{0%,10%{opacity:1}13%,38%{opacity:0}40%,100%{opacity:1}}
+      @keyframes a42{0%,10%{opacity:1}13%,42%{opacity:0}44%,100%{opacity:1}}
+      @keyframes a50{0%,10%{opacity:1}13%,50%{opacity:0}52%,100%{opacity:1}}
+      @keyframes a54{0%,10%{opacity:1}13%,54%{opacity:0}56%,100%{opacity:1}}
+      .d20,.d24,.d28{transform-box:fill-box;transform-origin:50% 50%;animation:14s ease-out infinite}
+      .d20{animation-name:d20}.d24{animation-name:d24}.d28{animation-name:d28}
+      @keyframes d20{0%,10%{opacity:1;transform:none}13%,20%{opacity:0;transform:rotate(-40deg) scale(.7)}24%,100%{opacity:1;transform:none}}
+      @keyframes d24{0%,10%{opacity:1;transform:none}13%,24%{opacity:0;transform:rotate(-40deg) scale(.7)}28%,100%{opacity:1;transform:none}}
+      @keyframes d28{0%,10%{opacity:1;transform:none}13%,28%{opacity:0;transform:rotate(-40deg) scale(.7)}32%,100%{opacity:1;transform:none}}
+      .b38,.b42{transform-box:fill-box;transform-origin:0 50%;animation:14s ease-in-out infinite}
+      .b38{animation-name:b38}.b42{animation-name:b42}
+      @keyframes b38{0%,10%{transform:none}13%,38%{transform:scaleX(0)}42%,100%{transform:none}}
+      @keyframes b42{0%,10%{transform:none}13%,42%{transform:scaleX(0)}47%,100%{transform:none}}
+      @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+    </style>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1199" height="419" rx="16" fill="#0b0f14" stroke="#1f2937"/>
+
+  <!-- terminal -->
+  <rect x="40" y="24" width="600" height="372" rx="12" fill="#111827" stroke="#30363d"/>
+  <path d="M40 58V36a12 12 0 0 1 12-12h576a12 12 0 0 1 12 12v22Z" fill="#161b22"/>
+  <path d="M40 58H640" stroke="#30363d"/>
+  <circle cx="64" cy="41" r="6" fill="#dc2626"/>
+  <circle cx="84" cy="41" r="6" fill="#fbbf24"/>
+  <circle cx="104" cy="41" r="6" fill="#4ade80"/>
+  <text class="mono" x="340" y="46" fill="#8b949e" font-size="13" text-anchor="middle">hydra · sample session</text>
+
+  <g class="mono" font-size="15">
+    <text x="60" y="94" fill="#4ade80">$</text>
+    <text x="80" y="94" fill="#e6edf3">/hydra:stats</text>
+
+    <g class="a16">
+      <text x="60" y="126" fill="#e6edf3" font-weight="700">🐉 Hydra Stats</text>
+      <text x="620" y="126" fill="#6e7681" font-size="13" text-anchor="end">38 turns · current prices</text>
+      <rect x="60" y="138" width="560" height="1" fill="#30363d"/>
+    </g>
+
+    <g shape-rendering="crispEdges">
+      <g class="a20">
+        <rect x="60" y="153" width="10" height="10" fill="#4ade80"/>
+        <text x="80" y="163" fill="#4ade80">Haiku</text>
+        <text x="236" y="163" fill="#8b949e" text-anchor="end">24 turns</text>
+        <text x="356" y="163" fill="#e6edf3" text-anchor="end">142.3k in</text>
+        <text x="466" y="163" fill="#e6edf3" text-anchor="end">8.1k out</text>
+        <text x="600" y="163" fill="#e6edf3" text-anchor="end">$0.018</text>
+      </g>
+      <g class="a24">
+        <rect x="60" y="179" width="10" height="10" fill="#60a5fa"/>
+        <text x="80" y="189" fill="#60a5fa">Sonnet</text>
+        <text x="236" y="189" fill="#8b949e" text-anchor="end">9 turns</text>
+        <text x="356" y="189" fill="#e6edf3" text-anchor="end">67.4k in</text>
+        <text x="466" y="189" fill="#e6edf3" text-anchor="end">3.2k out</text>
+        <text x="600" y="189" fill="#e6edf3" text-anchor="end">$0.167</text>
+      </g>
+      <g class="a28">
+        <rect x="60" y="205" width="10" height="10" fill="#a78bfa"/>
+        <text x="80" y="215" fill="#a78bfa">Opus</text>
+        <text x="236" y="215" fill="#8b949e" text-anchor="end">5 turns</text>
+        <text x="356" y="215" fill="#e6edf3" text-anchor="end">45.1k in</text>
+        <text x="466" y="215" fill="#e6edf3" text-anchor="end">2.8k out</text>
+        <text x="600" y="215" fill="#e6edf3" text-anchor="end">$0.236</text>
+        <rect x="60" y="230" width="560" height="1" fill="#30363d"/>
+      </g>
+    </g>
+
+    <g class="a34"><text x="80" y="258" fill="#8b949e">Delegation</text><text x="300" y="258" fill="#e6edf3">86.8%</text><text x="360" y="258" fill="#6e7681">(33/38)</text></g>
+    <g class="a38"><text x="80" y="284" fill="#8b949e">Actual</text><text x="300" y="284" fill="#e6edf3">$0.421</text></g>
+    <g class="a42">
+      <text x="80" y="310" fill="#8b949e">All-Opus baseline</text><text x="300" y="310" fill="#e6edf3">$1.301</text>
+      <rect x="60" y="324" width="560" height="1" fill="#30363d" shape-rendering="crispEdges"/>
+    </g>
+    <g class="a50" fill="#fbbf24" font-weight="700" font-size="18">
+      <text x="80" y="352">Saved</text><text x="300" y="352">$0.880 (67.6%)</text>
+    </g>
+    <text class="a54" x="60" y="382" fill="#6e7681" font-size="13">Parsed from the host CLI's own session logs. No AI estimation.</text>
+  </g>
+
+  <!-- chart panel -->
+  <rect x="670" y="24" width="490" height="372" rx="12" fill="#111827" stroke="#30363d"/>
+  <text class="sans" x="700" y="62" fill="#e6edf3" font-size="16" font-weight="700">Cost by tier</text>
+  <text class="sans" x="1130" y="62" fill="#dc2626" font-size="13" font-weight="700" letter-spacing="2" text-anchor="end">HAIL HYDRA</text>
+
+  <!-- donut: Opus 56.1%, Sonnet 39.6%, Haiku 4.3% of $0.421 -->
+  <circle cx="770" cy="180" r="66" fill="none" stroke="#161b22" stroke-width="26"/>
+  <g transform="rotate(-90 770 180)" fill="none" stroke-width="26">
+    <circle class="d28" cx="770" cy="180" r="66" pathLength="100" stroke="#a78bfa" stroke-dasharray="55.5 100"/>
+    <circle class="d24" cx="770" cy="180" r="66" pathLength="100" stroke="#60a5fa" stroke-dasharray="39 100" stroke-dashoffset="-56.1"/>
+    <circle class="d20" cx="770" cy="180" r="66" pathLength="100" stroke="#4ade80" stroke-dasharray="3.7 100" stroke-dashoffset="-95.7"/>
+  </g>
+  <text class="mono" x="770" y="182" fill="#e6edf3" font-size="20" font-weight="700" text-anchor="middle">$0.421</text>
+  <text class="sans" x="770" y="202" fill="#8b949e" font-size="13" text-anchor="middle">actual</text>
+
+  <g font-size="15" shape-rendering="crispEdges">
+    <g class="a20"><rect x="880" y="138" width="12" height="12" fill="#4ade80"/><text class="sans" x="902" y="149" fill="#4ade80">Haiku</text><text class="mono" x="1060" y="149" fill="#e6edf3" text-anchor="end">$0.018</text><text class="mono" x="1130" y="149" fill="#8b949e" text-anchor="end">4%</text></g>
+    <g class="a24"><rect x="880" y="170" width="12" height="12" fill="#60a5fa"/><text class="sans" x="902" y="181" fill="#60a5fa">Sonnet</text><text class="mono" x="1060" y="181" fill="#e6edf3" text-anchor="end">$0.167</text><text class="mono" x="1130" y="181" fill="#8b949e" text-anchor="end">40%</text></g>
+    <g class="a28"><rect x="880" y="202" width="12" height="12" fill="#a78bfa"/><text class="sans" x="902" y="213" fill="#a78bfa">Opus</text><text class="mono" x="1060" y="213" fill="#e6edf3" text-anchor="end">$0.236</text><text class="mono" x="1130" y="213" fill="#8b949e" text-anchor="end">56%</text></g>
+  </g>
+
+  <!-- actual vs all-Opus bars (420 px = $1.301) -->
+  <g class="sans" font-size="13" fill="#8b949e">
+    <text x="700" y="284">Actual · <tspan class="mono" fill="#e6edf3">$0.421</tspan></text>
+    <text x="700" y="342">All-Opus baseline · <tspan class="mono" fill="#e6edf3">$1.301</tspan></text>
+  </g>
+  <g shape-rendering="crispEdges">
+    <g class="b38">
+      <rect x="700" y="292" width="5.9" height="20" fill="#4ade80"/>
+      <rect x="705.9" y="292" width="53.8" height="20" fill="#60a5fa"/>
+      <rect x="759.7" y="292" width="76.3" height="20" fill="#a78bfa"/>
+    </g>
+    <rect class="b42" x="700" y="350" width="420" height="20" fill="#7c3aed"/>
+  </g>
+  <g class="a50">
+    <rect x="840.5" y="292.5" width="279" height="19" fill="#fbbf24" fill-opacity="0.08" stroke="#fbbf24" stroke-dasharray="4 3"/>
+    <text class="mono" x="980" y="307" fill="#fbbf24" font-size="14" font-weight="700" text-anchor="middle">saved $0.880 · 67.6%</text>
+  </g>
+</svg>

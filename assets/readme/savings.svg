@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Same work, two bills: two receipts for the same five tasks. All-Opus costs $20.00 per million input tokens; the Hydra mix of Haiku, Sonnet and Opus costs $6.30, 31.5% of all-Opus.">
+  <title>Same work, two bills: All-Opus $20.00 vs Hydra mix $6.30 for the same five tasks.</title>
+  <defs>
+    <style>
+      .sans{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace}
+      /* 14 s loop. t=0 shows the finished receipts; 12-15% clear; rows print 18-42%; totals 50%; stamp 56%; hold. */
+      .r1,.r2,.r3,.r4,.r5,.tot{animation:14s ease-out infinite}
+      .r1{animation-name:r1}.r2{animation-name:r2}.r3{animation-name:r3}
+      .r4{animation-name:r4}.r5{animation-name:r5}.tot{animation-name:tot}
+      @keyframes r1{0%,12%{opacity:1;transform:none}15%,18%{opacity:0;transform:translateY(-8px)}21%,100%{opacity:1;transform:none}}
+      @keyframes r2{0%,12%{opacity:1;transform:none}15%,24%{opacity:0;transform:translateY(-8px)}27%,100%{opacity:1;transform:none}}
+      @keyframes r3{0%,12%{opacity:1;transform:none}15%,30%{opacity:0;transform:translateY(-8px)}33%,100%{opacity:1;transform:none}}
+      @keyframes r4{0%,12%{opacity:1;transform:none}15%,36%{opacity:0;transform:translateY(-8px)}39%,100%{opacity:1;transform:none}}
+      @keyframes r5{0%,12%{opacity:1;transform:none}15%,42%{opacity:0;transform:translateY(-8px)}45%,100%{opacity:1;transform:none}}
+      @keyframes tot{0%,12%{opacity:1}15%,50%{opacity:0}53%,100%{opacity:1}}
+      .stamp{transform-box:fill-box;transform-origin:50% 50%;transform:rotate(-3deg);animation:stamp 14s ease-in-out infinite}
+      @keyframes stamp{
+        0%,12%{opacity:1;transform:rotate(-3deg) scale(1)}
+        15%,56%{opacity:0;transform:rotate(-3deg) scale(1.5)}
+        59%{opacity:1;transform:rotate(-3deg) scale(.94)}
+        61%,100%{opacity:1;transform:rotate(-3deg) scale(1)}
+      }
+      @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+    </style>
+    <!-- receipt paper: 360 wide, straight top, torn (zigzag) bottom -->
+    <path id="paper" fill="#161b22" stroke="#30363d" stroke-width="1" d="M0 0H360V258
+      l-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6
+      l-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6
+      l-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6Z"/>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1199" height="419" rx="16" fill="#0b0f14" stroke="#1f2937"/>
+
+  <!-- left column: headline, legend, footnote -->
+  <g class="sans">
+    <text x="40" y="44" fill="#dc2626" font-size="13" font-weight="700" letter-spacing="2">HAIL HYDRA</text>
+    <text x="40" y="92" fill="#e6edf3" font-size="34" font-weight="700">Same work,</text>
+    <text x="40" y="132" fill="#fbbf24" font-size="34" font-weight="700">two bills.</text>
+    <text x="40" y="168" fill="#8b949e" font-size="15">Five tasks, each priced at the</text>
+    <text x="40" y="188" fill="#8b949e" font-size="15">per-1M input-token rate of the</text>
+    <text x="40" y="208" fill="#8b949e" font-size="15">model that runs it.</text>
+  </g>
+  <g class="mono" font-size="14" shape-rendering="crispEdges">
+    <rect x="40" y="240" width="12" height="12" fill="#4ade80"/>
+    <text x="62" y="251" fill="#4ade80">Haiku 5.5</text><text x="290" y="251" fill="#e6edf3" text-anchor="end">$0.10</text>
+    <rect x="40" y="266" width="12" height="12" fill="#60a5fa"/>
+    <text x="62" y="277" fill="#60a5fa">Sonnet 5.5</text><text x="290" y="277" fill="#e6edf3" text-anchor="end">$2.00</text>
+    <rect x="40" y="292" width="12" height="12" fill="#a78bfa"/>
+    <text x="62" y="303" fill="#a78bfa">Opus 5.5</text><text x="290" y="303" fill="#e6edf3" text-anchor="end">$4.00</text>
+  </g>
+  <g class="sans" font-size="13" fill="#6e7681">
+    <text x="40" y="382">Claude Code list prices, $/1M input</text>
+    <text x="40" y="399">tokens, Oct 2026. Illustrative.</text>
+  </g>
+
+  <!-- printer slots -->
+  <g shape-rendering="crispEdges" fill="#1f2937">
+    <rect x="360" y="28" width="380" height="10" rx="5"/>
+    <rect x="780" y="28" width="380" height="10" rx="5"/>
+  </g>
+
+  <!-- receipt A: All-Opus -->
+  <g transform="translate(370 36)">
+    <use href="#paper"/>
+    <text class="sans" x="20" y="32" fill="#e6edf3" font-size="18" font-weight="700">ALL-OPUS</text>
+    <text class="mono" x="340" y="32" fill="#6e7681" font-size="13" text-anchor="end">$/1M in</text>
+    <text class="sans" x="20" y="54" fill="#8b949e" font-size="13">every task on Opus 5.5</text>
+    <path d="M20 66H340" stroke="#30363d" stroke-dasharray="4 4"/>
+    <g class="mono" font-size="15">
+      <g class="r1"><text x="20" y="92" fill="#e6edf3">explore</text><text x="170" y="92" fill="#a78bfa">Opus</text><text x="340" y="92" fill="#e6edf3" text-anchor="end">$4.00</text></g>
+      <g class="r2"><text x="20" y="118" fill="#e6edf3">run tests</text><text x="170" y="118" fill="#a78bfa">Opus</text><text x="340" y="118" fill="#e6edf3" text-anchor="end">$4.00</text></g>
+      <g class="r3"><text x="20" y="144" fill="#e6edf3">write docs</text><text x="170" y="144" fill="#a78bfa">Opus</text><text x="340" y="144" fill="#e6edf3" text-anchor="end">$4.00</text></g>
+      <g class="r4"><text x="20" y="170" fill="#e6edf3">implement</text><text x="170" y="170" fill="#a78bfa">Opus</text><text x="340" y="170" fill="#e6edf3" text-anchor="end">$4.00</text></g>
+      <g class="r5"><text x="20" y="196" fill="#e6edf3">architect</text><text x="170" y="196" fill="#a78bfa">Opus</text><text x="340" y="196" fill="#e6edf3" text-anchor="end">$4.00</text></g>
+    </g>
+    <path d="M20 212H340" stroke="#30363d" stroke-dasharray="4 4"/>
+    <g class="tot" font-weight="700">
+      <text class="sans" x="20" y="242" fill="#8b949e" font-size="16">TOTAL</text>
+      <text class="mono" x="340" y="242" fill="#e6edf3" font-size="20" text-anchor="end">$20.00</text>
+    </g>
+  </g>
+
+  <!-- vs -->
+  <circle cx="760" cy="168" r="19" fill="#0b0f14" stroke="#30363d"/>
+  <text class="sans" x="760" y="173" fill="#8b949e" font-size="14" font-weight="700" text-anchor="middle">vs</text>
+
+  <!-- receipt B: Hydra -->
+  <g transform="translate(790 36)">
+    <use href="#paper"/>
+    <text class="sans" x="20" y="32" fill="#dc2626" font-size="18" font-weight="700">HYDRA</text>
+    <text class="mono" x="340" y="32" fill="#6e7681" font-size="13" text-anchor="end">$/1M in</text>
+    <text class="sans" x="20" y="54" fill="#8b949e" font-size="13">each task on the tier it needs</text>
+    <path d="M20 66H340" stroke="#30363d" stroke-dasharray="4 4"/>
+    <g class="mono" font-size="15">
+      <g class="r1"><text x="20" y="92" fill="#e6edf3">explore</text><text x="170" y="92" fill="#4ade80">Haiku</text><text x="340" y="92" fill="#e6edf3" text-anchor="end">$0.10</text></g>
+      <g class="r2"><text x="20" y="118" fill="#e6edf3">run tests</text><text x="170" y="118" fill="#4ade80">Haiku</text><text x="340" y="118" fill="#e6edf3" text-anchor="end">$0.10</text></g>
+      <g class="r3"><text x="20" y="144" fill="#e6edf3">write docs</text><text x="170" y="144" fill="#4ade80">Haiku</text><text x="340" y="144" fill="#e6edf3" text-anchor="end">$0.10</text></g>
+      <g class="r4"><text x="20" y="170" fill="#e6edf3">implement</text><text x="170" y="170" fill="#60a5fa">Sonnet</text><text x="340" y="170" fill="#e6edf3" text-anchor="end">$2.00</text></g>
+      <g class="r5"><text x="20" y="196" fill="#e6edf3">architect</text><text x="170" y="196" fill="#a78bfa">Opus</text><text x="340" y="196" fill="#e6edf3" text-anchor="end">$4.00</text></g>
+    </g>
+    <path d="M20 212H340" stroke="#30363d" stroke-dasharray="4 4"/>
+    <g class="tot" font-weight="700">
+      <text class="sans" x="20" y="242" fill="#8b949e" font-size="16">TOTAL</text>
+      <text class="mono" x="340" y="242" fill="#fbbf24" font-size="20" text-anchor="end">$6.30</text>
+    </g>
+  </g>
+
+  <!-- gold stamp -->
+  <g class="stamp">
+    <rect x="530" y="314" width="460" height="62" rx="8" fill="#0b0f14" fill-opacity="0.92" stroke="#fbbf24" stroke-width="3"/>
+    <rect x="537" y="321" width="446" height="48" rx="5" fill="none" stroke="#fbbf24" stroke-width="1" stroke-opacity="0.6"/>
+    <text class="sans" x="760" y="342" fill="#fbbf24" font-size="19" font-weight="700" text-anchor="middle" letter-spacing="1">HYDRA MIX = 31.5% OF ALL-OPUS</text>
+    <text class="sans" x="760" y="361" fill="#fbbf24" font-size="13" text-anchor="middle">on this example · ~50% cheaper per dispatch in practice</text>
+  </g>
+</svg>

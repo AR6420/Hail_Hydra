@@ -1,3 +1,9 @@
+<!--
+  Hail Hydra (hail-hydra-cc): open-source multi-agent toolkit for AI coding CLIs.
+  Routes work to each host's cheaper, faster models: Claude Code, Gemini CLI, Codex CLI and GitHub Copilot CLI.
+  10 agents, 10 commands, sentinel verification, codebase map, real token tracking. MIT licensed.
+-->
+
 <p align="center">
   <a href="https://github.com/AR6420/Hail_Hydra">
     <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
@@ -17,89 +23,334 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Opus-🧠_The_Body-7C3AED?style=flat-square" alt="Opus" />
-  <img src="https://img.shields.io/badge/Sonnet-🔵_Smart_Heads-3B82F6?style=flat-square" alt="Sonnet" />
-  <img src="https://img.shields.io/badge/Haiku-🟢_Fast_Heads-22C55E?style=flat-square" alt="Haiku" />
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/hail-hydra-cc">
-    <img src="https://img.shields.io/npm/v/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=CB3837" alt="npm version" />
-  </a>
-  <a href="https://www.npmjs.com/package/hail-hydra-cc">
-    <img src="https://img.shields.io/npm/dt/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=22C55E&label=downloads" alt="npm downloads" />
-  </a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Speed-2--3×_Faster-22C55E?style=flat-square&logo=zap&logoColor=white" alt="Speed" />
-  <img src="https://img.shields.io/badge/Cost-~50%25_Per_Dispatch-3B82F6?style=flat-square&logo=piggy-bank&logoColor=white" alt="Cost" />
-  <img src="https://img.shields.io/badge/Quality-Zero_Loss-7C3AED?style=flat-square&logo=shield-check&logoColor=white" alt="Quality" />
+  <a href="https://www.npmjs.com/package/hail-hydra-cc"><img src="https://img.shields.io/npm/v/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=CB3837" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/hail-hydra-cc"><img src="https://img.shields.io/npm/dt/hail-hydra-cc?style=flat-square&logo=npm&logoColor=white&color=22C55E&label=downloads" alt="npm downloads" /></a>
+  <a href="https://github.com/AR6420/Hail_Hydra"><img src="https://img.shields.io/github/stars/AR6420/Hail_Hydra?style=flat-square" alt="GitHub stars" /></a>
 </p>
 
 <p align="center">
   <strong>10 agents &nbsp;·&nbsp; 10 commands &nbsp;·&nbsp; 6 hooks &nbsp;·&nbsp; 4 host CLIs &nbsp;·&nbsp; Codebase map &nbsp;·&nbsp; Real token tracking &nbsp;·&nbsp; Persistent memory</strong>
 </p>
 
----
+**Hail Hydra is a free multi-agent toolkit for Claude Code, Gemini CLI, Codex CLI and GitHub Copilot CLI.** It gives your coding CLI ten specialist agents, called heads. Each head is pinned to the cheapest model that can do its job well. Your main model plans, decides and verifies. The heads explore, run, write and check.
 
-## 🧬 What is Hydra?
+When you invoke it, Hydra typically cuts per-task cost by **about 50%**, and delegated work runs **2 to 3× faster**. Your main model verifies the results, so quality holds.
 
-**Hydra** is a curated multi-agent toolkit for AI coding CLIs — **Claude Code**, **Gemini CLI**, **Codex CLI**, and **GitHub Copilot CLI**. It ships 10 specialized agents pinned to each host's cost-effective models (Haiku/Sonnet on Claude Code, Flash tiers on Gemini, Luna/Terra on Codex), 10 commands for direct invocation, and one automatic touchpoint that recommends integration verification after substantial code changes — plus an opt-in `/hail-hydra` skill on Copilot with the same 10 roles on native subagents and no automatic hooks.
+- **Ten heads, two tiers.** Seven cheap-tier heads (Haiku, Flash-Lite, GPT-6 Luna) for search, tests, docs, git and scans. Three mid-tier heads (Sonnet, Flash, GPT-6 Sol) for code, review and deep checks.
+- **Sentinel verification.** After substantial edits, a fast scan checks imports, signatures and dependencies. It escalates to a deep check only when something looks wrong, and it catches about 72% of integration bugs before runtime.
+- **Codebase map.** A persistent dependency graph gives instant blast-radius lookups. Sentinel scans become 3 to 5× cheaper.
+- **Real receipts.** `/hydra:stats` reads your CLI's own session logs and reports what you actually spent and saved. No AI estimation.
+- **Memory that compounds.** Each head remembers your project's conventions, fragile spots and past false alarms across sessions.
 
-Each agent runs on the smallest model that can do its job well. When invoked, Hydra typically cuts per-task cost by **~50%** compared to running the same work on the orchestrator alone — while maintaining output quality through verification. That's the same ~50% you'll see everywhere Hydra is described, and it comes from one place: real session logs, via `/hydra:stats` (51.5% in the sample below).
+One canonical source generates a native payload for each host. Use `/hydra:*` on Claude Code and Gemini CLI, `$hydra-*` skills on Codex CLI, or `/hail-hydra <task>` on Copilot.
 
-<p align="center">
-  <img src="assets/hydra-stats-demo.svg" alt="/hydra:stats sample output — 51.5% saved, parsed from real session logs" width="680"/>
-</p>
+## See it in action
 
-> **Think of it this way:**
->
-> Would you hire a $500/hr architect to carry bricks? No. You'd have them design the building and let the crew handle construction. That's the model Hydra follows when you invoke a specialized head.
+Run `/hydra:stats` at any point in a session. It shows what every tier actually cost, compared with sending the same tokens to your main model:
 
-**New — GitHub Copilot CLI (opt-in):** use `/hail-hydra <task>` inside your existing
-Copilot session. Normal messages keep the normal agent. No second CLI, API key,
-background service or model-default change is needed. See [Copilot setup](#github-copilot-cli-opt-in).
+<img src="assets/readme/stats.svg" width="1200" height="420" alt="/hydra:stats output for a 38-turn sample session at current Claude prices: Haiku $0.018, Sonnet $0.167, Opus $0.236; actual cost $0.421 against a $1.301 all-Opus baseline, saving $0.880 (67.6%)." />
 
-**Multi-Host:** One canonical source (`content/`) generates a native payload per
-host. Invoke with `/hydra:*` on Claude Code and Gemini CLI, `$hydra-*` skills on
-Codex CLI, or `/hail-hydra <task>` on Copilot.
+<sub>Sample session priced at current Claude list prices (Haiku 5.5, Sonnet 5.5, Opus 5.5). Your numbers depend on how often Hydra is invoked.</sub>
 
-Everything else Hydra is known for is still here: persistent agent memory, the codebase map with blast-radius lookups, the sentinel verification touchpoint after substantial edits, internal-thinking compression (`/hydra:stfu`), and real token tracking with `/hydra:stats`. Full version history lives in the [CHANGELOG](CHANGELOG.md).
+## Meet the ten heads
 
-## When to Use Hydra Explicitly
+<img src="assets/readme/team.svg" width="1200" height="420" alt="Meet the ten heads: each Hydra head stands on the part of a mock code editor it works on (file tree, editor, terminal, tests, git, docs, import graph, package.json). One at a time it is spotlighted beside a card with its role, tier and model, ability, invocation and a small demo." />
 
-Hydra's biggest cost savings come from explicit invocation in scenarios where specialized handling genuinely helps:
+<details>
+<summary><b>All ten heads</b></summary>
+<br />
 
-| Scenario | How to Invoke | Why It Saves |
+| Head | Tier | Role | Personality |
+|:-----|:-----|:-----|:------------|
+| `hydra-scout` | 🟢 cheap | Codebase exploration, file search, reading, codebase map | *"I've already found it."* |
+| `hydra-runner` | 🟢 cheap | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
+| `hydra-scribe` | 🟢 cheap | Documentation, READMEs, comments | *"Documented before you finished asking."* |
+| `hydra-guard` | 🟢 cheap | Security and quality gate after code changes | *"No secrets. No injection. You're clean."* |
+| `hydra-git` | 🟢 cheap | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
+| `hydra-sentinel-scan` | 🟢 cheap | Fast integration sweep after code changes | *"Imports check out. Signatures match. Clean."* |
+| `hydra-preflight` | 🟢 cheap | Environment detection, version probing, dependency inventory | *"Your PyTorch/CUDA pair is broken. Pin torch==2.7.0."* |
+| `hydra-coder` | 🔵 mid | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
+| `hydra-analyst` | 🔵 mid | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
+| `hydra-sentinel` | 🔵 mid | Deep integration analysis, only when the scan flags issues | *"2 real issues confirmed. 1 false positive dismissed."* |
+
+**Default models per host**
+
+| Host | Cheap tier | Mid tier | Orchestrator |
+|:-----|:-----------|:---------|:-------------|
+| Claude Code | Haiku | Sonnet | your main model (Opus) |
+| Gemini CLI | `gemini-3.5-flash-lite` | `gemini-3.8-flash` | your main model |
+| Codex CLI | `gpt-6-luna` (low effort) | `gpt-6-sol` (medium effort) | your main model |
+| GitHub Copilot CLI | `claude-haiku-5.5`, then `gpt-6-luna` | `claude-sonnet-5.5`, then `gpt-5.6-terra` | your selected model |
+
+</details>
+
+<details>
+<summary><b>Task routing cheat sheet</b></summary>
+<br />
+
+```
+Is it read-only? ─── Yes ──→ Finding files?
+    │                           ├── Yes: hydra-scout 🟢
+    │                           └── No:  hydra-analyst 🔵
+    │
+    No ──→ Is it a git operation? ─── Yes ──→ hydra-git 🟢
+    │
+    No ──→ Is it a security scan? ─── Yes ──→ hydra-guard 🟢
+    │
+    No ──→ Just running a command? ─── Yes ──→ hydra-runner 🟢
+    │
+    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe 🟢
+    │
+    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder 🔵
+    │
+    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 orchestrator handles it
+
+    Code was just changed? ─── Yes ──→ hydra-sentinel-scan 🟢
+                                            │
+                                       Issues found?
+                                       ├── No:  Done ✅
+                                       └── Yes: hydra-sentinel 🔵
+```
+
+</details>
+
+**Use Hydra explicitly when it helps most:**
+
+| Scenario | How to invoke | Why it saves |
 |----------|---------------|-------------|
-| Broad codebase exploration | "use hydra-scout to find X" | Haiku reads files faster and cheaper than Opus |
-| Multi-file changes | "use hydra-coder to update X across these files" | Parallel Sonnet dispatch beats sequential Opus |
-| Security review | `/hydra:guard` | Pattern matching is Haiku-cheap |
-| Environment validation | `/hydra:preflight` | Cross-references compatibility matrices on Sonnet |
-| Codebase architecture review | `/hydra:map` | Dependency graph stored locally |
+| Broad codebase exploration | "use hydra-scout to find X" | A cheap model reads files faster and for a fraction of the price |
+| Multi-file changes | "use hydra-coder to update X across these files" | Parallel mid-tier dispatch beats one sequential frontier run |
+| Security review | `/hydra:guard` | Pattern matching runs on the cheap tier |
+| Environment validation | `/hydra:preflight` | Probes on the cheap tier, analysis on the mid tier |
+| Architecture review | `/hydra:map` | The dependency graph is stored locally |
 
-For one-off questions, simple edits, or conversational work, the host handles it
-directly. On Claude, Gemini and Codex, Hydra's only automatic intervention is the
-post-substantial-edit sentinel directive. Copilot has no automatic intervention.
+For one-off questions, simple edits and conversation, your CLI handles the work directly. On Claude Code, Gemini CLI and Codex CLI, Hydra's only automatic step is the sentinel reminder after a substantial edit. Copilot has no automatic step.
 
----
+## How a task flows
 
-## 🚀 Installation
+<img src="assets/readme/flow.svg" width="1200" height="420" alt="How a task flows: your request goes to the orchestrator, which classifies and plans; a parallel wave of heads does the work; a verification wave of sentinel-scan and guard checks it, escalating to the deep sentinel only when issues appear; you get one answer." />
 
-> **One command. Done.**
+1. **The orchestrator classifies.** Your main model decides what stays with it and what goes to a head. Meanwhile, `hydra-scout` starts gathering relevant files in parallel.
+2. **Heads work in waves.** Independent subtasks run at the same time. "Fix the bug and add tests" means two heads working at once.
+3. **Everything is checked before you see it.** Raw data and clean passes are auto-accepted. Code and analysis are verified. After substantial edits, sentinel and guard run a verification wave.
+4. **You get one answer.** If a head's output isn't good enough, the orchestrator redoes the work itself. Hydra escalates and never downgrades.
+
+<details>
+<summary><b>Full architecture</b></summary>
+<br />
+
+```
+User Request
+    │
+    ├──────────────────────────────────────────────────────┐
+    │                                                      │
+    ▼                                                      ▼
+┌─────────────────────────────┐            ┌──────────────────────────────┐
+│  🧠 ORCHESTRATOR            │            │  🟢 hydra-scout              │
+│  Classifies task            │            │  IMMEDIATE pre-dispatch:     │
+│  Plans waves                │            │  "Find files relevant to     │
+│  Decides blocking / not     │            │   [user's request]"          │
+└────────┬────────────────────┘            └──────────────┬───────────────┘
+         │         (unless Session Index already covers)  │
+         └──────────────────────┬──────────────────────────┘
+                                │ (scout + classification both ready)
+                      [Session Index updated]
+                                │
+    ════════════════════════════════════════════════════════
+    Wave N  (parallel dispatch, index context injected)
+    ┌───────────────────┬──────────────────────────────────┐
+    │  SEQUENTIAL       │  PARALLEL (wait for all)         │
+    ▼                   ▼                                  │
+ [coder]            [scribe] ──────────────────────────────┘
+    │
+    ▼
+ ALL agents complete (orchestrator waits for every dispatched agent)
+    │
+    ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
+    └── Code / analysis / user-facing docs? → Orchestrator verifies
+         │
+         ▼
+   ┌─────────────────────────────────────────────────────┐
+   │  🛡️ VERIFICATION WAVE (recommended by auto-guard)   │
+   │                                                     │
+   │  🟢 sentinel-scan — fast integration sweep          │
+   │       └── issues? → 🔵 sentinel — deep analysis     │
+   │  🟢 guard — security/quality scan                   │
+   │                                                     │
+   │  Runs before results are presented to you           │
+   └──────────────────────┬──────────────────────────────┘
+                          │
+                          ▼
+   User gets result (single response, all agent outputs included)
+```
+
+**Design principles**
+
+- **Invisibility.** You should never notice Hydra operating: no announcements, no permission requests, no process narration.
+- **Speed over ceremony.** Classification is a quick check ("cheap head, mid head, or me?"). Spending 10 seconds classifying a 5-second task defeats the purpose.
+- **Parallel heads.** Independent subtasks launch together.
+- **Escalate, never downgrade.** A rejected draft goes back to the orchestrator, never to a retry at the same tier.
+
+</details>
+
+<details>
+<summary><b>The theory: speculative decoding at the task level</b></summary>
+<br />
+
+Speculative decoding (Chen et al., 2023) speeds up LLM inference. A small **draft model** proposes tokens, and a large **target model** verifies them in parallel. Verifying K tokens costs about the same as generating one, so you get a 2 to 2.5× speedup with **zero quality loss**.
+
+Hydra applies the same idea at the **task level**. Cheap and mid-tier heads draft the task. The orchestrator checks it, then accepts it or redoes it.
+
+| Speculative decoding concept | Hydra equivalent |
+|:-----------------------------|:-----------------|
+| Target model (large) | 🧠 The orchestrator (Opus / Gemini Pro / GPT-6.1 Sol) |
+| Draft model (small) | 🟢🔵 The cheap and mid-tier heads |
+| Draft K tokens | Heads draft the full task output |
+| Parallel verification | The orchestrator glances at the output |
+| Modified rejection sampling | Accept → ship it. Reject → the orchestrator redoes it. |
+| Acceptance rate (~70-90%) | Target: 85%+ of delegated tasks accepted as-is |
+
+**Key papers:**
+- [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/abs/2302.01318), Chen et al., 2023 (DeepMind)
+- [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192), Leviathan et al., 2022 (Google)
+
+</details>
+
+## Commands
+
+Ten commands, invoked as `/hydra:*` on Claude Code and Gemini CLI, or as `$hydra-*` skills on Codex CLI. Open a group to see what's inside.
+
+<details>
+<summary><b>Everyday</b> (4 commands)</summary>
+<ul>
+<li><code>/hydra:help</code>: Show all commands and agents</li>
+<li><code>/hydra:status</code>: Installed agents, version and update availability</li>
+<li><code>/hydra:stats</code>: Real token usage, delegation rate and savings, parsed from the CLI's own session logs</li>
+<li><code>/hydra:update</code>: Update Hydra to the latest version</li>
+</ul>
+</details>
+<details>
+<summary><b>Verification and safety</b> (3 commands)</summary>
+<ul>
+<li><code>/hydra:guard [files]</code>: Manual security and quality scan</li>
+<li><code>/hydra:map [file | rebuild]</code>: View the codebase dependency map, query a file's blast radius, or rebuild</li>
+<li><code>/hydra:preflight</code>: Two-phase environment and compatibility check before a new project build</li>
+</ul>
+</details>
+<details>
+<summary><b>Session control</b> (3 commands)</summary>
+<ul>
+<li><code>/hydra:quiet</code>: Suppress dispatch logs for this session</li>
+<li><code>/hydra:stfu</code>: Compress internal thinking for every subagent in the session</li>
+<li><code>/hydra:report</code>: Report a bug, request a feature or share feedback</li>
+</ul>
+</details>
+<details>
+<summary><b>GitHub Copilot CLI</b> (one opt-in skill)</summary>
+<ul>
+<li><code>/hail-hydra &lt;task&gt;</code>: Run one task through the Hydra roles on Copilot's native subagents</li>
+<li><code>/hail-hydra --mode &lt;turbo|balanced|economy&gt; &lt;task&gt;</code>: Pick speed or cost for this task (default <code>balanced</code>)</li>
+<li><code>/hail-hydra --help</code>: Full list, including <code>--compare</code> for measuring savings</li>
+</ul>
+</details>
+
+<details>
+<summary><b><code>/hydra:preflight</code> in detail</b></summary>
+<br />
+
+Run it before starting any new project build. It catches broken GPU stacks, missing env vars and incompatible dependency pairs before they cost you hours of debugging. Hydra runs a two-phase check:
+
+1. **Detection** (cheap tier): probes runtimes, the CUDA stack, dependencies, env vars and services.
+2. **Analysis** (mid tier): cross-references the results against compatibility matrices and flags each one ✅ COMPATIBLE, ⚠️ KNOWN RISK or ❌ CONFIRMED BREAK.
+
+</details>
+
+## What it saves
+
+<img src="assets/readme/savings.svg" width="1200" height="420" alt="Same work, two bills: five tasks priced on all-Opus total $20.00 per million input tokens, while Hydra's routing (Haiku for explore, tests and docs; Sonnet for implement; Opus for architect) totals $6.30. Illustrative, Claude Code list prices, October 2026." />
+
+<details>
+<summary><b>The full math</b></summary>
+<br />
+
+| Task type | Share of work | Model used | Input cost vs Opus | Output cost vs Opus |
+|:----------|:--------------|:-----------|:-------------------|:--------------------|
+| Exploration, search, tests, docs | ~50% | 🟢 Haiku | 2.5% ($0.10 vs $4/MTok) | 2.5% ($0.50 vs $20/MTok) |
+| Implementation, review, debugging | ~30% | 🔵 Sonnet | 50% ($2 vs $4/MTok) | 50% ($10 vs $20/MTok) |
+| Architecture, hard problems | ~20% | 🧠 Opus | 100% (no change) | 100% (no change) |
+| Sentinel scan (fast) | Every code change | 🟢 Haiku | 2.5% | 2.5% |
+| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet | 50% | 50% |
+| **Blended effective cost** | | | **~36% of all-Opus** | **~36% of all-Opus** |
+
+Prices are Haiku 5.5, Sonnet 5.5 and Opus 5.5 (verified 2026-10). Blended input = (0.5×$0.10 + 0.3×$2 + 0.2×$4) / $4 = $1.45/$4 ≈ 36% of all-Opus. Haiku 5.5 prompts over 100K tokens bill at $0.50/$2.50, so sessions heavy on long context save less.
+
+Per-dispatch savings of **about 50% or more** are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked. Run `/hydra:stats` for your real numbers.
+
+On Gemini CLI and Codex CLI the same routing applies against that host's own frontier model. Flash-tier heads are measured against an all-Gemini-Pro baseline. Luna and Sol heads are measured against the session's main GPT model (default GPT-6.1 Sol).
+
+| Metric | Without Hydra | With Hydra |
+|:-------|:--------------|:-----------|
+| **Task speed (per dispatch)** | 1× | 2–3× faster |
+| **API cost (per dispatch)** | 1× | ~0.5× or less |
+| **Quality** | Main-model level | Main-model level, verified |
+| **Turn 2+ overhead** | Full re-exploration each turn | Session index reused, 2-4 s saved per turn |
+| **Integration bugs caught** | None automatically | ~72% before runtime |
+| **Sentinel scan tokens** | 3,000-8,000 per scan | 500-1,500 per scan with the codebase map |
+
+</details>
+
+<details>
+<summary><b>Why Hydra doesn't hit the subagent cost explosion</b></summary>
+<br />
+
+A fair objection to any subagent framework: naive fan-out can cost **3 to 7× more** than a single-thread session. Every spawned agent re-bootstraps context and re-verifies work the orchestrator already understood. Hydra's design avoids that trap on purpose:
+
+- **Bounded, task-scoped dispatch.** One agent per well-defined subtask, with only the context slice it needs. No wide swarm re-reading the repo in parallel.
+- **Cheap tiers do the token-heavy work.** The expensive model never pays frontier prices for exploration, test runs or doc writing.
+- **`maxTurns` caps on every agent.** A runaway agent stops at 25 turns (cheap tier) or 50 (mid tier) instead of burning tokens indefinitely.
+- **The codebase map replaces re-exploration.** Blast-radius lookups cost about 500 to 1,500 tokens instead of a 3,000 to 8,000-token grep sweep.
+- **Receipts, not claims.** `/hydra:stats` parses the CLI's own session logs. If dispatch overhead ever ate the savings, the number would show it.
+
+</details>
+
+<details>
+<summary><b>Measure it yourself</b></summary>
+<br />
+
+1. Start a Claude Code session **without** Hydra installed and complete a representative task.
+2. Note the session cost.
+3. Start a **new** session **with** Hydra installed and complete a similar task.
+4. Compare the two costs, or run `/hydra:stats`.
+
+On Copilot, compare `/usage` before and after a normal run against a `/hail-hydra` run, then run `/hail-hydra --compare`.
+
+</details>
+
+## Install
+
+<img src="assets/readme/install.svg" width="1200" height="420" alt="Installing Hail Hydra: npx hail-hydra-cc@latest opens a picker for Claude Code, Gemini CLI, Codex CLI and GitHub Copilot CLI; each is ticked, then 10 agents, 10 commands, hooks and the status line are installed." />
+
+You need Node.js 16 or newer and at least one supported CLI. Run one command:
 
 ```bash
 npx hail-hydra-cc@latest
 ```
 
-Runs the interactive installer — pick your CLI(s) (Claude Code, Gemini CLI, Codex CLI, GitHub Copilot CLI)
-and scope, and it deploys the agents, commands, hooks, and per-host wiring. Done in seconds.
+The interactive installer lets you pick your CLIs and scope. It deploys the agents, commands, hooks and per-host wiring in seconds. Then use it:
 
-### Installation Options
+| Host | Invoke with | After install |
+|:-----|:------------|:--------------|
+| **Claude Code** | `/hydra:help`, `/hydra:stats`, … | Restart Claude Code. The status line and hooks are registered in `~/.claude/settings.json`. |
+| **Gemini CLI** | `/hydra:help`, `/hydra:stats`, … | Restart Gemini CLI or run `/commands reload`. |
+| **Codex CLI** | `$hydra-help`, `$hydra-stats`, … | **Required once:** run `/hooks` inside Codex to trust the Hydra hooks. They stay inert until then. |
+| **GitHub Copilot CLI** | `/hail-hydra <task>` | Run `/skills reload` in the same session. |
+
+<details>
+<summary><b>All installer options</b></summary>
+<br />
 
 ```bash
-# Claude Code, all projects — no prompts (v2-compatible default)
+# Claude Code, all projects, no prompts (v2-compatible default)
 npx hail-hydra-cc --global
 
 # Pick your agent(s) explicitly
@@ -126,22 +377,17 @@ npx hail-hydra-cc --status
 npx hail-hydra-cc --uninstall
 ```
 
-All flags: `--agent=<list>` (`claude,gemini,codex,copilot`) or the aliases `--claude` /
-`--gemini` / `--codex` / `--copilot` / `--all` (every detected agent) · scope `--global` /
-`--local` / `--both` · `--yes` non-interactive (requires an agent selection) ·
-`--dry-run` · `--config-dir <path>` config-dir override (single agent only) ·
-`--status` · `--uninstall`.
+All flags:
+- **Agent selection:** `--agent=<list>` (`claude,gemini,codex,copilot`), or the aliases `--claude`, `--gemini`, `--codex`, `--copilot` and `--all` (every detected agent).
+- **Scope:** `--global`, `--local` or `--both`.
+- **Non-interactive:** `--yes` (requires an agent selection).
+- **Other:** `--dry-run`, `--config-dir <path>` (single agent only), `--status` and `--uninstall`.
 
-### Per-Host Invocation
+</details>
 
-| Host | Commands | Notes |
-|:-----|:---------|:------|
-| **Claude Code** | `/hydra:help`, `/hydra:stats`, … | StatusLine + hooks registered in `~/.claude/settings.json` |
-| **Gemini CLI** | `/hydra:help`, `/hydra:stats`, … | Restart Gemini CLI (or run `/commands reload`) to pick up the new commands |
-| **Codex CLI** | `$hydra-help`, `$hydra-stats`, … (skills with a `$` trigger) | **Required once:** run `/hooks` inside Codex to review and trust the Hydra hooks — they stay inert until then |
-| **GitHub Copilot CLI** | `/hail-hydra <task>` | Run `/skills reload`; instruction-gated explicit requests, no hooks or persistent agent switch |
-
-### GitHub Copilot CLI (opt-in)
+<details>
+<summary><b>GitHub Copilot CLI (opt-in)</b></summary>
+<br />
 
 Requires a Copilot CLI version that supports skills and explicit invocation.
 
@@ -150,7 +396,7 @@ npx hail-hydra-cc@latest --copilot --global --yes   # ~/.copilot/skills/hail-hyd
 npx hail-hydra-cc@latest --copilot --local --yes    # .github/skills/hail-hydra, this project only
 ```
 
-The installer honors `COPILOT_HOME` for the global path; `--config-dir <path>` (Hydra's installer flag, not a Copilot setting) overrides it.
+The installer honors `COPILOT_HOME` for the global path. `--config-dir <path>` overrides it; that is Hydra's installer flag, not a Copilot setting.
 
 Then, **inside the same Copilot session**:
 
@@ -161,48 +407,45 @@ Then, **inside the same Copilot session**:
 /hail-hydra --help
 ```
 
-`/hail-hydra` is an explicit skill invocation, not a sticky mode — a later message such as `Explain this function` uses the normal agent. The skill sets `disable-model-invocation: false` because some Copilot versions return `Skill not found` for explicit requests otherwise ([copilot-cli#4438](https://github.com/github/copilot-cli/issues/4438)); accidental model-mediated loading must not trigger Hydra work.
+`/hail-hydra` is an explicit skill invocation, not a sticky mode. A later message such as `Explain this function` uses the normal agent. The skill sets `disable-model-invocation: false` because some Copilot versions return `Skill not found` for explicit requests otherwise ([copilot-cli#4438](https://github.com/github/copilot-cli/issues/4438)). Accidental model-mediated loading must not trigger Hydra work.
 
-**Model defaults** — each role dispatches through its tier's `models` list, in order; an admin-disabled or rejected entry falls through to the next. Your selected main model keeps substantive reasoning and final acceptance, and naming a model in the request overrides the default. Under `Auto`, workers may inherit the session model.
+**Model defaults.** Each role dispatches through its tier's `models` list, in order. An admin-disabled or rejected entry falls through to the next one. Your selected main model keeps substantive reasoning and final acceptance. Naming a model in the request overrides the default. Under `Auto`, workers may inherit the session model.
 
 | Tier | Roles | models[0] | fallback | $/1M in/out |
 |---|---|---|---|---|
 | cheap | git, guard, preflight, runner, scout, scribe, sentinel-scan | `claude-haiku-5.5` | `gpt-6-luna` | 0.10/0.50 · 0.10/0.50 |
 | mid | analyst, coder, sentinel, architect, researcher | `claude-sonnet-5.5` | `gpt-5.6-terra` | 2.00/10.00 · 2.00/12.00 |
 
-**Modes:** `/hail-hydra --mode <turbo|balanced|economy> <goal>` (default `balanced`); Turbo puts speed first and costs more. Ceilings are instruction-level heuristics bounded by your Copilot plan's concurrency, not a scheduler guarantee.
+- **Modes:** `/hail-hydra --mode <turbo|balanced|economy> <goal>` (default `balanced`). Turbo puts speed first and costs more. Ceilings are instruction-level heuristics bounded by your Copilot plan's concurrency, not a scheduler guarantee.
+- **Quality:** substantial changes get an automatic in-task review via native `code-review` and `security-review` before completion is reported.
+- **Continuity:** treat a `/model` switch like a compaction boundary. Write the session ledger before an anticipated switch, and read it back before the next dispatch or decision.
+- **Hooks are deferred** until upstream hook reliability bugs are fixed: copilot-cli issues [#4520](https://github.com/github/copilot-cli/issues/4520), [#1730](https://github.com/github/copilot-cli/issues/1730), [#2201](https://github.com/github/copilot-cli/issues/2201), [#4001](https://github.com/github/copilot-cli/issues/4001) and [#4549](https://github.com/github/copilot-cli/issues/4549). For now, quality gates and `--notify` run in-task or manually.
 
-**Quality:** substantial changes get an automatic in-task review via native `code-review`/`security-review` before completion is reported.
-
-**Continuity:** treat a `/model` switch like a compaction boundary — write the session ledger before an anticipated switch, read it back before the next dispatch or decision.
-
-**Measuring savings:** compare `/usage` before/after a normal run against a `/hail-hydra` run, then `/hail-hydra --compare`; not yet benchmarked on Copilot specifically.
-
-**Hooks are deferred** until upstream hook reliability bugs are fixed (copilot-cli issues [#4520](https://github.com/github/copilot-cli/issues/4520), [#1730](https://github.com/github/copilot-cli/issues/1730), [#2201](https://github.com/github/copilot-cli/issues/2201), [#4001](https://github.com/github/copilot-cli/issues/4001), [#4549](https://github.com/github/copilot-cli/issues/4549)); quality gates and `--notify` run in-task/manually for now.
-
-> **`.claude/` collision:** Copilot also loads a project's `.claude/skills/` and `.claude/agents/`. A repo-local Claude Code Hydra install (`.claude/skills/hydra/`, auto-activating, and `.claude/agents/hydra-*.md`) will also be visible inside Copilot — install Claude Hydra globally, or remove the local copy, in repos where you use `/hail-hydra`.
+> **`.claude/` collision:** Copilot also loads a project's `.claude/skills/` and `.claude/agents/`. A repo-local Claude Code Hydra install (`.claude/skills/hydra/`, auto-activating, plus `.claude/agents/hydra-*.md`) will also be visible inside Copilot. In repos where you use `/hail-hydra`, install Claude Hydra globally or remove the local copy.
 
 ```bash
 npx hail-hydra-cc --copilot --status      # installed version + owned-file count
 npx hail-hydra-cc --copilot --uninstall --yes
 ```
 
-See `/hail-hydra --help` for the full command list.
+</details>
 
-### What Gets Installed
+<details>
+<summary><b>What gets installed</b></summary>
+<br />
 
-**Claude Code** — `~/.claude/` (or `./.claude/` with `--local`):
+**Claude Code**: `~/.claude/` (or `./.claude/` with `--local`)
 
 ```
 ~/.claude/
 ├── agents/                      # 10 agent definitions (Haiku/Sonnet pinned, memory: project)
-├── commands/hydra/              # 11 slash commands (/hydra:*)
+├── commands/hydra/              # slash commands (/hydra:*)
 ├── hooks/                       # 6 hook scripts + notification sound
-│   ├── hydra-check-update.js    # SessionStart — version check (background)
-│   ├── hydra-statusline.js      # StatusLine — status bar display
+│   ├── hydra-check-update.js    # SessionStart: version check (background)
+│   ├── hydra-statusline.js      # StatusLine: status bar display
 │   ├── hydra-token-math.js      # Token parsing + savings math (shared library)
-│   ├── hydra-auto-guard.js      # PostToolUse — file change tracker
-│   ├── hydra-notify.js          # Notification — task completion sound
+│   ├── hydra-auto-guard.js      # PostToolUse: file change tracker
+│   ├── hydra-notify.js          # Notification: task completion sound
 │   ├── hydra-sentinel-done.js   # Sentinel tracking cleanup
 │   └── hydra-task-complete.wav  # Notification sound file
 └── skills/
@@ -210,201 +453,65 @@ See `/hail-hydra --help` for the full command list.
     └── stfu-agents/             # SKILL.md
 ```
 
-Hooks and the statusLine are registered in `~/.claude/settings.json` — existing
-entries are preserved, and a custom statusLine is never overwritten.
+Hooks and the status line are registered in `~/.claude/settings.json`. Existing entries are preserved, and a custom status line is never overwritten.
 
-**Gemini CLI** — `~/.gemini/` (or `./.gemini/` with `--local`):
+**Gemini CLI**: `~/.gemini/` (or `./.gemini/` with `--local`)
 
 ```
 ~/.gemini/
 ├── agents/                      # 10 agent definitions (Flash-tier pinned)
-├── commands/hydra/              # 11 TOML commands (/hydra:*)
+├── commands/hydra/              # TOML commands (/hydra:*)
 ├── hydra/                       # SKILL.md, VERSION, references/, hooks/
 └── GEMINI.md                    # Hydra marker block (appended, reversible)
 ```
 
 Hooks (AfterTool, SessionStart, Notification) are registered in `~/.gemini/settings.json`.
 
-**Codex CLI** — `~/.codex/` (or `./.codex/` with `--local`):
+**Codex CLI**: `~/.codex/` (or `./.codex/` with `--local`)
 
 ```
 ~/.codex/
-├── agents/                      # 10 agent definitions (*.toml, Luna/Terra pinned)
+├── agents/                      # 10 agent definitions (*.toml, Luna/Sol pinned)
 ├── hydra/                       # VERSION, references/, hooks/
-├── hooks.json                   # Hook registrations — trust once via /hooks
+├── hooks.json                   # Hook registrations; trust once via /hooks
 ├── config.toml                  # [features] hooks + notify chain (marker blocks, reversible)
 └── AGENTS.md                    # Hydra marker block (appended, reversible)
 ~/.agents/skills/                # Skills: $hydra-help, $hydra-stats, $hydra-guard, …
 ```
 
-> **Local scope for Claude/Gemini/Codex** (`--local`): the per-project payload goes to `./.claude/`,
-> `./.gemini/`, or `./.codex/` in your working directory. Hooks and host wiring
-> (settings/hooks registration, context files, Codex skills) always stay user-level.
+> **Local scope** (`--local`): the per-project payload goes to `./.claude/`, `./.gemini/` or `./.codex/` in your working directory. Hooks and host wiring (settings and hooks registration, context files, Codex skills) always stay user-level.
 
----
+</details>
 
-## ⚡ Slash Commands
+## Under the hood
 
-> The following command catalogue and automatic integrations describe
-> Claude/Gemini/Codex. Copilot has the separate opt-in skill documented above.
+<details>
+<summary><b>🛡️ Sentinel: integration integrity</b></summary>
+<br />
 
-> **Codex CLI:** the same commands ship as skills invoked with a `$` trigger —
-> `$hydra-help`, `$hydra-stats`, `$hydra-guard`, … The `/hydra:*` form below is
-> for Claude Code and Gemini CLI.
+Most bugs don't come from bad code. They come from good code that **doesn't fit together**: a renamed export, a changed return type, a missing dependency after a refactor. These slip past linters, type-checkers and even code review, because no single file looks wrong.
 
-| Command | Description |
-|---------|-------------|
-| `/hydra:help` | Show all commands and agents |
-| `/hydra:status` | Show installed agents, version, and update availability |
-| `/hydra:update` | Update Hydra to the latest version |
-| `/hydra:guard [files]` | Run manual security & quality scan |
-| `/hydra:quiet` | Suppress dispatch logs for this session |
-| `/hydra:report` | Report a bug, request a feature, or share feedback |
-| `/hydra:stfu` | Compress internal thinking for every subagent in the session |
-| `/hydra:map` | View codebase dependency map, query blast radius, rebuild |
-| `/hydra:preflight` | Two-phase environment and compatibility check before starting a new project build |
-| `/hydra:stats` | Show real token usage, delegation rate, and actual savings (parses the host CLI's own session logs — no AI estimation) |
-
-### `/hydra:preflight` — Environment Validation
-
-Run before starting any new project build. Catches broken GPU stacks, missing env
-vars, and incompatible dependency pairs before they cost you hours of debugging.
-
-```
-/hydra:preflight
-```
-
-Hydra runs a two-phase check:
-1. **Detection** (Haiku): probes runtimes, CUDA stack, deps, env vars, services
-2. **Analysis** (Sonnet): cross-references against compatibility matrices, flags
-   ✅ COMPATIBLE / ⚠️ KNOWN RISK / ❌ CONFIRMED BREAK
-
----
-
-## 🖥️ Status Line
-
-> Claude Code only — Gemini CLI and Codex CLI have no statusline; use
-> `/hydra:stats` (or `$hydra-stats`) there instead.
-
-After installation, your Claude Code status bar shows real-time framework info:
-
-```
-🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project
-```
-
-| Element | What It Shows |
-|---------|---------------|
-| 🐉 | Hydra is active |
-| Model | Current Claude model (Opus, Sonnet, Haiku) |
-| Ctx: XX% | Context window usage with visual bar |
-| $X.XX | Session API cost so far |
-| Directory | Current working directory |
-| ⚠ Warning | Compaction warning (only at 70%+ context usage) |
-
-**Context bar colors:**
-- 🟢 Green (0–49%) — plenty of room
-- 🟡 Yellow (50–79%) — getting full, consider `/compact`
-- 🔴 Red (80%+) — context nearly full, `/compact` or `/clear` recommended
-
-**Compaction warnings** (appended automatically at 70%+):
-```
-🐉 │ Opus │ Ctx: 73% ███████░░░ │ $1.87 │ my-project │ ⚠ Auto-compact at 85%
-🐉 │ Opus │ Ctx: 83% ████████░░ │ $3.14 │ my-project │ ⚠ Compacting soon!
-```
-- ⚠ **Auto-compact at 85%** (70–79%) — heads-up that compaction is approaching
-- ⚠ **Compacting soon!** (80%+) — compaction is imminent, consider `/compact` now
-
-> **Note:** If you already have a custom `statusLine` configured, the installer
-> keeps yours and prints instructions for switching to Hydra's.
-
----
-
-## 🔔 Task Completion Sound
-
-Hydra plays a short notification sound when the CLI finishes responding — so you know it's done even if you've tabbed away.
-
-- **Cross-platform** — macOS (`afplay`), Windows (PowerShell), Linux (`paplay`/`aplay`)
-- **Non-blocking** — the sound plays detached; it never delays the response
-- **Host-native and fully event-driven** — Claude Code `Stop` hook, Gemini `Notification` hook, Codex `notify` chain that preserves your existing notifier; no prompt-level calls, so the model can't forget it
-
-The notification hook is registered automatically during installation.
-
----
-
-## 🔄 Auto-Update Notifications
-
-Hydra checks for updates once per session in the background (never blocks startup).
-When a new version is available, you'll see it in the status bar:
-
-```
-🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v2.6.0 available
-```
-
-Update with:
-
-```bash
-# From within Claude Code:
-/hydra:update
-
-# Or from your terminal:
-npx hail-hydra-cc@latest --global
-```
-
-After updating, restart Claude Code to load the new files.
-
----
-
-## ✨ Features
-
-- **Ten specialized heads** — Haiku (fast) and Sonnet (capable) heads for every task type, including preflight detection for new projects
-- **Sentinel verification** — the answer to "did the cheap model's output actually hold up?": a two-tier check (fast scan + deep analysis) runs after code changes and catches ~72% of integration bugs before runtime
-- **Persistent agent memory** — Every agent remembers your codebase patterns, conventions, and past decisions across sessions
-- **Orchestrator memory** — Opus maintains its own notes on fragile zones, routing patterns, and known issues via CLAUDE.md
-- **Verification touchpoint** — after substantial code changes, the auto-guard hook injects a directive recommending a sentinel + guard verification wave before results are presented; trivial edits stay silent
-- **Auto-Guard** — a PostToolUse hook tracks every file edit; hydra-guard (Haiku) scans the tracked files for security issues on demand (`/hydra:guard`) or as part of the sentinel wave
-- **Configurable modes** — `conservative`, `balanced` (default), or `aggressive` delegation via `hydra.config.md`
-- **Slash commands** — `/hydra:help`, `/hydra:status`, `/hydra:update`, `/hydra:guard`, `/hydra:quiet`, `/hydra:report` for full session control
-- **Task completion sound** — plays a notification when Claude finishes substantial tasks
-- **Quick commands** — natural language shortcuts: `hydra status`, `hydra quiet`, `hydra map`
-- **Custom agent templates** — Add your own heads using `templates/custom-agent.md`
-- **Session indexing** — Codebase context persists across turns; no re-exploration on every prompt
-- **Speculative pre-dispatch** — hydra-scout launches in parallel with task classification, saving 2–3 seconds per task
-- **Dispatch log** — Transparent audit trail showing which agents ran, what model, and outcome
-- **Codebase Map** — Persistent dependency graph built by hydra-scout. Maps every file's imports, dependents, risk score, env vars, and test coverage. Enables instant blast-radius lookups for sentinel — no more grepping the entire codebase.
-- **Risk-Based Verification** — Files with more dependents get more thorough verification. Critical files always trigger deep sentinel analysis. Low-risk files get fast-tracked.
-- **`/hydra:map`** — Inspect the dependency map, query blast radius for any file, or force a rebuild
-- **🆕 Real Token Tracking** — `/hydra:stats` parses Claude Code session logs directly to show actual usage and savings. No AI estimation, no marketing fluff — just real numbers from Anthropic's API responses.
-- **🆕 Internal Compression** — Subagent output and orchestrator responses are now compressed for efficiency. Sub-agent output is heavily compressed (only Opus reads it). Orchestrator responses drop filler and pleasantries while keeping natural prose.
-
----
-
-## 🛡️ Sentinel — Integration Integrity
-
-Most bugs don't come from bad code — they come from good code that **doesn't fit together**. A renamed export, a changed return type, a missing dependency after a refactor. These integration issues slip past linters, type-checkers, and even code review because no single file looks wrong.
-
-**hydra-sentinel** catches them — the auto-guard touchpoint recommends a scan after every substantial edit, and the scan escalates to deep analysis only when it finds something.
-
-### How It Works
+The auto-guard touchpoint recommends a sentinel scan after every substantial edit. The scan escalates to deep analysis only when it finds something.
 
 ```
 Code change lands (hydra-coder finishes)
     │
     ▼
 ┌──────────────────────────────────────┐
-│  🟢 hydra-sentinel-scan (Haiku)  │  ← Runs on EVERY code change (~1-2s)
+│  🟢 hydra-sentinel-scan              │  ← Runs on EVERY code change (~1-2s)
 │  Fast sweep: imports, exports,       │
 │  signatures, dependencies            │
 └──────────────┬───────────────────────┘
                │
           Issues found?
-          ├── No:  ✅ Pass — code proceeds to guard
+          ├── No:  ✅ Pass, code proceeds to guard
           │
           └── Yes: Escalate
                │
                ▼
 ┌──────────────────────────────────────┐
-│  🔵 hydra-sentinel (Sonnet)      │  ← Only when scan flags issues (~20-30%)
-│  Deep analysis: confirms real issues, │
+│  🔵 hydra-sentinel                   │  ← Only when scan flags issues (~20-30%)
+│  Deep analysis: confirms real issues,│
 │  dismisses false positives,          │
 │  proposes fixes                      │
 └──────────────┬───────────────────────┘
@@ -415,9 +522,7 @@ Code change lands (hydra-coder finishes)
           └── Complex (architectural): Report with context
 ```
 
-### What Sentinel Catches
-
-| Check Type | Priority | Example |
+| Check type | Priority | Example |
 |:-----------|:---------|:--------|
 | **Import/export mismatches** | P0 | Importing a function that was renamed or removed |
 | **Function signature changes** | P0 | Caller passes 2 args, function now expects 3 |
@@ -427,8 +532,6 @@ Code change lands (hydra-coder finishes)
 | **Circular dependency introduction** | P2 | New import creates A → B → C → A cycle |
 | **Dead code from refactoring** | P2 | Exported function no longer imported anywhere |
 | **Environment/config mismatches** | P2 | Code references env var that isn't in `.env.example` |
-
-### Example Output
 
 ```
 🛡️ Sentinel Report
@@ -445,26 +548,15 @@ Code change lands (hydra-coder finishes)
 ──────────────────────────────────────
 ```
 
-Across the check types above, the estimated weighted detection rate is **~72%**
-of integration bugs caught before runtime — highest for import/export and
-dependency mismatches (direct matching), lower for type contracts and config
-drift (heuristic).
+Across these check types, the estimated weighted detection rate is **about 72%** of integration bugs caught before runtime. It is highest for import/export and dependency mismatches (direct matching) and lower for type contracts and config drift (heuristic). Sentinel also remembers past false positives and known fragile points in your project, so it gets more accurate the more you use it.
 
-> **Memory makes it better over time.** Sentinel remembers past false positives and known fragile
-> integration points in your project. The more you use it, the more accurate it gets.
+</details>
 
----
+<details>
+<summary><b>🗺️ Codebase map</b></summary>
+<br />
 
-## 🗺️ Codebase Map
-
-Hydra builds a persistent dependency map of your codebase,
-giving every agent instant access to file relationships without scanning.
-
-### How It Works
-
-hydra-scout builds the map on first run by extracting import statements
-from every source file using grep (no external parsers required). The map
-is stored at `.claude/hydra/codebase-map.json`.
+`hydra-scout` builds a persistent dependency map on first run by extracting import statements from every source file with grep. No external parsers are needed. The map is stored at `.claude/hydra/codebase-map.json`.
 
 ```
 Session 1: scout builds the full map (~10 seconds for 500 files)
@@ -472,120 +564,48 @@ Session 2: scout checks git hash → nothing changed → skip rebuild (instant)
 Session 3: scout checks git hash → 3 files changed → update only those 3
 ```
 
-### What the Map Contains
-
-| Data | How It's Used |
+| Data | How it's used |
 |:-----|:-------------|
 | **File imports** | "auth.ts imports user.ts and env.ts" |
 | **Reverse imports** | "auth.ts is imported by users.ts, admin.ts, middleware.ts" |
 | **Risk score** | low (0-1 deps) → medium (2-3) → high (4-6) → critical (7+) |
 | **Env var index** | "JWT_SECRET is used in auth.ts and middleware.ts" |
 | **Test coverage** | covered / partial / untested per file |
-| **Git staleness** | Hash comparison for instant freshness check |
+| **Git staleness** | Hash comparison for an instant freshness check |
 
-### Why This Matters
+**Without the map**, when `auth.ts` changes, sentinel greps the whole codebase for files that import it. In a 500-file project that takes 5 to 15 seconds and 3,000 to 8,000 tokens. **With the map**, sentinel looks up `imported_by`, gets `[users.ts, admin.ts, middleware.ts]` and reads only those three files. That takes under 2 seconds and 500 to 1,500 tokens.
 
-**Without map** — When auth.ts changes, sentinel greps the ENTIRE codebase
-looking for files that import it. In a 500-file project, that's 500 file reads.
-Takes 5-15 seconds, costs 3,000-8,000 tokens.
+Risk scores also decide how hard sentinel looks:
 
-**With map** — Sentinel reads the JSON, looks up auth.ts's `imported_by` array,
-gets `[users.ts, admin.ts, middleware.ts]` instantly. Reads only those 3 files.
-Takes <2 seconds, costs 500-1,500 tokens.
-
-**Savings: 3-5× faster, 3-5× fewer tokens per sentinel scan.**
-
-### Risk-Based Sentinel Triggering
-
-The map's risk scores let Opus make smarter verification decisions:
-
-| Modified File Risk | What Happens |
+| Modified file risk | What happens |
 |:-------------------|:------------|
 | 🔴 Critical (7+ deps) | Sentinel-scan + deep analysis (always) |
 | 🟠 High (4-6 deps) | Sentinel-scan, escalate if issues found |
 | 🟡 Medium (2-3 deps) | Sentinel-scan, escalate only for P0 issues |
 | 🟢 Low (0-1 deps) | Sentinel-scan, auto-accept if clean |
 
-This means Hydra spends more verification effort where it matters most
-(high-risk files) and less where it doesn't (isolated utilities).
-
-### Inspect the Map
-
 ```bash
-/hydra:map                       # Show summary — risk distribution, coverage stats
-/hydra:map src/services/auth.ts  # Show blast radius for a specific file
+/hydra:map                       # Summary: risk distribution, coverage stats
+/hydra:map src/services/auth.ts  # Blast radius for a specific file
 /hydra:map rebuild               # Force a complete rebuild
 ```
 
-### Technical Notes
+- Built with grep and regex: no Tree-sitter, no AST parsing, no external dependencies. Works with JS/TS, Python, Go, Java, Kotlin, Ruby and Rust.
+- Resolves relative imports (for example `'./auth'` → `src/services/auth.ts`).
+- Falls back gracefully. If the map doesn't exist, every agent uses its original grep-based behavior. The map is an optimization, not a requirement.
+- Add `.claude/hydra/codebase-map.json` to `.gitignore`; it is machine-generated.
 
-- The map is built using grep + regex — no Tree-sitter, no AST parsing, no
-  external dependencies. Works with JS/TS, Python, Go, Java, Kotlin, Ruby, Rust.
-- Supports relative import resolution (e.g., `'./auth'` → `src/services/auth.ts`)
-- Falls back gracefully — if the map doesn't exist, all agents use their
-  original grep-based behavior. The map is an optimization, not a requirement.
-- Stored at `.claude/hydra/codebase-map.json` — add to `.gitignore` (machine-generated).
+</details>
 
----
+<details>
+<summary><b>🧠 Agent memory</b></summary>
+<br />
 
-## 📊 Real Token Tracking
+Without memory, every session starts cold. With memory, knowledge compounds. Every agent has `memory: project` in its frontmatter. Claude Code manages a per-project memory directory (`.claude/memory/`) where agents store and retrieve what they learn.
 
-`/hydra:stats` shows actual token usage and savings for your session. No AI
-estimation. The numbers are pulled directly from the host CLI's own session
-logs — Claude Code JSONL, Gemini CLI chat records, or Codex CLI rollout files.
+> Agent memory is a **Claude Code** feature. Gemini CLI and Codex CLI have no equivalent, so the generator drops the `memory` field on those hosts.
 
-```
-🐉 Hydra Stats
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Session: 7c3a9e21.jsonl
-Turns:   38
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🟢 Haiku  (24 turns):  142.3k in / 8.1k out  → $0.183
-🔵 Sonnet (9 turns):   67.4k in / 3.2k out   → $0.250
-🟣 Opus   (5 turns):   45.1k in / 2.8k out   → $0.296
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Delegation rate:    87.0% (33/38 turns)
-Actual cost:        $0.729
-All-Opus baseline:  $1.502
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 Saved:           $0.773 (51.5%)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Reads the host CLI's session logs directly.
-No AI estimation. Numbers are real.
-```
-
-The "All-Opus baseline" is the hypothetical cost if every Hydra agent had
-been Opus instead. The savings show what Hydra's model routing actually
-saves you in this session. Implementation is pure Node.js — works on
-Windows, macOS, and Linux. Respects `CLAUDE_CONFIG_DIR` env override.
-
----
-
-## 🧠 Agent Memory
-
-Without memory, every session starts cold. Agents re-discover your conventions, re-learn your
-project structure, and repeat the same questions. With memory, knowledge compounds.
-
-| Aspect | Without Memory | With Memory |
-|:-------|:---------------|:------------|
-| **First task** | Agent explores from scratch | Agent recalls project patterns |
-| **Conventions** | May use wrong style | Remembers your naming, structure, patterns |
-| **Known issues** | No awareness of past bugs | Recalls fragile areas and past fixes |
-| **Routing accuracy** | Generic classification | Improved by past dispatch outcomes |
-| **False positives** | Same false alarms repeat | Sentinel suppresses known non-issues |
-
-### How It Works
-
-Every agent has `memory: project` in its frontmatter. Claude Code automatically manages a
-per-project memory directory (`.claude/memory/`) where agents store and retrieve learnings.
-
-> Agent memory is a **Claude Code** feature — Gemini CLI and Codex CLI have no
-> equivalent, so the generator drops the `memory` field on those hosts.
-
-| Agent | What It Remembers |
+| Agent | What it remembers |
 |:------|:------------------|
 | **hydra-scout** | Project structure patterns, key file locations, search shortcuts |
 | **hydra-runner** | Test commands, common failure patterns, build quirks |
@@ -596,195 +616,50 @@ per-project memory directory (`.claude/memory/`) where agents store and retrieve
 | **hydra-coder** | Coding style, architecture patterns, preferred libraries |
 | **hydra-analyst** | Common bug patterns, performance hotspots, review focus areas |
 | **hydra-sentinel** | Integration history, confirmed vs dismissed findings |
-| **Orchestrator (Opus)** | Fragile zones, routing accuracy, escalation patterns (via CLAUDE.md Hydra Notes) |
+| **Orchestrator** | Fragile zones, routing accuracy, escalation patterns (in the "Hydra Notes" section of `CLAUDE.md`) |
 
-### Memory Properties
+Memory is automatic, project-scoped and persistent. It is stored as plain markdown in `.claude/memory/`, so you can edit or delete it at any time.
 
-- **Automatic** — agents read and write memory without any user action
-- **Project-scoped** — each project has its own memory; no cross-contamination
-- **Persistent** — survives across sessions; compounds over time
-- **Manageable** — stored as plain markdown in `.claude/memory/`; edit or delete anytime
+</details>
 
-### The Compound Effect
+<details>
+<summary><b>🖥️ Status line, completion sound and update notices</b></summary>
+<br />
 
-Session 1: Agents learn your project. Session 5: They know your conventions. Session 20: They
-anticipate your patterns. The framework gets more efficient the more you use it — not because
-the models improve, but because context quality improves.
-
----
-
-## 🤔 Why I Built This
-
-After Opus 4 dropped, I noticed something frustrating — code execution felt slowww. Reallyyy Slow. Not because the model was worse, but because I was feeding everything through one massive model. Every file read, every grep, every test run, every docstring — all burning through Opus-tier tokens. The result? Frequent context compaction, more hallucinations, and an API bill that made me wince.
-
-So I started experimenting. I switched to Haiku for the simple stuff — running commands, tool calls, file exploration. Sonnet for code generation, refactoring, reviews. And kept Opus only for what it's actually good at: planning, architecture, and the hard decisions. The result surprised me. Same code quality. Sometimes better — because each model was operating within a focused context window instead of one overloaded one.
-
-Five agents. Five separate context windows. Each with a clearly defined job. They do the work, and only pass results back to the brain — Opus. The outcome:
-
-- Longer coding sessions (less compaction, less context blowup)
-- Drastically reduced API costs (Haiku is 5× cheaper than Opus)
-- Faster execution (Haiku responds ~10× faster)
-- Same or better code quality (focused context > bloated context)
-- Zero manual model switching (this is the big one)
-
-Because that was the real pain — manually switching between models for every task tier to save costs. Every. Single. Time. So I built a framework that does it for me. And honestly? It does it better than I did. That was hard to admit, but here we are.
-
-I also didn't want it to be boring. So I gave it teeth, heads, and a battle cry. If you prefer something more buttoned-up, the [`spec-exec`](../../tree/spec-exec) branch has the same framework with zero theatrics.
-
-*Hail Hydra. Have fun.*
-
----
-
-## 💡 The Theory (for nerds)
-
-Speculative decoding (Chen et al., 2023) accelerates LLM inference by having a small **draft model** propose tokens that a large **target model** verifies in parallel. Since verifying K tokens costs roughly the same as generating 1 token, you get 2–2.5× speedup with **zero quality loss**.
-
-Hydra applies this at the **task level**:
+**Status line** (Claude Code only; on other hosts use `/hydra:stats` or `$hydra-stats`):
 
 ```
-                          ┌─────────────────────────────────┐
-                          │  SPECULATIVE DECODING (tokens)  │
-                          │                                 │
-                          │  Small model drafts K tokens    │
-                          │  Big model verifies in parallel │
-                          │  Accept or reject + resample    │
-                          │  Result: 2-2.5× speedup         │
-                          └─────────────────────────────────┘
-                                        │
-                                   Same idea,
-                                  bigger scale
-                                        │
-                                        ▼
-                          ┌─────────────────────────────────┐
-                          │  🐉 HYDRA (tasks)               │
-                          │                                 │
-                          │  Haiku/Sonnet drafts the task   │
-                          │  Opus verifies (quick glance)   │
-                          │  Accept or redo yourself        │
-                          │  Result: 2-3× speedup           │
-                          └─────────────────────────────────┘
+🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project
 ```
 
-The math is simple: if 70% of tasks can be handled by Haiku (10× faster, 5× cheaper) and 20% by Sonnet (3× faster, ~1.7× cheaper), your effective speed and cost improve dramatically — even accounting for the occasional rejection.
-
-How the concepts map:
-
-| Speculative Decoding Concept | Hydra Equivalent |
-|:-----------------------------|:-----------------|
-| Target model (large) | 🧠 The orchestrator (Opus / Gemini Pro / GPT-6.1 Sol) |
-| Draft model (small) | 🟢🔵 The cheap/mid-tier heads |
-| Draft K tokens | Heads draft the full task output |
-| Parallel verification | Orchestrator glances at the output |
-| Modified rejection sampling | Accept → ship it. Reject → orchestrator redoes it. |
-| Acceptance rate (~70-90%) | Target: 85%+ of delegated tasks accepted as-is |
-
-**Key papers:**
-- [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/abs/2302.01318) — Chen et al., 2023 (DeepMind)
-- [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — Leviathan et al., 2022 (Google)
-
----
-
-## 🏗️ Architecture
+It shows the current model, context usage with a color bar (green below 50%, yellow 50 to 79%, red 80% and above), the session cost and the working directory. From 70% context it adds a compaction warning:
 
 ```
-User Request
-    │
-    ├──────────────────────────────────────────────────────┐
-    │                                                      │
-    ▼                                                      ▼
-┌─────────────────────────────┐            ┌──────────────────────────────┐
-│  🧠 ORCHESTRATOR (Opus)     │            │  🟢 hydra-scout (Haiku)  │
-│  Classifies task            │            │  IMMEDIATE pre-dispatch:      │
-│  Plans waves                │            │  "Find files relevant to      │
-│  Decides blocking / not     │            │   [user's request]"           │
-└────────┬────────────────────┘            └──────────────┬───────────────┘
-         │         (unless Session Index already covers)  │
-         └──────────────────────┬──────────────────────────┘
-                                │ (scout + classification both ready)
-                      [Session Index updated]
-                                │
-    ════════════════════════════════════════════════════════
-    Wave N  (parallel dispatch, index context injected)
-    ┌───────────────────┬──────────────────────────────────┐
-    │  SEQUENTIAL       │  PARALLEL (wait for all)         │
-    ▼                   ▼                                  │
- [coder]            [scribe] ──────────────────────────────┘
-    │
-    ▼
- ALL agents complete (Opus waits for every dispatched agent)
-    │
-    ├── Raw data / clean pass? → AUTO-ACCEPT → (updates Session Index if scout)
-    └── Code / analysis / user-facing docs? → Orchestrator verifies
-         │
-         ▼
-   ┌─────────────────────────────────────────────────────┐
-   │  🛡️ VERIFICATION WAVE (recommended by auto-guard)   │
-   │                                                     │
-   │  🟢 sentinel-scan (Haiku) — fast integration sweep  │
-   │       └── issues? → 🔵 sentinel (Sonnet) — deep     │
-   │  🟢 guard (Haiku) — security/quality scan           │
-   │                                                     │
-   │  Runs before results are presented to you            │
-   └──────────────────────┬──────────────────────────────┘
-                          │
-                          ▼
-   User gets result (single response, all agent outputs included)
+🐉 │ Opus │ Ctx: 73% ███████░░░ │ $1.87 │ my-project │ ⚠ Auto-compact at 85%
+🐉 │ Opus │ Ctx: 83% ████████░░ │ $3.14 │ my-project │ ⚠ Compacting soon!
 ```
 
----
+If you already have a custom `statusLine`, the installer keeps yours and prints instructions for switching.
 
-## 🐲 The Ten Heads
+**Task completion sound.** Hydra plays a short sound when the CLI finishes responding. It works on macOS (`afplay`), Windows (PowerShell) and Linux (`paplay`/`aplay`), and plays detached so it never delays the response. It is fully event-driven: a Claude Code `Stop` hook, a Gemini `Notification` hook, or a Codex `notify` chain that preserves your existing notifier.
 
-| Head | Model | Speed | Role | Personality |
-|:-----|:------|:------|:-----|:------------|
-| **hydra-scout (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Codebase exploration, file search, reading | *"I've already found it."* |
-| **hydra-runner (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Test execution, builds, linting, validation | *"47 passed, 3 failed. Here's why."* |
-| **hydra-scribe (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Documentation, READMEs, comments | *"Documented before you finished asking."* |
-| **hydra-guard (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Security/quality gate after code changes | *"No secrets. No injection. You're clean."* |
-| **hydra-git (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Git: commit, branch, diff, stash, log | *"Committed. Conventional message. Clean diff."* |
-| **hydra-sentinel-scan (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Fast integration sweep after code changes | *"Imports check out. Signatures match. Clean."* |
-| **hydra-preflight (Haiku)** | 🟢 Haiku | ⚡⚡⚡ | Environment detection, version probing, dep inventory | *"Your PyTorch/CUDA pair is broken. Pin torch==2.7.0."* |
-| **hydra-coder (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code implementation, refactoring, features | *"Feature's done. Tests pass."* |
-| **hydra-analyst (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Code review, debugging, analysis | *"Found 2 critical bugs and an N+1 query."* |
-| **hydra-sentinel (Sonnet)** | 🔵 Sonnet | ⚡⚡ | Deep integration analysis (when scan flags issues) | *"2 real issues confirmed. 1 false positive dismissed."* |
-
-### Task Routing Cheat Sheet
+**Update notices.** Hydra checks for updates once per session in the background and never blocks startup:
 
 ```
-Is it read-only? ─── Yes ──→ Finding files?
-    │                           ├── Yes: hydra-scout (Haiku) 🟢
-    │                           └── No:  hydra-analyst (Sonnet) 🔵
-    │
-    No ──→ Is it a git operation? ─── Yes ──→ hydra-git (Haiku) 🟢
-    │
-    No ──→ Is it a security scan? ─── Yes ──→ hydra-guard (Haiku) 🟢
-    │
-    No ──→ Just running a command? ─── Yes ──→ hydra-runner (Haiku) 🟢
-    │
-    No ──→ Writing docs only? ─── Yes ──→ hydra-scribe (Haiku) 🟢
-    │
-    No ──→ Clear implementation approach? ─── Yes ──→ hydra-coder (Sonnet) 🔵
-    │
-    No ──→ Needs deep reasoning? ─── Yes ──→ 🧠 Opus (handle it yourself)
-
-    Code was just changed? ─── Yes ──→ hydra-sentinel-scan (Haiku) 🟢
-        │                                   │
-        │                              Issues found?
-        │                              ├── No:  Done ✅
-        │                              └── Yes: hydra-sentinel (Sonnet) 🔵
+🐉 │ Opus │ Ctx: 37% ████░░░░░░ │ $0.42 │ my-project │ ⚡ v2.6.0 available
 ```
 
----
+Update with `/hydra:update` inside the CLI or `npx hail-hydra-cc@latest --global` from your terminal, then restart.
 
-## ⚙️ Configuration
+</details>
 
-The following config applies to Claude, Gemini and Codex. Copilot uses
-task-local `--mode turbo|balanced|economy` instead; it does not read this config
-or treat `aggressive` as an alias for Turbo.
+<details>
+<summary><b>⚙️ Configuration</b></summary>
+<br />
 
-Customize Hydra's behavior with an optional config file — create it by hand at
-your host's config path (the installer doesn't write one, and `--uninstall`
-leaves it alone):
+This applies to Claude Code, Gemini CLI and Codex CLI. Copilot uses a per-task `--mode turbo|balanced|economy` instead. It does not read this config, and it does not treat `aggressive` as an alias for Turbo.
+
+The config file is optional. Create it by hand at your host's config path. The installer doesn't write one, and `--uninstall` leaves it alone.
 
 | Host | Global | Project-level (overrides global) |
 |:-----|:-------|:---------------------------------|
@@ -798,207 +673,137 @@ dispatch_log: on        # on (default) | off
 auto_guard: on          # on (default) | off
 ```
 
-Run `/hydra:status` (`$hydra-status` on Codex) to see what's currently loaded.
-See [`content/config/hydra.config.md`](content/config/hydra.config.md) for the full reference with all options.
+Run `/hydra:status` (`$hydra-status` on Codex) to see what's loaded. See [`content/config/hydra.config.md`](content/config/hydra.config.md) for every option.
 
----
+</details>
 
-## 🧩 Extending Hydra
+<details>
+<summary><b>🧩 Add your own head</b></summary>
+<br />
 
-Add your own specialized head in three steps:
+1. **Fetch the template** into the agents directory Hydra installed:
+   ```bash
+   curl -o ~/.claude/agents/hydra-myspecialist.md https://raw.githubusercontent.com/AR6420/Hail_Hydra/main/templates/custom-agent.md
+   ```
+   For project level, use `.claude/agents/` instead.
+2. **Customize it**: edit the name, description, tools and instructions.
+3. **Restart your CLI.** The new head is discoverable alongside the built-in ten.
 
-**1. Fetch the template** straight into the agents directory Hydra installed:
-```bash
-curl -o ~/.claude/agents/hydra-myspecialist.md https://raw.githubusercontent.com/AR6420/Hail_Hydra/main/templates/custom-agent.md
-# project-level: curl -o .claude/agents/hydra-myspecialist.md https://raw.githubusercontent.com/AR6420/Hail_Hydra/main/templates/custom-agent.md
-```
+The template uses the Markdown agent format that Claude Code and Gemini CLI (`~/.gemini/agents/`) share. Codex CLI agents live in `~/.codex/agents/` as TOML. See [`templates/custom-agent.md`](templates/custom-agent.md) for guidance on descriptions, output formats and collaboration protocols.
 
-**2. Customize the agent** — edit the name, description, tools, and instructions.
+</details>
 
-**3. Restart your CLI** — the new head is discoverable alongside the built-in ten.
-
-The template uses the Markdown agent format shared by Claude Code and Gemini CLI
-(`~/.gemini/agents/`); Codex CLI agents live in `~/.codex/agents/` as TOML.
-See [`templates/custom-agent.md`](templates/custom-agent.md) for the full template with
-instructions on writing effective agent descriptions, output formats, and collaboration protocols.
-
----
-
-## 📂 Repository Structure
+<details>
+<summary><b>📂 Repository structure</b></summary>
+<br />
 
 ```
 hydra/
-├── 📄 bin/cli.js                        # The npx installer (hail-hydra-cc)
-├── 🧬 content/                          # Canonical source — single origin for every host
-│   ├── SKILL.md                         # Orchestrator instructions (full)
-│   ├── skill-core.md                    # Compressed core for size-capped hosts
-│   ├── agents/                          # 10 agent definitions
-│   ├── commands/                        # 10 command definitions
-│   ├── references/                      # Routing guide + model capabilities
-│   ├── config/hydra.config.md           # User configuration template
-│   └── skills/stfu-agents/              # STFU-Agents skill
-├── ⚙️ src/
-│   ├── generator/                       # Emitters: content/ → dist/<host>/
-│   ├── installer/                       # Multi-host installer (hosts/claude|gemini|codex.js)
-│   ├── hooks/<host>/                    # Per-host lifecycle hooks
-│   └── lib/                             # Shared cores (token math, guard, sentinel state)
-├── 📦 dist/                             # Generated per-host payload (`npm run build` — gitignored)
-├── 📋 templates/
-│   └── custom-agent.md                  # Template for adding your own heads
-└── 🧪 test/                             # Node test suite (`npm test`)
+├── bin/cli.js                        # The npx installer (hail-hydra-cc)
+├── content/                          # Canonical source: single origin for every host
+│   ├── SKILL.md                      # Orchestrator instructions (full)
+│   ├── skill-core.md                 # Compressed core for size-capped hosts
+│   ├── agents/                       # 10 agent definitions
+│   ├── commands/                     # Command definitions
+│   ├── references/                   # Routing guide + model capabilities
+│   ├── config/hydra.config.md        # User configuration template
+│   └── skills/stfu-agents/           # STFU-Agents skill
+├── src/
+│   ├── generator/                    # Emitters: content/ → dist/<host>/
+│   ├── installer/                    # Multi-host installer
+│   ├── hooks/<host>/                 # Per-host lifecycle hooks
+│   └── lib/                          # Shared cores (token math, guard, sentinel state)
+├── dist/                             # Generated per-host payload (`npm run build`, gitignored)
+├── templates/custom-agent.md         # Template for adding your own heads
+└── test/                             # Node test suite (`npm test`)
 ```
 
----
+</details>
 
-## 📊 Expected Impact
-
-| Metric | Without Hydra | With Hydra | Improvement |
-|:-------|:-------------|:-----------|:------------|
-| **Task Speed (per dispatch)** | 1× (Opus for everything) | 2–3× faster | 🟢 Haiku heads respond ~10× faster |
-| **API Cost (per dispatch)** | 1× (Opus for everything) | ~0.5× per dispatch | ~50% cheaper when invoked |
-| **Quality** | Opus-level | Opus-level | Zero degradation |
-| **User Experience** | Normal | Normal | Explicit invocation; one automatic touchpoint (post-substantial-edit verification) |
-| **Overhead per turn (Turn 2+)** | Full re-exploration each turn | Session index reused | 🟢 2-4s saved per turn |
-| **Scout/runner verification** | Opus reviews every output | Auto-accepted for factual data | 🟢 ~50-60% of outputs skip review |
-| **Integration bugs caught** | 0% (no verification) | ~72% caught before runtime | 🟢 Sentinel auto-verification |
-| **Session knowledge** | Starts cold every time | Compounds across sessions | 🟢 Persistent agent memory |
-| **Sentinel scan speed** | 5-15 seconds (grep) | <2 seconds (map lookup) | 🟢 3-5× faster with codebase map |
-| **Sentinel scan tokens** | 3,000-8,000 per scan | 500-1,500 per scan | 🟢 3-5× fewer tokens per scan |
-
-### How the Savings Work
-
-| Task Type | % of Work | Model Used | Input Cost vs Opus | Output Cost vs Opus |
-|:----------|:----------|:-----------|:----------------------|:-----------------------|
-| Exploration, search, tests, docs | ~50% | 🟢 Haiku | 2.5% ($0.10 vs $4/MTok) | 2.5% ($0.50 vs $20/MTok) |
-| Implementation, review, debugging | ~30% | 🔵 Sonnet | 50% ($2 vs $4/MTok) | 50% ($10 vs $20/MTok) |
-| Architecture, hard problems | ~20% | 🧠 Opus | 100% (no change) | 100% (no change) |
-| Sentinel scan (fast) | Auto (every code change) | 🟢 Haiku | 2.5% | 2.5% |
-| Sentinel deep (conditional) | ~20-30% of code changes | 🔵 Sonnet | 50% | 50% |
-| **Blended effective cost** | | | **~36% of all-Opus** | **~36% of all-Opus** |
-
-Note: Prices are Haiku 5.5 / Sonnet 5.5 / Opus 5.5 (verified 2026-10). When Hydra is invoked across a representative mix of task types, blended input = (0.5×$0.10 + 0.3×$2 + 0.2×$4) / $4 = $1.45/$4 ≈ 36% of all-Opus. Haiku 5.5 prompts over 100K tokens bill at $0.50/$2.50, so long-context-heavy sessions save less.
-Per-dispatch savings of **~50%** or more are typical for Hydra-invoked work. Session-level savings depend on how often Hydra is invoked — run `/hydra:stats` for real numbers from your session.
-
-On Gemini CLI and Codex CLI the same routing applies against that host's own
-frontier model — Flash-tier heads measured against an all-Gemini-Pro baseline,
-Luna/Sol heads against the session's main GPT model (default GPT-6.1 Sol) — landing around the same
-~50% blended mark. `/hydra:stats` (`$hydra-stats` on Codex) reports real
-per-host numbers.
-
-### Why Hydra Doesn't Hit the Subagent Cost-Explosion Problem
-
-A fair objection to any subagent framework: naive fan-out can cost **3–7× more**
-than a single-thread session, because every spawned agent re-bootstraps context
-and re-verifies work the orchestrator already understood. Hydra's design avoids
-that trap deliberately:
-
-- **Bounded, task-scoped dispatch** — the orchestrator sends one agent per
-  well-defined subtask with only the context slice it needs, not a wide swarm
-  re-reading the repo in parallel
-- **Cheap tiers do the token-heavy work** — the expensive model never pays
-  frontier prices for exploration, test runs, or doc writing
-- **`maxTurns` caps on every agent** — a runaway agent stops at 25 turns
-  (cheap tier) or 50 (mid tier) instead of burning tokens indefinitely
-- **The codebase map replaces re-exploration** — blast-radius lookups cost
-  ~500–1,500 tokens instead of a 3,000–8,000-token grep sweep per verification
-- **Receipts, not claims** — `/hydra:stats` parses the CLI's own session logs,
-  so if dispatch overhead ever ate the savings, the number would show it
-
-### Measure Your Savings
-
-The most accurate way to measure Hydra's impact — no estimation, real numbers:
-
-1. Start a Claude Code session **without** Hydra installed
-2. Complete a representative coding task
-3. Note the session cost from Claude Code's cost display
-4. Start a **new** session **with** Hydra installed
-5. Complete a similar task
-6. Compare the two costs
-
-That's it. Real data beats theoretical calculations every time.
-
-#### What to expect
-When Hydra is actively invoked across a typical mix (50% Haiku, 30% Sonnet, 20% Opus):
-- **Input tokens**: ~64% cheaper per dispatch ($1.45 vs $4.00 per MTok)
-- **Output tokens**: ~64% cheaper per dispatch ($7.25 vs $20.00 per MTok)
-- **Per-dispatch blended**: ~50%+ cost reduction on Hydra-invoked work
-- **Speed**: 2–3× faster on delegated tasks
-
-Session-level savings depend on invocation frequency. `/hydra:stats` reports real numbers from your session logs — no estimation.
-
-### Additional Savings from Codebase Map
-
-The codebase map provides additional token savings on TOP of the model-routing
-savings above:
-
-| Operation | Without Map | With Map | Savings |
-|:----------|:-----------|:---------|:--------|
-| Sentinel scan (per change) | 3,000-8,000 tokens | 500-1,500 tokens | ~3-5× |
-| Scout exploration (repeat session) | 5,000-15,000 tokens | 1,000-3,000 tokens | ~3-5× |
-| Blast radius computation | Grep entire codebase | JSON lookup | Instant |
-
-These savings compound with every code change in a session. In a session with
-5 code changes, the map saves roughly 10,000-30,000 tokens on sentinel scans alone.
-
----
-
-## 🎯 Design Principles
-
-### 🫥 Invisibility
-> The user should **never** notice Hydra operating. No announcements, no permission requests, no process narration. If a head does the work, present the output as if the orchestrator did it.
-
-### ⚡ Speed Over Ceremony
-> Don't overthink classification. Quick mental check: "Haiku? Sonnet? Me?" and go. If you spend 10 seconds classifying a 5-second task, you've defeated the purpose.
-
-### 🔀 Parallel Heads
-> Independent subtasks launch in parallel. "Fix the bug AND add tests" → two heads working simultaneously.
-
-### ⬆️ Escalate, Never Downgrade
-> If a head's output isn't good enough, Opus does it directly. No retries at the same tier. This mirrors speculative decoding's rejection sampling — when a draft token is rejected, the target model samples directly.
-
----
-
-## 🤔 FAQ
+## FAQ
 
 <details>
-<summary><strong>Will I notice any quality difference?</strong></summary>
-<br/>
-No. Hydra only delegates tasks that are within each model's capability band. If there's any doubt, the task stays with Opus. And Opus always verifies — if a head's output isn't up to standard, Opus redoes it before you ever see it.
+<summary><b>Will I notice any quality difference?</b></summary>
+<br />
+
+No. Hydra only delegates tasks within each model's capability band. If there's any doubt, the task stays with your main model. The orchestrator also verifies the output: if a head's work isn't up to standard, it is redone before you see it.
+
 </details>
 
 <details>
-<summary><strong>Is this actually speculative decoding?</strong></summary>
-<br/>
-Not at the token level — that happens inside Anthropic's servers and we can't modify it. Hydra applies the same <em>philosophy</em> at the task level: draft with a fast model, verify with the powerful model, accept or reject. Same goals (speed + cost), same guarantees (zero quality loss), different granularity.
+<summary><b>Is this actually speculative decoding?</b></summary>
+<br />
+
+Not at the token level; that happens inside the model provider's servers. Hydra applies the same idea at the task level: draft with a fast model, verify with the powerful one, accept or reject. The goals are the same (speed and cost), and so is the guarantee of no quality loss, at a different granularity.
+
 </details>
 
 <details>
-<summary><strong>What if I'm not using Opus?</strong></summary>
-<br/>
-Hydra is designed for the Opus-as-orchestrator pattern, but the principles apply at any tier. If you're running Sonnet as your main model, you could adjust the heads to use Haiku for everything delegatable.
+<summary><b>What if I'm not using Opus?</b></summary>
+<br />
+
+Hydra is designed for the frontier-model-as-orchestrator pattern, but the idea works at any tier. On Gemini CLI and Codex CLI the heads use that host's cheaper models automatically. If Sonnet is your main model on Claude Code, you can point every head at Haiku.
+
 </details>
 
 <details>
-<summary><strong>Can I customize which models the heads use?</strong></summary>
-<br/>
-Absolutely. Each head is a simple Markdown file with a <code>model:</code> field in the frontmatter. Change <code>model: haiku</code> to <code>model: sonnet</code> (or any supported model) and you're done.
+<summary><b>Can I change which models the heads use?</b></summary>
+<br />
+
+Yes. Each head is a small Markdown file with a <code>model:</code> field in its frontmatter. Change <code>model: haiku</code> to <code>model: sonnet</code> (or any supported model) and you're done.
+
 </details>
 
 <details>
-<summary><strong>Do the heads work with subagents I already have?</strong></summary>
-<br/>
-Yes. Hydra heads coexist with any other subagents. Claude Code discovers all agents in the <code>.claude/agents/</code> directories. No conflicts.
+<summary><b>Do the heads work with subagents I already have?</b></summary>
+<br />
+
+Yes. Hydra heads coexist with any other subagents. Claude Code discovers every agent in the <code>.claude/agents/</code> directories, so there are no conflicts.
+
 </details>
 
 <details>
-<summary><strong>How do I uninstall?</strong></summary>
-<br/>
+<summary><b>Does Sentinel slow things down or auto-fix without asking?</b></summary>
+<br />
 
-Removes all agents, commands, skills, hooks, and cache files, and reverses the
-host wiring — hooks/statusLine in `~/.claude/settings.json`, hooks in
-`~/.gemini/settings.json` plus the `GEMINI.md` marker block, and Codex's
-`hooks.json`, `config.toml` marker blocks, and `AGENTS.md` block. Your own
-configuration (including any `hydra/config/` files) is preserved.
+The fast scan adds about 1 to 2 seconds per code change. The deep analysis runs only when the scan flags issues (about 20 to 30% of changes) and adds another 3 to 5 seconds. Only trivial fixes, such as updating an import path after a rename, are applied automatically. Medium fixes are offered for your approval. Complex issues are reported with context.
+
+</details>
+
+<details>
+<summary><b>Can I disable Sentinel?</b></summary>
+<br />
+
+Yes. Set <code>auto_guard: off</code> in your <code>hydra.config.md</code> and the orchestrator skips the verification dispatch. The hook's post-edit reminder still appears, because it's the orchestrator that honors the setting. Or use <code>mode: conservative</code> to make all delegation, including verification, more sparing. The sentinel agents stay installed, so you can always invoke them explicitly.
+
+</details>
+
+<details>
+<summary><b>Does agent memory use extra tokens?</b></summary>
+<br />
+
+A little. Memory loads into each agent's context when it starts, but memory files are small, typically a few hundred tokens each. Better project context usually <em>saves</em> tokens by reducing re-exploration and misclassification.
+
+</details>
+
+<details>
+<summary><b>Do I need to build the codebase map manually?</b></summary>
+<br />
+
+No. <code>hydra-scout</code> builds it automatically the first time it explores, then updates only changed files using git hash comparison. Force a rebuild with <code>/hydra:map rebuild</code>. A 500-file project's map is typically 50 to 150 KB; a 5,000-file project's is about 0.5 to 1.5 MB.
+
+</details>
+
+<details>
+<summary><b>How do I uninstall?</b></summary>
+<br />
+
+The uninstaller removes all agents, commands, skills, hooks and cache files and reverses the host wiring:
+- **Claude Code:** hooks and the status line in `~/.claude/settings.json`.
+- **Gemini CLI:** hooks in `~/.gemini/settings.json` and the `GEMINI.md` marker block.
+- **Codex CLI:** `hooks.json`, the `config.toml` marker blocks and the `AGENTS.md` block.
+
+Your own configuration, including any `hydra/config/` files, is preserved.
 
 ```bash
 npx hail-hydra-cc --uninstall              # every host with Hydra installed
@@ -1007,129 +812,30 @@ npx hail-hydra-cc --uninstall --gemini     # just one host
 
 </details>
 
-<details>
-<summary><strong>What is Sentinel and how does it work?</strong></summary>
-<br/>
-Sentinel is a two-tier integration verification system. After every code change, <strong>hydra-sentinel-scan</strong> (Haiku) runs a fast sweep (~1-2s) checking imports, exports, function signatures, and dependencies. If it finds potential issues, <strong>hydra-sentinel</strong> (Sonnet) performs deep analysis to confirm real problems and dismiss false positives. The result is ~72% of integration bugs caught before they reach you.
-</details>
+## Why I built this
 
-<details>
-<summary><strong>Does Sentinel slow things down?</strong></summary>
-<br/>
-The fast scan adds ~1-2 seconds per code change. The deep analysis only triggers when the scan flags issues (~20-30% of changes), adding another ~3-5 seconds in those cases. For the ~70-80% of changes that are clean, you'll barely notice it. The time saved debugging integration issues far outweighs the scan overhead.
-</details>
+After Opus 4 dropped, I noticed something frustrating: code execution felt slowww. Reallyyy slow. Not because the model was worse, but because I was feeding everything through one massive model. Every file read, every grep, every test run, every docstring burned through Opus-tier tokens. The result? Frequent context compaction, more hallucinations, and an API bill that made me wince.
 
-<details>
-<summary><strong>Will Sentinel auto-fix things without asking?</strong></summary>
-<br/>
-Only trivial fixes (like updating an import path after a rename). For medium-complexity fixes (signature mismatches), it offers the fix for your approval. For complex architectural issues, it reports the problem with context but doesn't attempt a fix. You stay in control.
-</details>
+So I started experimenting. Haiku for the simple stuff: running commands, tool calls, file exploration. Sonnet for code generation, refactoring and reviews. Opus only for what it's actually good at: planning, architecture and the hard decisions. Same code quality, sometimes better, because each model worked inside a focused context window instead of one overloaded one.
 
-<details>
-<summary><strong>Can I disable Sentinel?</strong></summary>
-<br/>
-Yes. Set <code>auto_guard: off</code> in your <code>hydra.config.md</code> and the orchestrator skips the verification dispatch (the hook's post-edit reminder still appears — it's the orchestrator that honors the setting). Or use <code>mode: conservative</code> to make delegation, including verification dispatches, more sparing. The sentinel agents themselves stay installed — you can always invoke them explicitly.
-</details>
+The real pain was manually switching models for every task tier to save costs. Every. Single. Time. So I built a framework that does it for me. And honestly? It does it better than I did. That was hard to admit, but here we are.
 
-<details>
-<summary><strong>Does Agent Memory use extra tokens?</strong></summary>
-<br/>
-Memory is loaded as part of each agent's context when it starts, so it does use some tokens — but agent memory files are small (typically a few hundred tokens each). The improved accuracy from having project context usually <em>saves</em> tokens by reducing re-exploration and misclassification.
-</details>
+I also didn't want it to be boring, so I gave it teeth, heads and a battle cry. If you prefer something more buttoned-up, the [`spec-exec`](../../tree/spec-exec) branch has the same framework with zero theatrics.
 
-<details>
-<summary><strong>Where is agent memory stored?</strong></summary>
-<br/>
-In <code>.claude/memory/</code> within your project directory. Each agent stores its own memory as plain markdown files. You can read, edit, or delete them anytime. Memory is project-scoped — each project has its own memory, no cross-contamination.
-</details>
+*Hail Hydra. Have fun.*
 
-<details>
-<summary><strong>Does Opus (the orchestrator) also have memory?</strong></summary>
-<br/>
-Yes. Opus maintains a "Hydra Notes" section in your project's <code>CLAUDE.md</code> file. This includes fragile integration zones, routing accuracy observations, and known issues. Unlike agent memory (which is per-agent), orchestrator memory is visible to all agents and informs dispatch decisions.
-</details>
+## Feedback and contributing
 
-<details>
-<summary><strong>What is the Codebase Map?</strong></summary>
-<br/>
-A persistent JSON file that maps every file's imports, dependents, risk score,
-env var references, and test coverage. Built by hydra-scout using grep (no external
-parsers). Stored at <code>.claude/hydra/codebase-map.json</code>. Enables instant
-blast-radius lookups for sentinel instead of scanning the entire codebase.
-</details>
+Found a bug, a misrouted task type or an idea for a new head? Run `/hydra:report` inside your CLI, or open an issue: [report a bug](https://github.com/AR6420/Hail_Hydra/issues/new?template=bug_report.md) · [request a feature](https://github.com/AR6420/Hail_Hydra/issues/new?template=feature_request.md) · [share feedback](https://github.com/AR6420/Hail_Hydra/issues/new?template=feedback.md).
 
-<details>
-<summary><strong>Do I need to build the map manually?</strong></summary>
-<br/>
-No. hydra-scout builds it automatically the first time it's dispatched for
-exploration. After that, it updates incrementally (only changed files) using
-git hash comparison. You can force a rebuild with <code>/hydra:map rebuild</code>
-or inspect it with <code>/hydra:map</code>.
-</details>
+Pull requests are welcome. Fork the repo, create a branch (`git checkout -b feature/hydra-new-head`), run `npm test`, and open a PR. Full version history lives in the [CHANGELOG](CHANGELOG.md).
 
-<details>
-<summary><strong>Does the map work with my language?</strong></summary>
-<br/>
-The map extracts imports using grep patterns for JavaScript, TypeScript, Python,
-Go, Java, Kotlin, Ruby, and Rust. If your language isn't supported, agents fall
-back to their original grep-based behavior — the map is an optimization, not
-a requirement. More languages can be added in future versions.
-</details>
+## License
 
-<details>
-<summary><strong>How big is the map file?</strong></summary>
-<br/>
-For a 500-file project, the map is typically 50-150KB. For a 5,000-file project,
-it's around 500KB-1.5MB. It's a single JSON file — no database, no external
-services, nothing to maintain.
-</details>
-
----
-
-## 💬 Feedback
-
-Found a bug? Have a feature idea? Want to share feedback?
-
-**From within Claude Code:**
-```
-/hydra:report
-```
-
-**Or directly on GitHub:**
-- [Report a Bug](https://github.com/AR6420/Hail_Hydra/issues/new?template=bug_report.md)
-- [Request a Feature](https://github.com/AR6420/Hail_Hydra/issues/new?template=feature_request.md)
-- [Share Feedback](https://github.com/AR6420/Hail_Hydra/issues/new?template=feedback.md)
-
----
-
-## 🤝 Contributing
-
-Found a task type that gets misclassified? Have an idea for a new head? Contributions are welcome!
-
-1. Fork it
-2. Create your branch (`git checkout -b feature/hydra-new-head`)
-3. Commit (`git commit -m 'Add hydra-optimizer head for perf tuning'`)
-4. Push (`git push origin feature/hydra-new-head`)
-5. Open a PR
-
----
-
-## 📜 License
-
-MIT — Use it, fork it, deploy it. Just don't use it for world domination.
+MIT, see [LICENSE](LICENSE). Use it, fork it, deploy it. Just don't use it for world domination.
 
 *...unless it's code world domination. Then go ahead.*
 
----
-
 <p align="center">
-  <br/>
-  <img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra" />
-  <br/><br/>
-  <em>Built with 🧠 by Claude Opus — ironically, the model this framework is designed to use less of.</em>
-  <br/>
-  <em>Multi-host: Claude Code, Gemini CLI, Codex CLI, and GitHub Copilot CLI.</em>
+  <a href="https://www.npmjs.com/package/hail-hydra-cc"><img src="https://img.shields.io/badge/🐉-HAIL_HYDRA-darkred?style=for-the-badge&labelColor=black" alt="Hail Hydra on npm" /></a>
 </p>
-
----
-> Prefer a clean, technical version? See the [`spec-exec`](../../tree/spec-exec) branch — same framework, zero theatrics.

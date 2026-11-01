@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Install: a terminal runs npx hail-hydra-cc@latest and ticks Claude Code, Gemini CLI, Codex CLI and GitHub Copilot CLI. As each host is ticked its card lights up and fills, showing how to invoke Hydra there and what got installed, ending with Hail Hydra. Ready.">
+  <title>Install Hail Hydra with npx hail-hydra-cc@latest</title>
+  <defs>
+    <style>
+      /* 14 s loop. t=0 = finished install.
+         10-13% reset; 15-30% type command; 34% picker; 38/43/48/53% host ticks (cards light, bars fill 12%);
+         60/65/70% output lines; 76% "Hail Hydra. Ready." + all cards glow 79-90%. */
+      .type { animation: type 14s infinite; }
+      @keyframes type { 0%, 10% { transform: translateX(280px); } 13%, 15% { transform: translateX(0); animation-timing-function: steps(24, end); } 30%, 100% { transform: translateX(280px); } }
+      .tcur { opacity: 0; animation: tcur 14s infinite; }
+      @keyframes tcur { 0%, 12% { opacity: 0; } 13%, 30% { opacity: 1; } 31%, 100% { opacity: 0; } }
+      .pick { animation: pick 14s ease-out infinite; }
+      @keyframes pick { 0%, 10% { opacity: 1; } 13%, 32% { opacity: 0; } 34%, 100% { opacity: 1; } }
+      .ptr { transform: translateY(60px); animation: ptr 14s infinite steps(1, end); }
+      @keyframes ptr { 0% { transform: translateY(60px); } 13% { transform: translateY(0); } 43% { transform: translateY(20px); } 48% { transform: translateY(40px); } 53%, 100% { transform: translateY(60px); } }
+      .k1, .k2, .k3, .k4, .o1, .o2, .o3, .o4 { animation: 14s ease-out infinite; }
+      .k1 { animation-name: k1; } .k2 { animation-name: k2; } .k3 { animation-name: k3; } .k4 { animation-name: k4; }
+      @keyframes k1 { 0%, 10% { opacity: 1; } 13%, 38% { opacity: 0; } 39%, 100% { opacity: 1; } }
+      @keyframes k2 { 0%, 10% { opacity: 1; } 13%, 43% { opacity: 0; } 44%, 100% { opacity: 1; } }
+      @keyframes k3 { 0%, 10% { opacity: 1; } 13%, 48% { opacity: 0; } 49%, 100% { opacity: 1; } }
+      @keyframes k4 { 0%, 10% { opacity: 1; } 13%, 53% { opacity: 0; } 54%, 100% { opacity: 1; } }
+      .o1 { animation-name: o1; } .o2 { animation-name: o2; } .o3 { animation-name: o3; } .o4 { animation-name: o4; }
+      @keyframes o1 { 0%, 10% { opacity: 1; } 13%, 60% { opacity: 0; } 62%, 100% { opacity: 1; } }
+      @keyframes o2 { 0%, 10% { opacity: 1; } 13%, 65% { opacity: 0; } 67%, 100% { opacity: 1; } }
+      @keyframes o3 { 0%, 10% { opacity: 1; } 13%, 70% { opacity: 0; } 72%, 100% { opacity: 1; } }
+      @keyframes o4 { 0%, 10% { opacity: 1; } 13%, 76% { opacity: 0; } 78%, 100% { opacity: 1; } }
+      .bar { transform-box: fill-box; transform-origin: 0 50%; }
+      @keyframes d1 { 0%, 10% { opacity: 0; } 13%, 38% { opacity: .72; } 39%, 100% { opacity: 0; } }
+      @keyframes b1 { 0%, 10% { transform: scaleX(1); } 13% { transform: scaleX(.03); } 39% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 51%, 100% { transform: scaleX(1); } }
+      @keyframes c1 { 0%, 10% { opacity: 1; } 13%, 51% { opacity: 0; } 52%, 100% { opacity: 1; } }
+      @keyframes g1 { 0%, 38% { opacity: 0; } 39% { opacity: 1; } 45%, 77% { opacity: 0; } 79%, 90% { opacity: 1; } 94%, 100% { opacity: 0; } }
+      .d1 { opacity: 0; animation: d1 14s ease-in-out infinite; } .b1 { animation: b1 14s linear infinite; } .c1 { animation: c1 14s ease-out infinite; } .g1 { opacity: 0; animation: g1 14s ease-in-out infinite; }
+      @keyframes d2 { 0%, 10% { opacity: 0; } 13%, 43% { opacity: .72; } 44%, 100% { opacity: 0; } }
+      @keyframes b2 { 0%, 10% { transform: scaleX(1); } 13% { transform: scaleX(.03); } 44% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 56%, 100% { transform: scaleX(1); } }
+      @keyframes c2 { 0%, 10% { opacity: 1; } 13%, 56% { opacity: 0; } 57%, 100% { opacity: 1; } }
+      @keyframes g2 { 0%, 43% { opacity: 0; } 44% { opacity: 1; } 50%, 77% { opacity: 0; } 79%, 90% { opacity: 1; } 94%, 100% { opacity: 0; } }
+      .d2 { opacity: 0; animation: d2 14s ease-in-out infinite; } .b2 { animation: b2 14s linear infinite; } .c2 { animation: c2 14s ease-out infinite; } .g2 { opacity: 0; animation: g2 14s ease-in-out infinite; }
+      @keyframes d3 { 0%, 10% { opacity: 0; } 13%, 48% { opacity: .72; } 49%, 100% { opacity: 0; } }
+      @keyframes b3 { 0%, 10% { transform: scaleX(1); } 13% { transform: scaleX(.03); } 49% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 61%, 100% { transform: scaleX(1); } }
+      @keyframes c3 { 0%, 10% { opacity: 1; } 13%, 61% { opacity: 0; } 62%, 100% { opacity: 1; } }
+      @keyframes g3 { 0%, 48% { opacity: 0; } 49% { opacity: 1; } 55%, 77% { opacity: 0; } 79%, 90% { opacity: 1; } 94%, 100% { opacity: 0; } }
+      .d3 { opacity: 0; animation: d3 14s ease-in-out infinite; } .b3 { animation: b3 14s linear infinite; } .c3 { animation: c3 14s ease-out infinite; } .g3 { opacity: 0; animation: g3 14s ease-in-out infinite; }
+      @keyframes d4 { 0%, 10% { opacity: 0; } 13%, 53% { opacity: .72; } 54%, 100% { opacity: 0; } }
+      @keyframes b4 { 0%, 10% { transform: scaleX(1); } 13% { transform: scaleX(.03); } 54% { transform: scaleX(.03); animation-timing-function: steps(6, end); } 66%, 100% { transform: scaleX(1); } }
+      @keyframes c4 { 0%, 10% { opacity: 1; } 13%, 66% { opacity: 0; } 67%, 100% { opacity: 1; } }
+      @keyframes g4 { 0%, 53% { opacity: 0; } 54% { opacity: 1; } 60%, 77% { opacity: 0; } 79%, 90% { opacity: 1; } 94%, 100% { opacity: 0; } }
+      .d4 { opacity: 0; animation: d4 14s ease-in-out infinite; } .b4 { animation: b4 14s linear infinite; } .c4 { animation: c4 14s ease-out infinite; } .g4 { opacity: 0; animation: g4 14s ease-in-out infinite; }
+      .cur { animation: cur 1s steps(1, end) infinite; }
+      @keyframes cur { 50% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+    <clipPath id="card"><rect x="0" y="0" width="1200" height="420" rx="16"/></clipPath>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <rect x="11" y="11" width="2" height="2" fill="#161b22" shape-rendering="crispEdges"/>
+    </pattern>
+    <g id="head">
+      <polygon points="-21,-16 -25,-30 -13,-18" fill="#dc2626"/>
+      <polygon points="-9,-18 -8,-29 0,-18" fill="#dc2626"/>
+      <rect x="-26" y="-19" width="34" height="31" rx="9" fill="currentColor"/>
+      <rect x="-3" y="-8" width="29" height="20" rx="7" fill="currentColor"/>
+      <rect x="-3" y="5" width="29" height="7" rx="3" fill="#000" opacity=".22"/>
+      <rect x="-26" y="6" width="22" height="6" rx="3" fill="#000" opacity=".18"/>
+      <rect x="-21" y="-15" width="9" height="3" fill="#fff" opacity=".28" shape-rendering="crispEdges"/>
+      <rect x="-11" y="-11" width="9" height="9" rx="2" fill="#e6edf3"/>
+      <rect x="-6" y="-8" width="4" height="5" fill="#0b0f14" shape-rendering="crispEdges"/>
+      <rect x="19" y="-4" width="3" height="3" fill="#0b0f14" opacity=".55" shape-rendering="crispEdges"/>
+      <polygon points="9,12 12,16 15,12" fill="#e6edf3"/>
+      <polygon points="17,12 19,15 21,12" fill="#e6edf3"/>
+    </g>
+    <filter id="soft" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1199" height="419" rx="16" fill="#0b0f14" stroke="#1f2937"/>
+  <g clip-path="url(#card)">
+    <rect width="1200" height="420" fill="url(#dots)"/>
+
+    <!-- header -->
+    <text x="40" y="50" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="24" fill="#e6edf3">Install in one command</text>
+    <text x="40" y="74" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="14" fill="#8b949e">Pick your hosts once; every AI coding CLI gets its heads wired in</text>
+    <rect x="1036" y="40" width="8" height="8" fill="#dc2626" transform="rotate(45 1040 44)"/>
+    <text x="1160" y="49" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-weight="700" font-size="13" letter-spacing="2" fill="#dc2626">HAIL HYDRA</text>
+
+    <!-- section labels -->
+    <g font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="15" fill="#e6edf3">
+      <text x="40" y="104"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">01 </tspan>Run the installer</text>
+      <text x="680" y="104"><tspan font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">02 </tspan>Every host, wired up</text>
+    </g>
+
+    <!-- terminal window -->
+    <rect x="40" y="116" width="600" height="260" rx="10" fill="#111827" stroke="#30363d"/>
+    <rect x="40" y="116" width="600" height="24" rx="10" fill="#161b22"/>
+    <rect x="40" y="128" width="600" height="12" fill="#161b22"/>
+    <g fill="#30363d" shape-rendering="crispEdges"><rect x="52" y="125" width="6" height="6"/><rect x="62" y="125" width="6" height="6"/><rect x="72" y="125" width="6" height="6"/></g>
+    <text x="340" y="133" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">~/my-project</text>
+
+    <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="14">
+      <!-- command (typed by sliding a cover off it) -->
+      <text x="60" y="166" fill="#dc2626">›</text>
+      <text x="80" y="166" fill="#e6edf3">npx hail-hydra-cc@latest</text>
+      <g class="type">
+        <rect x="78" y="150" width="270" height="22" fill="#111827"/>
+        <rect class="tcur" x="79" y="153" width="8" height="16" fill="#e6edf3"/>
+      </g>
+
+      <!-- picker -->
+      <g class="pick">
+        <text x="60" y="190" fill="#fbbf24">?</text>
+        <text x="80" y="190" fill="#e6edf3">Install Hydra for which hosts?</text>
+        <text x="352" y="190" fill="#6e7681" font-size="13">(space to toggle)</text>
+        <g fill="none" stroke="#30363d" stroke-width="1.5">
+          <rect x="80" y="200" width="13" height="13" rx="3"/>
+          <rect x="80" y="220" width="13" height="13" rx="3"/>
+          <rect x="80" y="240" width="13" height="13" rx="3"/>
+          <rect x="80" y="260" width="13" height="13" rx="3"/>
+        </g>
+        <text x="104" y="211" fill="#e6edf3">Claude Code</text>
+        <text x="104" y="231" fill="#e6edf3">Gemini CLI</text>
+        <text x="104" y="251" fill="#e6edf3">Codex CLI</text>
+        <text x="104" y="271" fill="#e6edf3">GitHub Copilot CLI</text>
+        <g fill="#6e7681" font-size="13">
+          <text x="290" y="211">haiku / sonnet</text>
+          <text x="290" y="231">gemini-3.5-flash-lite / gemini-3.8-flash</text>
+          <text x="290" y="251">gpt-6-luna / gpt-6-sol</text>
+          <text x="290" y="271">claude-haiku-5.5 / claude-sonnet-5.5</text>
+        </g>
+        <text class="ptr" x="60" y="211" fill="#dc2626">❯</text>
+      </g>
+      <!-- ticks -->
+      <g class="k1"><rect x="80" y="200" width="13" height="13" rx="3" fill="#16a34a"/><path d="M83,206.5 l2.5,3 l4.5,-5.5" fill="none" stroke="#e6edf3" stroke-width="2"/></g>
+      <g class="k2"><rect x="80" y="220" width="13" height="13" rx="3" fill="#16a34a"/><path d="M83,226.5 l2.5,3 l4.5,-5.5" fill="none" stroke="#e6edf3" stroke-width="2"/></g>
+      <g class="k3"><rect x="80" y="240" width="13" height="13" rx="3" fill="#16a34a"/><path d="M83,246.5 l2.5,3 l4.5,-5.5" fill="none" stroke="#e6edf3" stroke-width="2"/></g>
+      <g class="k4"><rect x="80" y="260" width="13" height="13" rx="3" fill="#16a34a"/><path d="M83,266.5 l2.5,3 l4.5,-5.5" fill="none" stroke="#e6edf3" stroke-width="2"/></g>
+
+      <!-- output -->
+      <g class="o1"><text x="60" y="298" fill="#4ade80">✔</text><text x="80" y="298" fill="#e6edf3">10 agents</text><text x="290" y="298" fill="#6e7681" font-size="13">7 cheap tier · 3 mid tier</text></g>
+      <g class="o2"><text x="60" y="318" fill="#4ade80">✔</text><text x="80" y="318" fill="#e6edf3">10 commands</text><text x="290" y="318" fill="#6e7681" font-size="13">/hydra:help … /hydra:stats</text></g>
+      <g class="o3"><text x="60" y="338" fill="#4ade80">✔</text><text x="80" y="338" fill="#e6edf3">hooks + statusline</text></g>
+      <g class="o4"><text x="60" y="362" fill="#dc2626" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="16" font-weight="700">🐉 Hail Hydra. Ready.</text><rect class="cur" x="236" y="349" width="8" height="15" fill="#e6edf3" shape-rendering="crispEdges"/></g>
+    </g>
+
+    <!-- host cards: each lights up as its host is ticked -->
+    <!-- Claude Code -->
+    <g class="gl g1">
+      <rect x="677" y="113" width="486" height="64" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+      <rect x="679" y="115" width="482" height="60" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+    </g>
+    <g>
+      <rect x="680" y="116" width="480" height="58" rx="8" fill="#111827" stroke="#16a34a"/>
+      <use href="#head" style="color:#4ade80" transform="translate(708,149) scale(.62)"/>
+      <text x="736" y="140" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#e6edf3">Claude Code</text>
+      <rect x="884" y="126" width="78" height="19" rx="5" fill="#161b22" stroke="#30363d"/>
+      <text x="892" y="140" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#f87171">/hydra:*</text>
+      <text x="736" y="159" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">agents + commands + hooks + statusline</text>
+      <g class="c1">
+        <rect x="1128" y="126" width="20" height="20" rx="5" fill="#16a34a"/>
+        <path d="M1133,136 L1136.5,140 L1143,131" fill="none" stroke="#e6edf3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <rect x="688" y="166" width="464" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+      <rect class="bar b1" x="688" y="166" width="464" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      <rect class="d1" x="680" y="116" width="480" height="58" rx="8" fill="#0b0f14"/>
+    </g>
+    <!-- Gemini CLI -->
+    <g class="gl g2">
+      <rect x="677" y="180" width="486" height="64" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+      <rect x="679" y="182" width="482" height="60" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+    </g>
+    <g>
+      <rect x="680" y="183" width="480" height="58" rx="8" fill="#111827" stroke="#16a34a"/>
+      <use href="#head" style="color:#4ade80" transform="translate(708,216) scale(.62)"/>
+      <text x="736" y="207" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#e6edf3">Gemini CLI</text>
+      <rect x="884" y="193" width="78" height="19" rx="5" fill="#161b22" stroke="#30363d"/>
+      <text x="892" y="207" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#f87171">/hydra:*</text>
+      <text x="736" y="226" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">agents + TOML commands + hooks</text>
+      <g class="c2">
+        <rect x="1128" y="193" width="20" height="20" rx="5" fill="#16a34a"/>
+        <path d="M1133,203 L1136.5,207 L1143,198" fill="none" stroke="#e6edf3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <rect x="688" y="233" width="464" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+      <rect class="bar b2" x="688" y="233" width="464" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      <rect class="d2" x="680" y="183" width="480" height="58" rx="8" fill="#0b0f14"/>
+    </g>
+    <!-- Codex CLI -->
+    <g class="gl g3">
+      <rect x="677" y="247" width="486" height="64" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+      <rect x="679" y="249" width="482" height="60" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+    </g>
+    <g>
+      <rect x="680" y="250" width="480" height="58" rx="8" fill="#111827" stroke="#16a34a"/>
+      <use href="#head" style="color:#4ade80" transform="translate(708,283) scale(.62)"/>
+      <text x="736" y="274" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#e6edf3">Codex CLI</text>
+      <rect x="884" y="260" width="133" height="19" rx="5" fill="#161b22" stroke="#30363d"/>
+      <text x="892" y="274" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#f87171">$hydra-* skills</text>
+      <text x="736" y="293" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">agents + hooks (trust once via /hooks)</text>
+      <g class="c3">
+        <rect x="1128" y="260" width="20" height="20" rx="5" fill="#16a34a"/>
+        <path d="M1133,270 L1136.5,274 L1143,265" fill="none" stroke="#e6edf3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <rect x="688" y="300" width="464" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+      <rect class="bar b3" x="688" y="300" width="464" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      <rect class="d3" x="680" y="250" width="480" height="58" rx="8" fill="#0b0f14"/>
+    </g>
+    <!-- GitHub Copilot CLI -->
+    <g class="gl g4">
+      <rect x="677" y="314" width="486" height="64" rx="11" fill="none" stroke="#4ade80" stroke-width="6" filter="url(#soft)"/>
+      <rect x="679" y="316" width="482" height="60" rx="9" fill="none" stroke="#4ade80" stroke-width="2"/>
+    </g>
+    <g>
+      <rect x="680" y="317" width="480" height="58" rx="8" fill="#111827" stroke="#16a34a"/>
+      <use href="#head" style="color:#4ade80" transform="translate(708,350) scale(.62)"/>
+      <text x="736" y="341" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="14" fill="#e6edf3">GitHub Copilot CLI</text>
+      <rect x="884" y="327" width="156" height="19" rx="5" fill="#161b22" stroke="#30363d"/>
+      <text x="892" y="341" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#f87171">/hail-hydra &lt;task&gt;</text>
+      <text x="736" y="360" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="13" fill="#8b949e">opt-in skill</text>
+      <g class="c4">
+        <rect x="1128" y="327" width="20" height="20" rx="5" fill="#16a34a"/>
+        <path d="M1133,337 L1136.5,341 L1143,332" fill="none" stroke="#e6edf3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <rect x="688" y="367" width="464" height="3" fill="#1f2937" shape-rendering="crispEdges"/>
+      <rect class="bar b4" x="688" y="367" width="464" height="3" fill="#4ade80" shape-rendering="crispEdges"/>
+      <rect class="d4" x="680" y="317" width="480" height="58" rx="8" fill="#0b0f14"/>
+    </g>
+
+    <!-- footer -->
+    <text x="600" y="402" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="13" fill="#6e7681">no prompts: <tspan fill="#8b949e">npx hail-hydra-cc --all --global --yes</tspan></text>
+  </g>
+</svg>
