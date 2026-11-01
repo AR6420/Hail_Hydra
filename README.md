@@ -44,6 +44,12 @@ When you invoke it, Hydra typically cuts per-task cost by **about 50%**, and del
 
 One canonical source generates a native payload for each host. Use `/hydra:*` on Claude Code and Gemini CLI, `$hydra-*` skills on Codex CLI, or `/hail-hydra <task>` on Copilot.
 
+```bash
+npx hail-hydra-cc@latest
+```
+
+<p align="center"><sub>One command. Pick your CLIs, restart, done. <a href="#install">More install options</a></sub></p>
+
 ## See it in action
 
 Run `/hydra:stats` at any point in a session. It shows what every tier actually cost, compared with sending the same tokens to your main model:
